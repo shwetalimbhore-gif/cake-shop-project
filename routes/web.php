@@ -17,9 +17,6 @@ use App\Http\Controllers\Frontend\ProductController;
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
-});
 
 Route::get('/dashboard', function () {
     return view('dashboard');
@@ -33,9 +30,6 @@ Route::middleware('auth')->group(function () {
 
 require __DIR__.'/auth.php';
 
-// Route::get('/', function () {
-//     return view('frontend.index');
-// });
 
 Route::get('/', [HomeController::class, 'index']);
 
@@ -43,3 +37,7 @@ Route::get('/categories', [CategoryController::class, 'index'])->name('categorie
 
 Route::get('/categories/{category}', [ProductController::class, 'byCategory'])
     ->name('categories.products');
+
+Route::get('/products/{product}', [ProductController::class, 'show'])
+    ->name('products.show');
+

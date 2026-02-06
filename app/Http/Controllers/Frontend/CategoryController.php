@@ -10,9 +10,9 @@ class CategoryController extends Controller
 {
     public function index()
     {
-        // $categories = Category::where('status', 1)->get();
+        $categories = Category::where('is_active', 1)->get();
 
-        $categories = Category::all();
+        // $categories = Category::all();
 
         return view('frontend.categories.index', compact('categories'));
     }

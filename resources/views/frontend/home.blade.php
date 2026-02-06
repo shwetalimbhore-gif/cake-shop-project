@@ -1,29 +1,27 @@
-@extends('layouts.frontend')
-
-@section('title', 'Home')
+@extends('frontend.layouts.app')
 
 @section('content')
-<div class="container">
-    <div class="row align-items-center">
-
-        <!-- LEFT TEXT -->
-        <div class="col-md-6">
-            <h1 class="display-5 fw-bold">SweetCravings</h1>
-            <p class="lead">Where Cravings Meet Cakes</p>
-            <p>Freshly baked cakes for every celebration.</p>
-
-            <a href="#" class="btn btn-primary btn-lg">
-                Order Cakes
-            </a>
-        </div>
-
-        <!-- RIGHT IMAGE -->
-        <div class="col-md-6 text-center">
-            <img src="{{ asset('images/cake.webp') }}"
-                 class="img-fluid rounded"
-                 alt="Cake">
-        </div>
-
+    <div class="text-center mb-4">
+        <h1>Welcome to SweetCravings 🍰</h1>
+        <p class="lead">Delicious cakes for every occasion</p>
     </div>
-</div>
+
+    <div class="row">
+        @forelse($products as $product)
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    @if($product->image)
+                        <img src="{{ asset($product->image) }}" class="card-img-top" alt="{{ $product->name }}">
+                    @endif
+
+                    <div class="card-body text-center">
+                        <h5 class="card-title">{{ $product->name }}</h5>
+                        <p class="card-text">₹ {{ $product->price }}</p>
+                    </div>
+                </div>
+            </div>
+        @empty
+            <p class="text-center">No cakes available.</p>
+        @endforelse
+    </div>
 @endsection
