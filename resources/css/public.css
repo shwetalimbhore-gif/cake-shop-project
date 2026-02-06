@@ -1,0 +1,21 @@
+.hero-section {
+    background: #fff5f7;
+}
+
+.cake-card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+    transition: transform 0.2s ease;
+}
+
+.cake-card:hover {
+    transform: translateY(-5px);
+}
+
+.cake-card img {
+    border-top-left-radius: 15px;
+    border-top-right-radius: 15px;
+    height: 200px;
+    object-fit: cover;
+}

@@ -3,15 +3,16 @@
 namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Category;
+use Illuminate\Http\Request;
 
 class CategoryController extends Controller
 {
     public function index()
     {
-        // Get only active categories (adjust if needed)
-        $categories = Category::orderBy('name')->get();
+        // $categories = Category::where('status', 1)->get();
+
+        $categories = Category::all();
 
         return view('frontend.categories.index', compact('categories'));
     }

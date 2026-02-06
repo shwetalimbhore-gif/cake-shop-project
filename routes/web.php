@@ -2,7 +2,9 @@
 
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Frontend\HomeController;
 use App\Http\Controllers\Frontend\CategoryController;
+use App\Http\Controllers\Frontend\ProductController;
 
 /*
 |--------------------------------------------------------------------------
@@ -31,11 +33,13 @@ Route::middleware('auth')->group(function () {
 
 require __DIR__.'/auth.php';
 
-Route::get('/', function () {
-    return view('home');
-});
+// Route::get('/', function () {
+//     return view('frontend.index');
+// });
 
+Route::get('/', [HomeController::class, 'index']);
 
-Route::get('/categories', [CategoryController::class, 'index'])
-    ->name('categories.index');
+Route::get('/categories', [CategoryController::class, 'index'])->name('categories');
 
+Route::get('/categories/{category}', [ProductController::class, 'byCategory'])
+    ->name('categories.products');
