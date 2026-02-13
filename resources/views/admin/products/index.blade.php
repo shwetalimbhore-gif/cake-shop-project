@@ -4,15 +4,17 @@
 @section('page-title', 'Products')
 
 @section('content')
-<div class="card">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="mb-0">Manage Products</h5>
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+        <h5 class="mb-0 fw-bold">
+            <i class="fas fa-box text-primary me-2"></i>
+            Manage Products
+        </h5>
         <a href="{{ route('admin.products.create') }}" class="btn btn-primary">
             <i class="fas fa-plus me-2"></i>Add New Product
         </a>
     </div>
     <div class="card-body">
-        <!-- Filters -->
         <form method="GET" action="{{ route('admin.products.index') }}" class="mb-4">
             <div class="row g-3">
                 <div class="col-md-3">
@@ -56,30 +58,21 @@
             </div>
         </form>
 
-        <!-- Bulk Actions -->
         <div class="mb-3">
             <button class="btn btn-danger btn-sm" id="bulkDeleteBtn" disabled>
                 <i class="fas fa-trash me-2"></i>Delete Selected
             </button>
         </div>
 
-        <!-- Products Table -->
         <div class="table-responsive">
-            <table class="table table-hover">
+            <table class="table table-hover align-middle">
                 <thead>
                     <tr>
                         <th width="50">
                             <input type="checkbox" id="selectAll">
                         </th>
                         <th width="80">Image</th>
-                        <th>
-                            <a href="{{ route('admin.products.index', array_merge(request()->query(), ['sort' => 'name', 'direction' => request('direction') == 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none">
-                                Name
-                                @if(request('sort') == 'name')
-                                    <i class="fas fa-sort-{{ request('direction') == 'asc' ? 'up' : 'down' }}"></i>
-                                @endif
-                            </a>
-                        </th>
+                        <th>Name</th>
                         <th>SKU</th>
                         <th>Category</th>
                         <th>Price</th>
@@ -99,31 +92,31 @@
                             @if($product->featured_image)
                                 <img src="{{ asset('storage/' . $product->featured_image) }}"
                                      alt="{{ $product->name }}"
-                                     class="img-thumbnail"
+                                     class="img-thumbnail rounded-3"
                                      style="width: 50px; height: 50px; object-fit: cover;">
                             @else
-                                <div class="bg-secondary text-white d-flex align-items-center justify-content-center"
+                                <div class="bg-soft-secondary d-flex align-items-center justify-content-center rounded-3"
                                      style="width: 50px; height: 50px;">
-                                    <i class="fas fa-box"></i>
+                                    <i class="fas fa-box text-muted"></i>
                                 </div>
                             @endif
                         </td>
-                        <td>
+                        <td class="fw-semibold">
                             {{ $product->name }}
                             @if($product->is_featured)
                                 <span class="badge bg-warning ms-2">Featured</span>
                             @endif
                         </td>
-                        <td>{{ $product->sku }}</td>
+                        <td><span class="badge bg-light text-dark">{{ $product->sku }}</span></td>
                         <td>{{ $product->category->name ?? 'Uncategorized' }}</td>
                         <td>
-                            @if($product->sale_price)
-                                <span class="text-decoration-line-through text-muted">${{ number_format($product->regular_price, 2) }}</span>
+                            @if($product->sale_price && $product->sale_price < $product->regular_price)
+                                <span class="text-decoration-line-through text-muted">{{ format_currency($product->regular_price) }}</span>
                                 <br>
-                                <span class="text-danger fw-bold">${{ number_format($product->sale_price, 2) }}</span>
+                                <span class="text-danger fw-bold">{{ format_currency($product->sale_price) }}</span>
                                 <span class="badge bg-success ms-1">-{{ $product->discount_percentage }}%</span>
                             @else
-                                ${{ number_format($product->regular_price, 2) }}
+                                {{ format_currency($product->regular_price) }}
                             @endif
                         </td>
                         <td>
@@ -148,25 +141,28 @@
                             </div>
                         </td>
                         <td>
-                            <a href="{{ route('admin.products.edit', $product) }}"
-                               class="btn btn-sm btn-info" title="Edit">
-                                <i class="fas fa-edit"></i>
-                            </a>
-                            <button type="button" class="btn btn-sm btn-danger delete-product"
-                                    data-id="{{ $product->id }}"
-                                    data-name="{{ $product->name }}"
-                                    title="Delete">
-                                <i class="fas fa-trash"></i>
-                            </button>
+                            <div class="btn-group" role="group">
+                                <a href="{{ route('admin.products.edit', $product) }}"
+                                   class="btn btn-sm btn-info" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <button type="button" class="btn btn-sm btn-danger delete-product"
+                                        data-id="{{ $product->id }}"
+                                        data-name="{{ $product->name }}"
+                                        title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
                         </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="10" class="text-center py-4">
+                        <td colspan="10" class="text-center py-5">
                             <i class="fas fa-box fa-3x text-muted mb-3"></i>
-                            <p class="text-muted mb-0">No products found</p>
-                            <a href="{{ route('admin.products.create') }}" class="btn btn-primary mt-3">
-                                Add Your First Product
+                            <h5 class="text-muted">No Products Found</h5>
+                            <p class="text-muted mb-3">Get started by adding your first product</p>
+                            <a href="{{ route('admin.products.create') }}" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>Add New Product
                             </a>
                         </td>
                     </tr>
@@ -175,9 +171,8 @@
             </table>
         </div>
 
-        <!-- Pagination -->
         <div class="d-flex justify-content-between align-items-center mt-4">
-            <div>
+            <div class="text-muted small">
                 Showing {{ $products->firstItem() ?? 0 }} to {{ $products->lastItem() ?? 0 }} of {{ $products->total() }} products
             </div>
             <div>
@@ -196,15 +191,17 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <p>Are you sure you want to delete <span id="deleteProductName"></span>?</p>
-                <p class="text-danger">This action cannot be undone!</p>
+                <p class="mb-2">Are you sure you want to delete <strong id="deleteProductName"></strong>?</p>
+                <p class="text-danger mb-0"><i class="fas fa-exclamation-triangle me-2"></i>This action cannot be undone!</p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <form id="deleteForm" method="POST">
+                <form id="deleteForm" method="POST" style="display: inline;">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="btn btn-danger">Delete</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-1"></i>Delete Product
+                    </button>
                 </form>
             </div>
         </div>
@@ -220,15 +217,17 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <p>Are you sure you want to delete <span id="selectedCount"></span> selected products?</p>
-                <p class="text-danger">This action cannot be undone!</p>
+                <p class="mb-2">Are you sure you want to delete <strong id="selectedCount"></strong> selected products?</p>
+                <p class="text-danger mb-0"><i class="fas fa-exclamation-triangle me-2"></i>This action cannot be undone!</p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                 <form id="bulkDeleteForm" method="POST" action="{{ route('admin.products.bulk-delete') }}">
                     @csrf
-                    <input type="hidden" name="ids[]" id="bulkDeleteIds">
-                    <button type="submit" class="btn btn-danger">Delete</button>
+                    <input type="hidden" name="ids" id="bulkDeleteIds">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-1"></i>Delete Selected
+                    </button>
                 </form>
             </div>
         </div>
@@ -239,63 +238,70 @@
 @section('scripts')
 <script>
 $(document).ready(function() {
-    // Select All checkbox
     $('#selectAll').change(function() {
         $('.product-checkbox').prop('checked', $(this).prop('checked'));
         toggleBulkDeleteButton();
     });
 
-    // Individual checkbox change
     $(document).on('change', '.product-checkbox', function() {
         toggleBulkDeleteButton();
         updateSelectAll();
     });
 
-    // Toggle bulk delete button
     function toggleBulkDeleteButton() {
         var checkedCount = $('.product-checkbox:checked').length;
         $('#bulkDeleteBtn').prop('disabled', checkedCount === 0);
+
+        if (checkedCount > 0) {
+            $('#bulkDeleteBtn').removeClass('btn-secondary').addClass('btn-danger');
+        } else {
+            $('#bulkDeleteBtn').removeClass('btn-danger').addClass('btn-secondary');
+        }
     }
 
-    // Update select all checkbox
     function updateSelectAll() {
         var totalCheckboxes = $('.product-checkbox').length;
         var checkedCheckboxes = $('.product-checkbox:checked').length;
+
+        if (totalCheckboxes === 0) return;
+
         $('#selectAll').prop('checked', totalCheckboxes === checkedCheckboxes);
         $('#selectAll').prop('indeterminate', checkedCheckboxes > 0 && checkedCheckboxes < totalCheckboxes);
     }
 
-    // Bulk delete button click
     $('#bulkDeleteBtn').click(function() {
         var ids = [];
         $('.product-checkbox:checked').each(function() {
             ids.push($(this).val());
         });
+
+        if (ids.length === 0) {
+            toastr.warning('Please select at least one product to delete.');
+            return;
+        }
+
         $('#selectedCount').text(ids.length);
-        $('#bulkDeleteIds').val(ids);
+        $('#bulkDeleteIds').val(ids.join(','));
         $('#bulkDeleteModal').modal('show');
     });
 
-    // Delete single product
-    $('.delete-product').click(function() {
+    $(document).on('click', '.delete-product', function() {
         var id = $(this).data('id');
         var name = $(this).data('name');
         $('#deleteProductName').text(name);
-        $('#deleteForm').attr('action', '{{ url("admin/products") }}/' + id);
+        $('#deleteForm').attr('action', '/admin/products/' + id);
         $('#deleteModal').modal('show');
     });
 
-    // Toggle product status
-    $('.status-toggle').change(function() {
-        var id = $(this).data('id');
-        var isChecked = $(this).prop('checked');
+    $(document).on('change', '.status-toggle', function() {
+        var checkbox = $(this);
+        var id = checkbox.data('id');
+        var isChecked = checkbox.prop('checked');
 
         $.ajax({
-            url: '{{ url("admin/products") }}/' + id + '/toggle-status',
+            url: '/admin/products/' + id + '/toggle-status',
             type: 'POST',
-            data: {
-                _token: '{{ csrf_token() }}'
-            },
+            data: { _token: '{{ csrf_token() }}' },
             success: function(response) {
                 if (response.success) {
                     toastr.success('Product status updated successfully');
@@ -303,33 +309,64 @@ $(document).ready(function() {
             },
             error: function() {
                 toastr.error('Failed to update product status');
-                $(this).prop('checked', !isChecked);
+                checkbox.prop('checked', !isChecked);
             }
         });
     });
 
-    // Toggle featured status
-    $('.featured-toggle').change(function() {
-        var id = $(this).data('id');
-        var isChecked = $(this).prop('checked');
+    $(document).on('change', '.featured-toggle', function() {
+        var checkbox = $(this);
+        var id = checkbox.data('id');
+        var isChecked = checkbox.prop('checked');
 
         $.ajax({
-            url: '{{ url("admin/products") }}/' + id + '/toggle-featured',
+            url: '/admin/products/' + id + '/toggle-featured',
             type: 'POST',
-            data: {
-                _token: '{{ csrf_token() }}'
-            },
+            data: { _token: '{{ csrf_token() }}' },
             success: function(response) {
                 if (response.success) {
                     toastr.success('Featured status updated successfully');
+                    var row = checkbox.closest('tr');
+                    var nameCell = row.find('td:eq(2)');
+                    var featuredBadge = nameCell.find('.badge.bg-warning');
+
+                    if (response.is_featured) {
+                        if (featuredBadge.length === 0) {
+                            nameCell.append('<span class="badge bg-warning ms-2">Featured</span>');
+                        }
+                    } else {
+                        featuredBadge.remove();
+                    }
                 }
             },
             error: function() {
                 toastr.error('Failed to update featured status');
-                $(this).prop('checked', !isChecked);
+                checkbox.prop('checked', !isChecked);
             }
         });
     });
+
+    $(document).on('change', 'select[name="category"], select[name="stock_status"], select[name="status"]', function() {
+        $(this).closest('form').submit();
+    });
+
+    var searchTimer;
+    $(document).on('keyup', 'input[name="search"]', function(e) {
+        clearTimeout(searchTimer);
+        var form = $(this).closest('form');
+
+        if (e.key === 'Enter') {
+            form.submit();
+            return;
+        }
+
+        searchTimer = setTimeout(function() {
+            form.submit();
+        }, 500);
+    });
+
+    toggleBulkDeleteButton();
+    updateSelectAll();
 });
 </script>
 @endsection

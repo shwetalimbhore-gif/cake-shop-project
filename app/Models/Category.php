@@ -23,7 +23,6 @@ class Category extends Model
         'is_active' => 'boolean'
     ];
 
-    // Boot method for slug generation
     protected static function boot()
     {
         parent::boot();
@@ -37,13 +36,11 @@ class Category extends Model
         });
     }
 
-    // Relationships
     public function products()
     {
         return $this->hasMany(Product::class);
     }
 
-    // Scopes
     public function scopeActive($query)
     {
         return $query->where('is_active', true);

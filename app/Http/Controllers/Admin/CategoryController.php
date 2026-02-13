@@ -5,85 +5,106 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 
 class CategoryController extends Controller
 {
-    /**
-     * Display a listing of categories.
-     */
     public function index()
     {
-        $categories = Category::orderBy('created_at', 'desc')->get();
+        $categories = Category::withCount('products')
+            ->orderBy('order')
+            ->orderBy('name')
+            ->paginate(15);
+
         return view('admin.categories.index', compact('categories'));
     }
 
-    /**
-     * Show the form for creating a new category.
-     */
     public function create()
     {
         return view('admin.categories.create');
     }
 
-    /**
-     * Store a newly created category in storage.
-     */
     public function store(Request $request)
     {
-        $request->validate([
-            'name' => 'required|max:255',
-            'slug' => 'nullable|unique:categories,slug',
-            'description' => 'nullable',
+        $validated = $request->validate([
+            'name' => 'required|string|max:255|unique:categories',
+            'description' => 'nullable|string',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'order' => 'nullable|integer|min:0',
+            'is_active' => 'sometimes|boolean'
         ]);
 
-        $category = new Category();
-        $category->name = $request->name;
-        $category->slug = $request->slug ?: Str::slug($request->name);
-        $category->description = $request->description;
-        $category->is_active = $request->has('is_active');
-        $category->save();
+        $validated['is_active'] = $request->has('is_active') ? true : false;
+
+        if ($request->hasFile('image') && $request->file('image')->isValid()) {
+            $path = $request->file('image')->store('categories', 'public');
+            $validated['image'] = $path;
+        }
+
+        Category::create($validated);
 
         return redirect()->route('admin.categories.index')
-            ->with('success', 'Category created successfully!');
+            ->with('success', 'Category created successfully.');
     }
 
-    /**
-     * Show the form for editing the specified category.
-     */
     public function edit(Category $category)
     {
         return view('admin.categories.edit', compact('category'));
     }
 
-    /**
-     * Update the specified category in storage.
-     */
     public function update(Request $request, Category $category)
     {
-        $request->validate([
-            'name' => 'required|max:255',
-            'slug' => 'nullable|unique:categories,slug,' . $category->id,
-            'description' => 'nullable',
+        $validated = $request->validate([
+            'name' => 'required|string|max:255|unique:categories,name,' . $category->id,
+            'description' => 'nullable|string',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'order' => 'nullable|integer|min:0',
+            'is_active' => 'sometimes|boolean'
         ]);
 
-        $category->name = $request->name;
-        $category->slug = $request->slug ?: Str::slug($request->name);
-        $category->description = $request->description;
-        $category->is_active = $request->has('is_active');
-        $category->save();
+        $validated['is_active'] = $request->has('is_active') ? true : false;
+
+        if ($request->hasFile('image') && $request->file('image')->isValid()) {
+            if ($category->image) {
+                Storage::disk('public')->delete($category->image);
+            }
+
+            $path = $request->file('image')->store('categories', 'public');
+            $validated['image'] = $path;
+        }
+
+        $category->update($validated);
 
         return redirect()->route('admin.categories.index')
-            ->with('success', 'Category updated successfully!');
+            ->with('success', 'Category updated successfully.');
     }
 
-    /**
-     * Remove the specified category from storage.
-     */
     public function destroy(Category $category)
     {
+        if ($category->products()->count() > 0) {
+            return redirect()->route('admin.categories.index')
+                ->with('error', 'Cannot delete category with products.');
+        }
+
+        if ($category->image) {
+            Storage::disk('public')->delete($category->image);
+        }
+
         $category->delete();
+
         return redirect()->route('admin.categories.index')
-            ->with('success', 'Category deleted successfully!');
+            ->with('success', 'Category deleted successfully.');
+    }
+
+    public function toggleStatus(Category $category)
+    {
+        $category->update([
+            'is_active' => !$category->is_active
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'is_active' => $category->is_active
+        ]);
     }
 }

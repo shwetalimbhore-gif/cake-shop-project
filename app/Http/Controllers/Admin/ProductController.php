@@ -7,183 +7,130 @@ use App\Models\Product;
 use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class ProductController extends Controller
 {
-    /**
-     * Display a listing of products.
-     */
     public function index(Request $request)
     {
         $query = Product::with('category');
 
-        // Search
-        if ($request->has('search')) {
-            $query->where('name', 'like', '%' . $request->search . '%')
-                  ->orWhere('sku', 'like', '%' . $request->search . '%');
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', '%' . $search . '%')
+                  ->orWhere('sku', 'like', '%' . $search . '%')
+                  ->orWhere('description', 'like', '%' . $search . '%');
+            });
         }
 
-        // Filter by category
-        if ($request->has('category') && $request->category != '') {
+        if ($request->filled('category')) {
             $query->where('category_id', $request->category);
         }
 
-        // Filter by stock status
-        if ($request->has('stock_status')) {
-            if ($request->stock_status == 'in_stock') {
+        if ($request->filled('stock_status')) {
+            if ($request->stock_status === 'in_stock') {
                 $query->where('stock_quantity', '>', 0);
-            } elseif ($request->stock_status == 'out_of_stock') {
+            } elseif ($request->stock_status === 'out_of_stock') {
                 $query->where('stock_quantity', '<=', 0);
             }
         }
 
-        // Filter by status
-        if ($request->has('status')) {
-            $query->where('is_active', $request->status == 'active');
+        if ($request->filled('status')) {
+            $query->where('is_active', $request->status === 'active');
         }
 
-        // Sort
-        $sortField = $request->get('sort', 'created_at');
-        $sortDirection = $request->get('direction', 'desc');
-        $query->orderBy($sortField, $sortDirection);
+        if ($request->filled('sort')) {
+            $direction = $request->get('direction', 'asc');
+            $query->orderBy($request->sort, $direction);
+        } else {
+            $query->latest();
+        }
 
-        $products = $query->paginate(15);
-        $categories = Category::active()->get();
+        $products = $query->paginate(15)->appends($request->query());
+        $categories = Category::orderBy('name')->get();
 
         return view('admin.products.index', compact('products', 'categories'));
     }
 
-    /**
-     * Show form for creating new product.
-     */
     public function create()
     {
-        $categories = Category::active()->orderBy('name')->get();
+        $categories = Category::orderBy('name')->get();
         return view('admin.products.create', compact('categories'));
     }
 
-    /**
-     * Store a newly created product.
-     */
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|max:255',
-            'short_description' => 'nullable|max:500',
-            'description' => 'required',
+            'name' => 'required|string|max:255',
+            'sku' => 'required|string|unique:products,sku',
+            'category_id' => 'nullable|exists:categories,id',
             'regular_price' => 'required|numeric|min:0',
-            'sale_price' => 'nullable|numeric|min:0|lt:regular_price',
-            'sku' => 'required|unique:products',
+            'sale_price' => 'nullable|numeric|min:0',
             'stock_quantity' => 'required|integer|min:0',
-            'category_id' => 'required|exists:categories,id',
-            'featured_image' => 'nullable|image|max:2048',
-            'gallery_images.*' => 'nullable|image|max:2048',
-            'sizes' => 'nullable|array',
-            'flavors' => 'nullable|array',
+            'description' => 'nullable|string',
+            'short_description' => 'nullable|string|max:500',
+            'featured_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'is_active' => 'boolean',
             'is_featured' => 'boolean',
-            'is_active' => 'boolean'
         ]);
 
-        // Handle featured image upload
         if ($request->hasFile('featured_image')) {
-            $path = $request->file('featured_image')->store('products/featured', 'public');
+            $path = $request->file('featured_image')->store('products', 'public');
             $validated['featured_image'] = $path;
         }
 
-        // Handle gallery images upload
-        if ($request->hasFile('gallery_images')) {
-            $gallery = [];
-            foreach ($request->file('gallery_images') as $image) {
-                $gallery[] = $image->store('products/gallery', 'public');
-            }
-            $validated['gallery_images'] = $gallery;
-        }
-
-        // Set in_stock status
-        $validated['in_stock'] = $validated['stock_quantity'] > 0;
-
-        // Create product
-        $product = Product::create($validated);
+        Product::create($validated);
 
         return redirect()->route('admin.products.index')
             ->with('success', 'Product created successfully.');
     }
 
-    /**
-     * Show form for editing product.
-     */
     public function edit(Product $product)
     {
-        $categories = Category::active()->orderBy('name')->get();
+        $categories = Category::orderBy('name')->get();
         return view('admin.products.edit', compact('product', 'categories'));
     }
 
-    /**
-     * Update the specified product.
-     */
     public function update(Request $request, Product $product)
     {
         $validated = $request->validate([
-            'name' => 'required|max:255',
-            'short_description' => 'nullable|max:500',
-            'description' => 'required',
+            'name' => 'required|string|max:255',
+            'sku' => 'required|string|unique:products,sku,' . $product->id,
+            'category_id' => 'nullable|exists:categories,id',
             'regular_price' => 'required|numeric|min:0',
-            'sale_price' => 'nullable|numeric|min:0|lt:regular_price',
-            'sku' => 'required|unique:products,sku,' . $product->id,
+            'sale_price' => 'nullable|numeric|min:0',
             'stock_quantity' => 'required|integer|min:0',
-            'category_id' => 'required|exists:categories,id',
-            'featured_image' => 'nullable|image|max:2048',
-            'gallery_images.*' => 'nullable|image|max:2048',
-            'sizes' => 'nullable|array',
-            'flavors' => 'nullable|array',
+            'description' => 'nullable|string',
+            'short_description' => 'nullable|string|max:500',
+            'featured_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'is_active' => 'boolean',
             'is_featured' => 'boolean',
-            'is_active' => 'boolean'
         ]);
 
-        // Handle featured image upload
         if ($request->hasFile('featured_image')) {
-            // Delete old image
             if ($product->featured_image) {
                 Storage::disk('public')->delete($product->featured_image);
             }
-            $path = $request->file('featured_image')->store('products/featured', 'public');
+
+            $path = $request->file('featured_image')->store('products', 'public');
             $validated['featured_image'] = $path;
         }
 
-        // Handle gallery images upload
-        if ($request->hasFile('gallery_images')) {
-            $gallery = $product->gallery_images ?? [];
-            foreach ($request->file('gallery_images') as $image) {
-                $gallery[] = $image->store('products/gallery', 'public');
-            }
-            $validated['gallery_images'] = $gallery;
-        }
-
-        // Set in_stock status
-        $validated['in_stock'] = $validated['stock_quantity'] > 0;
-
-        // Update product
         $product->update($validated);
 
         return redirect()->route('admin.products.index')
             ->with('success', 'Product updated successfully.');
     }
 
-    /**
-     * Remove the specified product.
-     */
     public function destroy(Product $product)
     {
-        // Delete images
         if ($product->featured_image) {
             Storage::disk('public')->delete($product->featured_image);
         }
 
-        if ($product->gallery_images) {
-            foreach ($product->gallery_images as $image) {
-                Storage::disk('public')->delete($image);
-            }
+        foreach ($product->images as $image) {
+            Storage::disk('public')->delete($image->image_path);
+            $image->delete();
         }
 
         $product->delete();
@@ -192,36 +139,42 @@ class ProductController extends Controller
             ->with('success', 'Product deleted successfully.');
     }
 
-    /**
-     * Bulk delete products.
-     */
     public function bulkDelete(Request $request)
     {
-        $request->validate([
-            'ids' => 'required|array',
-            'ids.*' => 'exists:products,id'
-        ]);
+        if ($request->has('ids') && is_string($request->ids)) {
+            $ids = explode(',', $request->ids);
+        } else {
+            $ids = $request->ids ?? [];
+        }
 
-        Product::whereIn('id', $request->ids)->each(function ($product) {
-            // Delete images
-            if ($product->featured_image) {
-                Storage::disk('public')->delete($product->featured_image);
-            }
-            if ($product->gallery_images) {
-                foreach ($product->gallery_images as $image) {
-                    Storage::disk('public')->delete($image);
+        $validIds = Product::whereIn('id', $ids)->pluck('id')->toArray();
+
+        if (empty($validIds)) {
+            return redirect()->back()
+                ->with('error', 'No valid products selected for deletion.');
+        }
+
+        foreach ($validIds as $id) {
+            $product = Product::find($id);
+            if ($product) {
+                if ($product->featured_image) {
+                    Storage::disk('public')->delete($product->featured_image);
+                }
+
+                foreach ($product->images as $image) {
+                    Storage::disk('public')->delete($image->image_path);
+                    $image->delete();
                 }
             }
-            $product->delete();
-        });
+        }
 
+        Product::whereIn('id', $validIds)->delete();
+
+        $count = count($validIds);
         return redirect()->route('admin.products.index')
-            ->with('success', count($request->ids) . ' products deleted successfully.');
+            ->with('success', $count . ' products deleted successfully.');
     }
 
-    /**
-     * Toggle product status.
-     */
     public function toggleStatus(Product $product)
     {
         $product->update([
@@ -230,13 +183,10 @@ class ProductController extends Controller
 
         return response()->json([
             'success' => true,
-            'status' => $product->is_active
+            'is_active' => $product->is_active
         ]);
     }
 
-    /**
-     * Toggle featured status.
-     */
     public function toggleFeatured(Product $product)
     {
         $product->update([
@@ -245,7 +195,7 @@ class ProductController extends Controller
 
         return response()->json([
             'success' => true,
-            'featured' => $product->is_featured
+            'is_featured' => $product->is_featured
         ]);
     }
 }

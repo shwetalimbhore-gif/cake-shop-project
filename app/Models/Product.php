@@ -41,7 +41,6 @@ class Product extends Model
         'in_stock' => 'boolean'
     ];
 
-    // Boot method for slug generation
     protected static function boot()
     {
         parent::boot();
@@ -55,7 +54,6 @@ class Product extends Model
         });
     }
 
-    // Relationships
     public function category()
     {
         return $this->belongsTo(Category::class);
@@ -66,24 +64,16 @@ class Product extends Model
         return $this->hasMany(OrderItem::class);
     }
 
-    /**
-     * Get all images for the product
-     */
     public function images()
     {
         return $this->hasMany(ProductImage::class);
     }
 
-    /**
-     * Get the primary image for the product
-     * This is what your HomeController is trying to load!
-     */
     public function primaryImage()
     {
         return $this->hasOne(ProductImage::class)->where('is_primary', true);
     }
 
-    // Scopes
     public function scopeActive($query)
     {
         return $query->where('is_active', true);
@@ -99,7 +89,6 @@ class Product extends Model
         return $query->where('in_stock', true);
     }
 
-    // Accessors
     public function getDisplayPriceAttribute()
     {
         if ($this->sale_price && $this->sale_price < $this->regular_price) {

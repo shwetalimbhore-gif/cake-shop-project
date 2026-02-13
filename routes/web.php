@@ -1,58 +1,70 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Front\HomeController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ProductController;
-use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Admin\OrderController;
+use App\Http\Controllers\Admin\ProfileController;
+use App\Http\Controllers\Admin\SettingsController;
+use App\Http\Controllers\ProfileController as UserProfileController;
 
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-*/
-
-// ============= PUBLIC FRONTEND ROUTES =============
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/about', [HomeController::class, 'about'])->name('about');
 Route::get('/contact', [HomeController::class, 'contact'])->name('contact');
 
-// ============= ADMIN ROUTES =============
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
-    // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    // Categories
     Route::resource('categories', CategoryController::class);
+    Route::post('categories/{category}/toggle-status', [CategoryController::class, 'toggleStatus'])->name('categories.toggle-status');
 
-    // Products
     Route::resource('products', ProductController::class);
     Route::post('products/bulk-delete', [ProductController::class, 'bulkDelete'])->name('products.bulk-delete');
-
-    // Toggle routes (AJAX)
     Route::post('products/{product}/toggle-status', [ProductController::class, 'toggleStatus'])->name('products.toggle-status');
     Route::post('products/{product}/toggle-featured', [ProductController::class, 'toggleFeatured'])->name('products.toggle-featured');
+
+    Route::prefix('orders')->name('orders.')->group(function () {
+        Route::get('/', [OrderController::class, 'index'])->name('index');
+        Route::get('/{order}', [OrderController::class, 'show'])->name('show');
+        Route::get('/{order}/edit', [OrderController::class, 'edit'])->name('edit');
+        Route::put('/{order}', [OrderController::class, 'update'])->name('update');
+        Route::delete('/{order}', [OrderController::class, 'destroy'])->name('destroy');
+        Route::post('/{order}/status', [OrderController::class, 'updateStatus'])->name('update-status');
+        Route::post('/{order}/payment-status', [OrderController::class, 'updatePaymentStatus'])->name('update-payment-status');
+        Route::get('/{order}/invoice', [OrderController::class, 'printInvoice'])->name('invoice');
+        Route::get('/export/csv', [OrderController::class, 'export'])->name('export');
+    });
+
+    Route::prefix('profile')->name('profile.')->group(function () {
+        Route::get('/', [ProfileController::class, 'index'])->name('index');
+        Route::put('/', [ProfileController::class, 'update'])->name('update');
+        Route::put('/password', [ProfileController::class, 'changePassword'])->name('password');
+        Route::get('/settings', [ProfileController::class, 'showSettings'])->name('settings');
+        Route::put('/settings', [ProfileController::class, 'settings'])->name('settings.update');
+    });
+
+    Route::prefix('settings')->name('settings.')->group(function () {
+        Route::get('/', [SettingsController::class, 'index'])->name('index');
+        Route::put('/', [SettingsController::class, 'update'])->name('update');
+        Route::post('/upload-logo', [SettingsController::class, 'uploadLogo'])->name('upload-logo');
+    });
 });
 
-// ============= BREEZE AUTH ROUTES (Modified) =============
-// Override the default dashboard redirect to our admin dashboard
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', function () {
-        if (auth()->user()->is_admin) {
+        if (auth()->user() && auth()->user()->is_admin) {
             return redirect()->route('admin.dashboard');
         }
         return redirect()->route('home');
     })->name('dashboard');
 });
 
-// Profile routes (from Breeze)
 Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::get('/user/profile', [UserProfileController::class, 'edit'])->name('user.profile.edit');
+    Route::patch('/user/profile', [UserProfileController::class, 'update'])->name('user.profile.update');
+    Route::delete('/user/profile', [UserProfileController::class, 'destroy'])->name('user.profile.destroy');
 });
 
-// ============= INCLUDE BREEZE AUTH ROUTES =============
 require __DIR__.'/auth.php';
