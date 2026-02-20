@@ -88,6 +88,7 @@ class ProductController extends Controller
      */
     public function show($slug)
     {
+        die("innn");
         $product = Product::with(['category', 'images', 'options' => function($query) {
             $query->where('is_active', true)->orderBy('type')->orderBy('order');
         }])

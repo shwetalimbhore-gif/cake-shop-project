@@ -18,6 +18,21 @@ if (!function_exists('setting')) {
     }
 }
 
+if (!function_exists('logoSetting')) {
+    function logoSetting($key, $default = null)
+    {
+        try {
+            $settings = Cache::remember('site_settings', 3600, function () {
+                return Setting::pluck('value', 'key')->toArray();
+            });
+
+            return $settings[$key] ?? $default;
+        } catch (\Exception $e) {
+            return $default;
+        }
+    }
+}
+
 if (!function_exists('site_logo')) {
     function site_logo()
     {

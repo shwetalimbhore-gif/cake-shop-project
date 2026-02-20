@@ -9,6 +9,10 @@ use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\ProfileController as UserProfileController;
+use App\Http\Controllers\Front\AccountController;
+use App\Http\Controllers\Front\CheckoutController;
+use App\Http\Controllers\Front\CartController;
+// use App\Http\Controllers\Front\
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/about', [HomeController::class, 'about'])->name('about');
@@ -66,5 +70,41 @@ Route::middleware('auth')->group(function () {
     Route::patch('/user/profile', [UserProfileController::class, 'update'])->name('user.profile.update');
     Route::delete('/user/profile', [UserProfileController::class, 'destroy'])->name('user.profile.destroy');
 });
+
+
+// ============= PUBLIC FRONTEND ROUTES =============
+Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/shop', [HomeController::class, 'shop'])->name('shop');
+Route::get('/product/{slug}', [HomeController::class, 'productDetails'])->name('product.details');
+Route::get('/about', [HomeController::class, 'about'])->name('about');
+Route::get('/contact', [HomeController::class, 'contact'])->name('contact');
+Route::post('/contact', [HomeController::class, 'submitContact'])->name('contact.submit');
+
+// ============= CART ROUTES =============
+Route::prefix('cart')->name('cart.')->group(function () {
+    Route::get('/', [CartController::class, 'index'])->name('index');
+    Route::post('/add/{product}', [CartController::class, 'add'])->name('add');
+    Route::post('/update/{id}', [CartController::class, 'update'])->name('update');
+    Route::delete('/remove/{id}', [CartController::class, 'remove'])->name('remove');
+    Route::delete('/clear', [CartController::class, 'clear'])->name('clear');
+});
+
+// ============= CHECKOUT ROUTES (Require Login) =============
+Route::middleware(['auth'])->prefix('checkout')->name('checkout.')->group(function () {
+    Route::get('/', [CheckoutController::class, 'index'])->name('index');
+    Route::post('/process', [CheckoutController::class, 'process'])->name('process');
+    Route::get('/success/{order}', [CheckoutController::class, 'success'])->name('success');
+});
+
+// ============= USER ACCOUNT ROUTES (Require Login) =============
+Route::middleware(['auth'])->prefix('account')->name('account.')->group(function () {
+    Route::get('/dashboard', [AccountController::class, 'dashboard'])->name('dashboard');
+    Route::get('/orders', [AccountController::class, 'orders'])->name('orders');
+    Route::get('/orders/{order}', [AccountController::class, 'orderDetails'])->name('order.details');
+    Route::get('/profile', [AccountController::class, 'profile'])->name('profile');
+    Route::put('/profile', [AccountController::class, 'updateProfile'])->name('profile.update');
+     Route::put('/password', [App\Http\Controllers\Front\AccountController::class, 'changePassword'])->name('password');
+});
+
 
 require __DIR__.'/auth.php';
