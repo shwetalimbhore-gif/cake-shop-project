@@ -7,7 +7,10 @@
     <meta name="description" content="{{ setting('site_description', 'Where Every Bite Feels Like Home') }}">
     <meta name="keywords" content="{{ setting('site_keywords', 'cakes, bakery') }}">
 
-    <title>@yield('title', setting('site_name'))</title>
+    <title>@yield('title', setting('site_name', 'Cozy Cravings'))</title>
+
+    <!-- Add favicon links -->
+    <link rel="icon" type="image/png" sizes="64x64" href="{{ asset('faviconIcon.png') }}">
 
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -456,6 +459,11 @@
                 </ul>
 
                 <div class="d-flex align-items-center">
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('tracking.*') ? 'active' : '' }}" href="{{ route('tracking.index') }}">
+                            <i class="fas fa-truck me-1"></i>Track Order
+                        </a>
+                    </li>
                     <!-- Cart Icon -->
                     <a href="{{ route('cart.index') }}" class="position-relative me-3 text-dark">
                         <i class="fas fa-shopping-cart fa-lg"></i>

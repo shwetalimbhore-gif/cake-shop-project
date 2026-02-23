@@ -30,17 +30,20 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('products/{product}/toggle-featured', [ProductController::class, 'toggleFeatured'])->name('products.toggle-featured');
 
     Route::prefix('orders')->name('orders.')->group(function () {
-        Route::get('/', [OrderController::class, 'index'])->name('index');
-        Route::get('/{order}', [OrderController::class, 'show'])->name('show');
-        Route::get('/{order}/edit', [OrderController::class, 'edit'])->name('edit');
-        Route::put('/{order}', [OrderController::class, 'update'])->name('update');
-        Route::delete('/{order}', [OrderController::class, 'destroy'])->name('destroy');
-        Route::post('/{order}/status', [OrderController::class, 'updateStatus'])->name('update-status');
-        Route::post('/{order}/payment-status', [OrderController::class, 'updatePaymentStatus'])->name('update-payment-status');
-        Route::get('/{order}/invoice', [OrderController::class, 'printInvoice'])->name('invoice');
-        Route::get('/export/csv', [OrderController::class, 'export'])->name('export');
-    });
+    Route::get('/', [OrderController::class, 'index'])->name('index');
+    Route::get('/{order}', [OrderController::class, 'show'])->name('show');
+    Route::get('/{order}/edit', [OrderController::class, 'edit'])->name('edit');
+    Route::put('/{order}', [OrderController::class, 'update'])->name('update');
+    Route::delete('/{order}', [OrderController::class, 'destroy'])->name('destroy');
+    Route::post('/{order}/status', [OrderController::class, 'updateStatus'])->name('update-status');
+    Route::post('/{order}/payment-status', [OrderController::class, 'updatePaymentStatus'])->name('update-payment-status');
+    Route::get('/{order}/invoice', [OrderController::class, 'printInvoice'])->name('invoice');
+    Route::get('/export/csv', [OrderController::class, 'export'])->name('export');
 
+    Route::post('orders/{order}/tracking', [OrderController::class, 'updateTracking'])->name('orders.tracking');
+    Route::post('orders/{order}/driver-location', [OrderController::class, 'updateDriverLocation'])->name('orders.driver-location');
+
+});
     Route::prefix('profile')->name('profile.')->group(function () {
         Route::get('/', [ProfileController::class, 'index'])->name('index');
         Route::put('/', [ProfileController::class, 'update'])->name('update');
@@ -87,6 +90,13 @@ Route::prefix('cart')->name('cart.')->group(function () {
     Route::post('/update/{id}', [CartController::class, 'update'])->name('update');
     Route::delete('/remove/{id}', [CartController::class, 'remove'])->name('remove');
     Route::delete('/clear', [CartController::class, 'clear'])->name('clear');
+
+});
+
+Route::prefix('tracking')->name('tracking.')->group(function () {
+    Route::get('/', [App\Http\Controllers\Front\TrackingController::class, 'index'])->name('index');
+    Route::post('/track', [App\Http\Controllers\Front\TrackingController::class, 'track'])->name('track');
+    Route::get('/status/{order}', [App\Http\Controllers\Front\TrackingController::class, 'getTrackingStatus'])->name('status');
 });
 
 // ============= CHECKOUT ROUTES (Require Login) =============
@@ -103,7 +113,9 @@ Route::middleware(['auth'])->prefix('account')->name('account.')->group(function
     Route::get('/orders/{order}', [AccountController::class, 'orderDetails'])->name('order.details');
     Route::get('/profile', [AccountController::class, 'profile'])->name('profile');
     Route::put('/profile', [AccountController::class, 'updateProfile'])->name('profile.update');
-     Route::put('/password', [App\Http\Controllers\Front\AccountController::class, 'changePassword'])->name('password');
+    Route::put('/password', [App\Http\Controllers\Front\AccountController::class, 'changePassword'])->name('password');
+
+
 });
 
 

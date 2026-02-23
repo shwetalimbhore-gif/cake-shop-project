@@ -175,6 +175,74 @@
                         </div>
                     </div>
 
+                    <!-- Tracking Information -->
+                    <div class="card border-0 shadow-sm mt-4">
+                        <div class="card-header bg-transparent">
+                            <h5 class="mb-0 fw-bold">
+                                <i class="fas fa-truck text-info me-2"></i>
+                                Tracking Information
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <form action="{{ route('admin.orders.tracking', $order) }}" method="POST">
+                                @csrf
+
+                                <div class="row">
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label fw-semibold">Tracking Number</label>
+                                        <input type="text" name="tracking_number" class="form-control"
+                                            value="{{ $order->tracking_number }}" placeholder="e.g., 1Z999AA123456789">
+                                    </div>
+
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label fw-semibold">Courier Name</label>
+                                        <select name="courier_name" class="form-select">
+                                            <option value="">Select Courier</option>
+                                            <option value="FedEx" {{ $order->courier_name == 'FedEx' ? 'selected' : '' }}>FedEx</option>
+                                            <option value="UPS" {{ $order->courier_name == 'UPS' ? 'selected' : '' }}>UPS</option>
+                                            <option value="USPS" {{ $order->courier_name == 'USPS' ? 'selected' : '' }}>USPS</option>
+                                            <option value="DHL" {{ $order->courier_name == 'DHL' ? 'selected' : '' }}>DHL</option>
+                                            <option value="BlueDart" {{ $order->courier_name == 'BlueDart' ? 'selected' : '' }}>BlueDart</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label fw-semibold">Estimated Delivery</label>
+                                        <input type="datetime-local" name="estimated_delivery" class="form-control"
+                                            value="{{ $order->estimated_delivery ? $order->estimated_delivery->format('Y-m-d\TH:i') : '' }}">
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-semibold">Current Location</label>
+                                        <input type="text" name="current_location" class="form-control"
+                                            value="{{ $order->current_location }}" placeholder="e.g., New York Distribution Center">
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-semibold">Status</label>
+                                        <select name="status" class="form-select" required>
+                                            <option value="pending" {{ $order->status == 'pending' ? 'selected' : '' }}>Pending</option>
+                                            <option value="processing" {{ $order->status == 'processing' ? 'selected' : '' }}>Processing</option>
+                                            <option value="shipped" {{ $order->status == 'shipped' ? 'selected' : '' }}>Shipped</option>
+                                            <option value="delivered" {{ $order->status == 'delivered' ? 'selected' : '' }}>Delivered</option>
+                                            <option value="cancelled" {{ $order->status == 'cancelled' ? 'selected' : '' }}>Cancelled</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="col-12 mb-3">
+                                        <label class="form-label fw-semibold">Delivery Notes</label>
+                                        <textarea name="delivery_notes" class="form-control" rows="2"
+                                                placeholder="Additional notes for customer">{{ $order->delivery_notes }}</textarea>
+                                    </div>
+                                </div>
+
+                                <button type="submit" class="btn btn-info">
+                                    <i class="fas fa-truck me-2"></i>Update Tracking
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
                     <hr class="my-4">
 
                     <div class="d-flex justify-content-end gap-2">
