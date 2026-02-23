@@ -87,7 +87,7 @@
                             <div class="mb-4">
                                 <label for="regular_price" class="form-label fw-semibold">Regular Price <span class="text-danger">*</span></label>
                                 <div class="input-group">
-                                    <span class="input-group-text">{{ setting('currency_symbol', '$') }}</span>
+                                    <span class="input-group-text">{{ setting('currency_symbol', '₹') }}</span>
                                     <input type="number" step="0.01" class="form-control @error('regular_price') is-invalid @enderror"
                                            id="regular_price" name="regular_price" value="{{ old('regular_price', $product->regular_price) }}" required>
                                 </div>
@@ -99,7 +99,7 @@
                             <div class="mb-4">
                                 <label for="sale_price" class="form-label fw-semibold">Sale Price</label>
                                 <div class="input-group">
-                                    <span class="input-group-text">{{ setting('currency_symbol', '$') }}</span>
+                                    <span class="input-group-text">{{ setting('currency_symbol', '₹') }}</span>
                                     <input type="number" step="0.01" class="form-control @error('sale_price') is-invalid @enderror"
                                            id="sale_price" name="sale_price" value="{{ old('sale_price', $product->sale_price) }}">
                                 </div>

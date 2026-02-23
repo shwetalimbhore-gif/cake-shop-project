@@ -4,342 +4,393 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <meta name="description" content="{{ setting('site_description', 'Where Every Bite Feels Like Home') }}">
-    <meta name="keywords" content="{{ setting('site_keywords', 'cakes, bakery') }}">
+    <meta name="description" content="{{ setting('site_description', 'Modern artisanal bakery crafting exceptional cakes') }}">
 
     <title>@yield('title', setting('site_name', 'Cozy Cravings'))</title>
 
-    <!-- Add favicon links -->
-    <link rel="icon" type="image/png" sizes="64x64" href="{{ asset('faviconIcon.png') }}">
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="180x180" href="{{ asset('favicon.png') }}">
 
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
-    <!-- Font Awesome -->
+    <!-- Font Awesome 6 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+    <!-- Google Fonts - Modern, Clean Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Prata&display=swap" rel="stylesheet">
+
+    <!-- AOS Animation -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
 
     <!-- Toastr CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastr@2.1.4/build/toastr.min.css">
 
     <style>
         :root {
-            --primary-color: #ff6b8b;
-            --secondary-color: #ff8da1;
-            --dark-color: #2d3349;
-            --light-color: #f8f9fa;
+            --cream: #FDF8F2;
+            --taupe: #B7A69A;
+            --sage: #A7B5A3;
+            --terracotta: #C97C5D;
+            --charcoal: #4A4A4A;
+            --sand: #E5D9CC;
+            --blush: #F7E6E0;
+            --olive: #7A8B7A;
+            --gold: #D4AF37;
+            --ivory: #FFFFF0;
+            --shadow-sm: 0 10px 30px -10px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 20px 40px -12px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 30px 60px -15px rgba(0, 0, 0, 0.15);
         }
 
         body {
-            font-family: 'Poppins', sans-serif;
-            color: #333;
+            font-family: 'Space Grotesk', sans-serif;
+            color: var(--charcoal);
+            background-color: var(--cream);
             overflow-x: hidden;
+            line-height: 1.6;
         }
 
-        .cursive-font {
-            font-family: 'Dancing Script', cursive;
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Prata', serif;
+            font-weight: 400;
+            letter-spacing: -0.02em;
         }
 
-        /* Navbar */
-        .navbar {
-            background: white;
-            box-shadow: 0 2px 15px rgba(0,0,0,0.05);
-            padding: 15px 0;
+        .display-1, .display-2, .display-3, .display-4, .display-5, .display-6 {
+            font-family: 'Prata', serif;
         }
 
-        .navbar-brand {
-            font-size: 28px;
-            font-weight: 700;
-            color: var(--primary-color) !important;
-            font-family: 'Dancing Script', cursive;
+        /* Modern Navbar */
+        .navbar-modern {
+            background: rgba(253, 248, 242, 0.9);
+            backdrop-filter: blur(10px);
+            padding: 20px 0;
+            transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+            border-bottom: 1px solid rgba(183, 166, 154, 0.1);
         }
 
-        .navbar-brand i {
-            color: var(--primary-color);
-            margin-right: 8px;
+        .navbar-modern.scrolled {
+            padding: 12px 0;
+            background: rgba(253, 248, 242, 0.98);
+            box-shadow: var(--shadow-sm);
         }
 
-        .nav-link {
+        .navbar-brand-modern {
+            font-family: 'Prata', serif;
+            font-size: 1.8rem;
+            color: var(--terracotta) !important;
+            letter-spacing: -0.02em;
+            transition: opacity 0.3s;
+        }
+
+        .navbar-brand-modern:hover {
+            opacity: 0.8;
+        }
+
+        /* ===== IMPROVED LOGO SIZE ===== */
+        .navbar-brand-modern img {
+            height: 65px;        /* Increased from 45px to 65px */
+            width: auto;
+            object-fit: contain;
+            transition: transform 0.3s ease;
+        }
+
+        /* Optional hover effect */
+        .navbar-brand-modern img:hover {
+            transform: scale(1.02);
+        }
+
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+            .navbar-brand-modern img {
+                height: 45px;    /* Smaller on mobile */
+            }
+        }
+
+        .nav-link-modern {
+            color: var(--charcoal) !important;
             font-weight: 500;
-            color: #4a5568 !important;
-            margin: 0 5px;
-            padding: 8px 15px !important;
-            border-radius: 30px;
-            transition: all 0.3s;
+            margin: 0 12px;
+            padding: 8px 0 !important;
+            position: relative;
+            font-size: 0.95rem;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            opacity: 0.7;
+            transition: opacity 0.3s;
         }
 
-        .nav-link:hover {
-            color: var(--primary-color) !important;
-            background: rgba(255,107,139,0.1);
+        .nav-link-modern:hover {
+            opacity: 1;
         }
 
-        .nav-link.active {
-            color: white !important;
-            background: var(--primary-color);
-        }
-
-        /* Cart Badge */
-        .cart-badge {
+        .nav-link-modern:after {
+            content: '';
             position: absolute;
-            top: -8px;
-            right: -8px;
-            background: var(--primary-color);
-            color: white;
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            font-size: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--terracotta);
+            transition: width 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
         }
 
-        /* Hero Section */
-        .hero-section {
-            background: linear-gradient(135deg, #fff5f7 0%, #ffe4e8 100%);
-            padding: 80px 0;
-            position: relative;
-            overflow: hidden;
+        .nav-link-modern:hover:after,
+        .nav-link-modern.active:after {
+            width: 100%;
         }
 
-        .hero-title {
-            font-size: 52px;
-            font-weight: 700;
-            color: var(--dark-color);
-            margin-bottom: 20px;
+        .nav-link-modern.active {
+            opacity: 1;
+            font-weight: 600;
         }
 
-        .hero-title span {
-            color: var(--primary-color);
-            font-family: 'Dancing Script', cursive;
-            font-size: 64px;
-        }
-
-        .hero-text {
-            font-size: 18px;
-            color: #4a5568;
-            margin-bottom: 30px;
-        }
-
-        .hero-image {
-            animation: float 3s ease-in-out infinite;
-        }
-
-        @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-20px); }
-            100% { transform: translateY(0px); }
-        }
-
-        /* Buttons */
-        .btn-primary {
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        /* Modern Buttons */
+        .btn-modern {
+            padding: 14px 32px;
+            border-radius: 4px;
+            font-weight: 500;
+            font-size: 0.95rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
             border: none;
-            padding: 12px 30px;
-            border-radius: 50px;
-            font-weight: 500;
-            color: white;
-            transition: all 0.3s;
-            box-shadow: 0 5px 15px rgba(255,107,139,0.3);
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
         }
 
-        .btn-primary:hover {
+        .btn-primary-modern {
+            background: var(--terracotta);
+            color: white;
+            box-shadow: 0 10px 20px -8px rgba(201, 124, 93, 0.3);
+        }
+
+        .btn-primary-modern:hover {
+            background: #b86a4a;
+            color: white;
             transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(255,107,139,0.4);
+            box-shadow: 0 15px 25px -10px rgba(201, 124, 93, 0.4);
         }
 
-        .btn-outline-primary {
-            border: 2px solid var(--primary-color);
-            color: var(--primary-color);
-            padding: 10px 25px;
-            border-radius: 50px;
-            font-weight: 500;
-            transition: all 0.3s;
+        .btn-outline-modern {
+            background: transparent;
+            color: var(--charcoal);
+            border: 1px solid var(--taupe);
         }
 
-        .btn-outline-primary:hover {
-            background: var(--primary-color);
-            color: white;
+        .btn-outline-modern:hover {
+            background: var(--cream);
+            border-color: var(--terracotta);
+            color: var(--terracotta);
+            transform: translateY(-2px);
         }
 
-        /* Product Cards */
-        .product-card {
+        /* Modern Cards */
+        .card-modern {
             background: white;
-            border-radius: 20px;
+            border: none;
+            border-radius: 8px;
             overflow: hidden;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
-            transition: all 0.3s;
-            margin-bottom: 30px;
-            position: relative;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
         }
 
-        .product-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 15px 30px rgba(255,107,139,0.15);
+        .card-modern:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--shadow-md);
+        }
+
+        /* Product Image Container - Fixed */
+        .product-image-container {
+            position: relative;
+            height: 280px;
+            overflow: hidden;
+            background: var(--sand);
+        }
+
+        .product-image-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+        }
+
+        .card-modern:hover .product-image-container img {
+            transform: scale(1.05);
         }
 
         .product-badge {
             position: absolute;
-            top: 15px;
-            left: 15px;
-            background: var(--primary-color);
+            top: 16px;
+            left: 16px;
+            background: var(--terracotta);
             color: white;
-            padding: 5px 15px;
-            border-radius: 25px;
-            font-size: 12px;
+            padding: 6px 14px;
+            border-radius: 2px;
+            font-size: 0.7rem;
             font-weight: 600;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
             z-index: 2;
         }
 
-        .product-image {
-            height: 250px;
-            overflow: hidden;
-            position: relative;
+        .product-badge.featured {
+            background: var(--gold);
+            color: var(--charcoal);
+            left: auto;
+            right: 16px;
         }
 
-        .product-image img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: all 0.5s;
-        }
-
-        .product-card:hover .product-image img {
-            transform: scale(1.1);
-        }
-
-        .product-overlay {
+        /* Cart Badge */
+        .cart-badge-modern {
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.3);
+            top: -6px;
+            right: -6px;
+            background: var(--terracotta);
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
-            opacity: 0;
-            transition: all 0.3s;
-        }
-
-        .product-card:hover .product-overlay {
-            opacity: 1;
-        }
-
-        .product-overlay .btn {
-            transform: translateY(20px);
-            transition: all 0.3s;
-        }
-
-        .product-card:hover .product-overlay .btn {
-            transform: translateY(0);
-        }
-
-        .product-info {
-            padding: 20px;
-        }
-
-        .product-category {
-            color: var(--primary-color);
-            font-size: 12px;
             font-weight: 600;
+        }
+
+        /* Section Headers */
+        .section-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .section-subtitle {
+            color: var(--taupe);
+            font-size: 0.9rem;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 5px;
+            letter-spacing: 3px;
+            margin-bottom: 16px;
+            display: block;
         }
 
-        .product-title {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 10px;
+        .section-title {
+            font-size: 2.8rem;
+            color: var(--charcoal);
+            margin-bottom: 20px;
+            line-height: 1.2;
         }
 
-        .product-title a {
-            color: var(--dark-color);
+        .section-description {
+            color: var(--taupe);
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Dropdown Modern */
+        .dropdown-menu-modern {
+            border: none;
+            border-radius: 4px;
+            box-shadow: var(--shadow-md);
+            padding: 12px;
+            margin-top: 12px;
+            background: white;
+            min-width: 220px;
+        }
+
+        .dropdown-item-modern {
+            border-radius: 2px;
+            padding: 10px 16px;
+            color: var(--charcoal);
+            font-weight: 400;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+        }
+
+        .dropdown-item-modern:hover {
+            background: var(--cream);
+            color: var(--terracotta);
+            padding-left: 20px;
+        }
+
+        .dropdown-item-modern i {
+            width: 20px;
+            margin-right: 10px;
+            color: var(--taupe);
+        }
+
+        /* Alerts */
+        .alert-modern {
+            border: none;
+            border-radius: 2px;
+            padding: 16px 24px;
+            margin: 0;
+            font-weight: 500;
+        }
+
+        .alert-success-modern {
+            background: var(--sage);
+            color: white;
+        }
+
+        .alert-danger-modern {
+            background: var(--terracotta);
+            color: white;
+        }
+
+        /* Breadcrumb */
+        .breadcrumb-modern {
+            padding: 40px 0 20px;
+            margin-bottom: 40px;
+            border-bottom: 1px solid var(--sand);
+        }
+
+        .breadcrumb-modern h1 {
+            font-size: 2.2rem;
+            margin-bottom: 16px;
+        }
+
+        .breadcrumb-custom {
+            background: transparent;
+            padding: 0;
+        }
+
+        .breadcrumb-custom .breadcrumb-item {
+            font-size: 0.9rem;
+        }
+
+        .breadcrumb-custom .breadcrumb-item a {
+            color: var(--taupe);
             text-decoration: none;
         }
 
-        .product-price {
-            font-size: 20px;
-            font-weight: 700;
-            color: var(--primary-color);
-            margin-bottom: 0;
+        .breadcrumb-custom .breadcrumb-item.active {
+            color: var(--charcoal);
         }
 
-        .product-price small {
-            font-size: 14px;
-            color: #999;
-            text-decoration: line-through;
-            margin-right: 8px;
+        .breadcrumb-custom .breadcrumb-item + .breadcrumb-item:before {
+            color: var(--sand);
         }
 
-        /* Category Cards */
-        .category-card {
-            background: white;
-            border-radius: 20px;
-            overflow: hidden;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
-            transition: all 0.3s;
-            text-align: center;
-            padding: 30px 20px;
-            margin-bottom: 30px;
-        }
-
-        .category-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 15px 30px rgba(255,107,139,0.15);
-        }
-
-        .category-icon {
-            width: 80px;
-            height: 80px;
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 20px;
-            color: white;
-            font-size: 32px;
-        }
-
-        .category-title {
-            font-size: 20px;
-            font-weight: 600;
-            color: var(--dark-color);
-            margin-bottom: 10px;
-        }
-
-        .category-count {
-            color: #999;
-            font-size: 14px;
-        }
-
-        /* Footer */
-        .footer {
-            background: var(--dark-color);
-            color: white;
-            padding: 60px 0 30px;
-            margin-top: 80px;
-        }
-
-        .footer h5 {
-            color: white;
-            font-weight: 600;
-            margin-bottom: 25px;
+        /* Footer Modern */
+        .footer-modern {
+            background: var(--charcoal);
+            color: var(--cream);
+            padding: 80px 0 40px;
+            margin-top: 100px;
             position: relative;
         }
 
-        .footer h5:after {
-            content: '';
-            position: absolute;
-            left: 0;
-            bottom: -10px;
-            width: 50px;
-            height: 3px;
-            background: var(--primary-color);
+        .footer-title {
+            font-size: 1.2rem;
+            margin-bottom: 24px;
+            color: white;
+            letter-spacing: 1px;
         }
 
         .footer-links {
@@ -352,9 +403,10 @@
         }
 
         .footer-links a {
-            color: #bbb;
+            color: var(--taupe);
             text-decoration: none;
             transition: all 0.3s;
+            font-size: 0.95rem;
         }
 
         .footer-links a:hover {
@@ -362,64 +414,106 @@
             padding-left: 5px;
         }
 
-        .social-links a {
-            display: inline-block;
-            width: 36px;
-            height: 36px;
-            background: rgba(255,255,255,0.1);
-            color: white;
-            border-radius: 50%;
-            text-align: center;
-            line-height: 36px;
+        .social-links-modern {
+            margin-top: 20px;
+        }
+
+        .social-link-modern {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--cream);
+            border-radius: 2px;
             margin-right: 8px;
             transition: all 0.3s;
-        }
-
-        .social-links a:hover {
-            background: var(--primary-color);
-            transform: translateY(-3px);
-        }
-
-        .footer-bottom {
-            border-top: 1px solid rgba(255,255,255,0.1);
-            padding-top: 30px;
-            margin-top: 40px;
-            text-align: center;
-            color: #999;
-        }
-
-        /* Breadcrumb */
-        .breadcrumb-area {
-            background: linear-gradient(135deg, #fff5f7 0%, #ffe4e8 100%);
-            padding: 40px 0;
-            margin-bottom: 50px;
-        }
-
-        .breadcrumb {
-            background: transparent;
-            padding: 0;
-            margin: 10px 0 0;
-        }
-
-        .breadcrumb-item a {
-            color: var(--primary-color);
             text-decoration: none;
         }
 
-        .breadcrumb-item.active {
-            color: #999;
+        .social-link-modern:hover {
+            background: var(--terracotta);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .footer-bottom {
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding-top: 30px;
+            margin-top: 50px;
+            text-align: center;
+            color: var(--taupe);
+            font-size: 0.85rem;
+        }
+
+        /* Pagination Modern */
+        .pagination-modern {
+            gap: 8px;
+        }
+
+        .page-link-modern {
+            border: none;
+            border-radius: 2px;
+            padding: 10px 16px;
+            color: var(--charcoal);
+            font-weight: 500;
+            transition: all 0.3s;
+            background: transparent;
+        }
+
+        .page-link-modern:hover {
+            background: var(--sand);
+            color: var(--charcoal);
+        }
+
+        .page-item-modern.active .page-link-modern {
+            background: var(--terracotta);
+            color: white;
+        }
+
+        /* Form Elements */
+        .form-control-modern {
+            border: 1px solid var(--sand);
+            border-radius: 2px;
+            padding: 14px 16px;
+            transition: all 0.3s;
+        }
+
+        .form-control-modern:focus {
+            border-color: var(--terracotta);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(201, 124, 93, 0.1);
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.8s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
         }
 
         /* Responsive */
         @media (max-width: 768px) {
-            .hero-title {
-                font-size: 36px;
+            .section-title {
+                font-size: 2rem;
             }
-            .hero-title span {
-                font-size: 48px;
+
+            .navbar-brand-modern {
+                font-size: 1.5rem;
             }
-            .hero-section {
-                padding: 50px 0;
+
+            .product-image-container {
+                height: 220px;
             }
         }
     </style>
@@ -427,14 +521,14 @@
     @stack('styles')
 </head>
 <body>
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg sticky-top">
+    <!-- Modern Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-modern fixed-top" id="mainNavbar">
         <div class="container">
-            <a class="navbar-brand" href="{{ route('home') }}">
+            <a class="navbar-brand-modern" href="{{ route('home') }}">
                 @if(setting('site_logo'))
-                    <img src="{{ asset('storage/' . setting('site_logo')) }}" alt="{{ setting('site_name') }}" style="height: 50px;">
+                    <img src="{{ asset('storage/' . setting('site_logo')) }}" alt="{{ setting('site_name') }}">
                 @else
-                    <i class="fas fa-birthday-cake"></i> {{ setting('site_name', 'MyCakeShop') }}
+                    {{ setting('site_name', 'Cozy Cravings') }}
                 @endif
             </a>
 
@@ -445,61 +539,61 @@
             <div class="collapse navbar-collapse" id="navbarMain">
                 <ul class="navbar-nav mx-auto">
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('home') ? 'active' : '' }}" href="{{ route('home') }}">Home</a>
+                        <a class="nav-link-modern {{ request()->routeIs('home') ? 'active' : '' }}" href="{{ route('home') }}">Home</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('shop') ? 'active' : '' }}" href="{{ route('shop') }}">Shop</a>
+                        <a class="nav-link-modern {{ request()->routeIs('shop') ? 'active' : '' }}" href="{{ route('shop') }}">Collection</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('about') ? 'active' : '' }}" href="{{ route('about') }}">About</a>
+                        <a class="nav-link-modern {{ request()->routeIs('tracking.*') ? 'active' : '' }}" href="{{ route('tracking.index') }}">Track Order</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('contact') ? 'active' : '' }}" href="{{ route('contact') }}">Contact</a>
+                        <a class="nav-link-modern {{ request()->routeIs('about') ? 'active' : '' }}" href="{{ route('about') }}">Our Story</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link-modern {{ request()->routeIs('contact') ? 'active' : '' }}" href="{{ route('contact') }}">Contact</a>
                     </li>
                 </ul>
 
-                <div class="d-flex align-items-center">
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('tracking.*') ? 'active' : '' }}" href="{{ route('tracking.index') }}">
-                            <i class="fas fa-truck me-1"></i>Track Order
-                        </a>
-                    </li>
-                    <!-- Cart Icon -->
-                    <a href="{{ route('cart.index') }}" class="position-relative me-3 text-dark">
-                        <i class="fas fa-shopping-cart fa-lg"></i>
+                <div class="d-flex align-items-center gap-4">
+                    <!-- Cart -->
+                    <a href="{{ route('cart.index') }}" class="position-relative">
+                        <i class="fas fa-shopping-bag" style="color: var(--charcoal); font-size: 1.2rem;"></i>
                         @php $cartCount = count(Session::get('cart', [])); @endphp
                         @if($cartCount > 0)
-                            <span class="cart-badge">{{ $cartCount }}</span>
+                            <span class="cart-badge-modern">{{ $cartCount }}</span>
                         @endif
                     </a>
 
                     <!-- User Menu -->
                     @auth
                         <div class="dropdown">
-                            <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                <i class="fas fa-user me-2"></i>{{ auth()->user()->name }}
-                            </button>
-                            <ul class="dropdown-menu dropdown-menu-end">
+                            <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle"
+                               data-bs-toggle="dropdown" style="color: var(--charcoal);">
+                                <i class="fas fa-user-circle me-2" style="font-size: 1.2rem;"></i>
+                                <span class="d-none d-md-inline">{{ auth()->user()->name }}</span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-modern dropdown-menu-end">
                                 <li>
-                                    <a class="dropdown-item" href="{{ route('account.dashboard') }}">
-                                        <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                                    <a class="dropdown-item-modern" href="{{ route('account.dashboard') }}">
+                                        <i class="fas fa-tachometer-alt"></i>Dashboard
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item" href="{{ route('account.orders') }}">
-                                        <i class="fas fa-shopping-bag me-2"></i>My Orders
+                                    <a class="dropdown-item-modern" href="{{ route('account.orders') }}">
+                                        <i class="fas fa-shopping-bag"></i>Orders
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item" href="{{ route('account.profile') }}">
-                                        <i class="fas fa-user me-2"></i>Profile
+                                    <a class="dropdown-item-modern" href="{{ route('account.profile') }}">
+                                        <i class="fas fa-user"></i>Profile
                                     </a>
                                 </li>
                                 @if(auth()->user()->is_admin)
                                     <li><hr class="dropdown-divider"></li>
                                     <li>
-                                        <a class="dropdown-item text-primary" href="{{ route('admin.dashboard') }}">
-                                            <i class="fas fa-cog me-2"></i>Admin Panel
+                                        <a class="dropdown-item-modern" href="{{ route('admin.dashboard') }}">
+                                            <i class="fas fa-cog"></i>Admin
                                         </a>
                                     </li>
                                 @endif
@@ -507,19 +601,19 @@
                                 <li>
                                     <form method="POST" action="{{ route('logout') }}">
                                         @csrf
-                                        <button type="submit" class="dropdown-item text-danger">
-                                            <i class="fas fa-sign-out-alt me-2"></i>Logout
+                                        <button type="submit" class="dropdown-item-modern text-danger">
+                                            <i class="fas fa-sign-out-alt"></i>Logout
                                         </button>
                                     </form>
                                 </li>
                             </ul>
                         </div>
                     @else
-                        <a href="{{ route('login') }}" class="btn btn-outline-primary me-2">
-                            <i class="fas fa-sign-in-alt me-2"></i>Login
+                        <a href="{{ route('login') }}" class="text-decoration-none" style="color: var(--charcoal);">
+                            Sign in
                         </a>
-                        <a href="{{ route('register') }}" class="btn btn-primary">
-                            <i class="fas fa-user-plus me-2"></i>Register
+                        <a href="{{ route('register') }}" class="btn-modern btn-primary-modern">
+                            Join
                         </a>
                     @endauth
                 </div>
@@ -527,21 +621,24 @@
         </div>
     </nav>
 
-    <!-- Alerts -->
+    <!-- Spacer -->
+    <div style="height: 90px;"></div>
+
+    <!-- Modern Alerts -->
     @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show m-0 rounded-0" role="alert">
+        <div class="alert-modern alert-success-modern alert-dismissible fade show" role="alert">
             <div class="container">
                 <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
-                <button type="button" class="btn-close float-end" data-bs-dismiss="alert"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
             </div>
         </div>
     @endif
 
     @if(session('error'))
-        <div class="alert alert-danger alert-dismissible fade show m-0 rounded-0" role="alert">
+        <div class="alert-modern alert-danger-modern alert-dismissible fade show" role="alert">
             <div class="container">
                 <i class="fas fa-exclamation-circle me-2"></i>{{ session('error') }}
-                <button type="button" class="btn-close float-end" data-bs-dismiss="alert"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
             </div>
         </div>
     @endif
@@ -549,70 +646,63 @@
     <!-- Main Content -->
     @yield('content')
 
-    <!-- Footer -->
-    <footer class="footer">
+    <!-- Modern Footer -->
+    <footer class="footer-modern">
         <div class="container">
-            <div class="row">
-                <div class="col-lg-4 mb-4">
-                    <h5>
-                        @if(setting('site_logo'))
-                            <img src="{{ asset('storage/' . setting('site_logo')) }}" alt="{{ setting('site_name') }}" style="height: 40px;">
-                        @else
-                            <i class="fas fa-birthday-cake me-2"></i>{{ setting('site_name', 'MyCakeShop') }}
-                        @endif
-                    </h5>
-                    <p class="text-muted">{{ setting('site_description', 'Delicious cakes for every occasion') }}</p>
-                    <div class="social-links">
+            <div class="row g-5">
+                <div class="col-lg-4">
+                    <h5 class="footer-title">{{ setting('site_name', 'Cozy Cravings') }}</h5>
+                    <p class="text-white-50 mb-4" style="color: var(--taupe) !important;">
+                        {{ setting('site_description', 'Modern artisanal bakery crafting exceptional cakes') }}
+                    </p>
+                    <div class="social-links-modern">
                         @if(setting('facebook_url'))
-                            <a href="{{ setting('facebook_url') }}" target="_blank"><i class="fab fa-facebook-f"></i></a>
+                            <a href="{{ setting('facebook_url') }}" class="social-link-modern"><i class="fab fa-facebook-f"></i></a>
                         @endif
                         @if(setting('instagram_url'))
-                            <a href="{{ setting('instagram_url') }}" target="_blank"><i class="fab fa-instagram"></i></a>
+                            <a href="{{ setting('instagram_url') }}" class="social-link-modern"><i class="fab fa-instagram"></i></a>
                         @endif
                         @if(setting('twitter_url'))
-                            <a href="{{ setting('twitter_url') }}" target="_blank"><i class="fab fa-twitter"></i></a>
+                            <a href="{{ setting('twitter_url') }}" class="social-link-modern"><i class="fab fa-twitter"></i></a>
                         @endif
                     </div>
                 </div>
 
-                <div class="col-lg-2 col-md-4 mb-4">
-                    <h5>Quick Links</h5>
+                <div class="col-lg-2 col-md-4">
+                    <h5 class="footer-title">Explore</h5>
                     <ul class="footer-links">
                         <li><a href="{{ route('home') }}">Home</a></li>
-                        <li><a href="{{ route('shop') }}">Shop</a></li>
-                        <li><a href="{{ route('about') }}">About Us</a></li>
+                        <li><a href="{{ route('shop') }}">Collection</a></li>
+                        <li><a href="{{ route('tracking.index') }}">Track Order</a></li>
+                        <li><a href="{{ route('about') }}">Our Story</a></li>
                         <li><a href="{{ route('contact') }}">Contact</a></li>
                     </ul>
                 </div>
 
-                <div class="col-lg-3 col-md-4 mb-4">
-                    <h5>Contact Info</h5>
+                <div class="col-lg-3 col-md-4">
+                    <h5 class="footer-title">Contact</h5>
                     <ul class="footer-links">
-                        <li><i class="fas fa-map-marker-alt me-2"></i>{{ setting('contact_address', '123 Bakery Street') }}</li>
-                        <li><i class="fas fa-phone me-2"></i>{{ setting('contact_phone', '+1 234 567 8900') }}</li>
-                        <li><i class="fas fa-envelope me-2"></i>{{ setting('contact_email', 'info@mycakeshop.com') }}</li>
+                        <li><i class="fas fa-map-marker-alt me-2" style="color: var(--terracotta);"></i>{{ setting('contact_address', '123 Bakery Lane') }}</li>
+                        <li><i class="fas fa-phone me-2" style="color: var(--terracotta);"></i>{{ setting('contact_phone', '+1 234 567 890') }}</li>
+                        <li><i class="fas fa-envelope me-2" style="color: var(--terracotta);"></i>{{ setting('contact_email', 'hello@cozycravings.com') }}</li>
                     </ul>
                 </div>
 
-                <div class="col-lg-3 col-md-4 mb-4">
-                    <h5>Opening Hours</h5>
+                <div class="col-lg-3 col-md-4">
+                    <h5 class="footer-title">Hours</h5>
                     <ul class="footer-links">
                         @php
                             $hours = json_decode(setting('opening_hours', '{}'), true);
-                            $days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
                         @endphp
-                        @foreach($days as $day)
-                            <li>
-                                <span class="d-inline-block" style="width: 80px;">{{ $day }}:</span>
-                                {{ $hours[$day] ?? '09:00-18:00' }}
-                            </li>
-                        @endforeach
+                        <li><span class="d-inline-block w-50">Mon - Fri:</span> {{ $hours['Monday'] ?? '9am - 6pm' }}</li>
+                        <li><span class="d-inline-block w-50">Saturday:</span> {{ $hours['Saturday'] ?? '10am - 5pm' }}</li>
+                        <li><span class="d-inline-block w-50">Sunday:</span> {{ $hours['Sunday'] ?? 'Closed' }}</li>
                     </ul>
                 </div>
             </div>
 
             <div class="footer-bottom">
-                <p class="mb-0">&copy; {{ date('Y') }} {{ setting('site_name', 'MyCakeShop') }}. All rights reserved.</p>
+                <p class="mb-0">&copy; {{ date('Y') }} {{ setting('site_name', 'Cozy Cravings') }}. All rights reserved.</p>
             </div>
         </div>
     </footer>
@@ -621,14 +711,41 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/toastr@2.1.4/toastr.min.js"></script>
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
 
     <script>
+        // Toastr
         toastr.options = {
             "closeButton": true,
             "progressBar": true,
             "positionClass": "toast-top-right",
             "timeOut": "3000"
         };
+
+        // AOS
+        AOS.init({
+            duration: 800,
+            once: true,
+            offset: 50
+        });
+
+        // Navbar scroll
+        window.addEventListener('scroll', function() {
+            const navbar = document.getElementById('mainNavbar');
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+
+        // Auto close alerts
+        setTimeout(function() {
+            document.querySelectorAll('.alert-modern').forEach(function(alert) {
+                let bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
+                bsAlert.close();
+            });
+        }, 5000);
     </script>
 
     @stack('scripts')

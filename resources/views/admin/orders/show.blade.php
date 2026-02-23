@@ -1,356 +1,279 @@
-@extends('layouts.admin')
+@extends('layouts.front')
 
-@section('title', 'Order ' . $order->order_number . ' - Admin Panel')
-@section('page-title', 'Order #' . $order->order_number)
+@section('title', 'Our Cakes - ' . setting('site_name', 'Cozy Cravings'))
+@section('page-title', 'Our Cakes')
 
 @section('content')
-<div class="row">
-    <div class="col-md-8">
-        <div class="card border-0 shadow-sm mb-4">
-            <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
-                <h5 class="mb-0 fw-bold">
-                    <i class="fas fa-box text-primary me-2"></i>
-                    Order Items
-                </h5>
-                <span class="badge {{ $order->status_badge }} p-2">
-                    {{ ucfirst($order->status) }}
-                </span>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table align-middle">
-                        <thead>
-                            <tr>
-                                <th>Product</th>
-                                <th>SKU</th>
-                                <th>Price</th>
-                                <th>Quantity</th>
-                                <th>Subtotal</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($order->items as $item)
-                            <tr>
-                                <td>
-                                    <div class="fw-semibold">{{ $item->product_name }}</div>
-                                    @if(!empty($item->options) && is_array(json_decode($item->options, true)))
-                                        @php $options = json_decode($item->options, true); @endphp
-                                        <small class="text-muted">
-                                            @foreach($options as $key => $value)
-                                                {{ ucfirst($key) }}: {{ $value }}
-                                                @if(!$loop->last), @endif
-                                            @endforeach
-                                        </small>
-                                    @endif
-                                </td>
-                                <td><span class="badge bg-light text-dark">{{ $item->sku ?? 'N/A' }}</span></td>
-                                <td>{{ format_currency($item->price) }}</td>
-                                <td>{{ $item->quantity }}</td>
-                                <td class="fw-bold">{{ format_currency($item->subtotal) }}</td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                        <tfoot class="border-top">
-                            <tr>
-                                <td colspan="4" class="text-end"><strong>Subtotal:</strong></td>
-                                <td>{{ format_currency($order->subtotal) }}</td>
-                            </tr>
-                            @if($order->tax > 0)
-                            <tr>
-                                <td colspan="4" class="text-end"><strong>Tax:</strong></td>
-                                <td>{{ format_currency($order->tax) }}</td>
-                            </tr>
-                            @endif
-                            @if($order->shipping_cost > 0)
-                            <tr>
-                                <td colspan="4" class="text-end"><strong>Shipping:</strong></td>
-                                <td>{{ format_currency($order->shipping_cost) }}</td>
-                            </tr>
-                            @endif
-                            @if($order->discount > 0)
-                            <tr>
-                                <td colspan="4" class="text-end"><strong>Discount:</strong></td>
-                                <td>-{{ format_currency($order->discount) }}</td>
-                            </tr>
-                            @endif
-                            <tr>
-                                <td colspan="4" class="text-end"><strong class="fs-5">Total:</strong></td>
-                                <td><strong class="fs-5 text-primary">{{ format_currency($order->total) }}</strong></td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <div class="card border-0 shadow-sm mb-4">
-            <div class="card-header bg-transparent">
-                <h5 class="mb-0 fw-bold">
-                    <i class="fas fa-clock text-info me-2"></i>
-                    Order Timeline
-                </h5>
-            </div>
-            <div class="card-body">
-                <style>
-                    .timeline {
-                        position: relative;
-                        padding-left: 30px;
-                    }
-                    .timeline-item {
-                        position: relative;
-                        padding-left: 45px;
-                        padding-bottom: 25px;
-                    }
-                    .timeline-item:last-child {
-                        padding-bottom: 0;
-                    }
-                    .timeline-badge {
-                        position: absolute;
-                        left: -30px;
-                        top: 0;
-                        width: 36px;
-                        height: 36px;
-                        border-radius: 50%;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        color: white;
-                        font-size: 14px;
-                        z-index: 2;
-                        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-                    }
-                    .timeline-content {
-                        padding-bottom: 15px;
-                        border-bottom: 1px solid #eee;
-                    }
-                    .timeline-item:last-child .timeline-content {
-                        border-bottom: none;
-                    }
-                    .timeline:before {
-                        content: '';
-                        position: absolute;
-                        left: 12px;
-                        top: 15px;
-                        bottom: 10px;
-                        width: 2px;
-                        background: #e0e0e0;
-                        z-index: 1;
-                    }
-                    .timeline-title {
-                        font-weight: 600;
-                        color: #333;
-                        margin-bottom: 5px;
-                    }
-                    .timeline-date {
-                        color: #6c757d;
-                        font-size: 0.9rem;
-                    }
-                    .timeline-time {
-                        color: #6c757d;
-                        font-size: 0.85rem;
-                        font-style: italic;
-                    }
-                </style>
-
-                <div class="timeline">
-                    <div class="timeline-item">
-                        <div class="timeline-badge bg-success">
-                            <i class="fas fa-check"></i>
-                        </div>
-                        <div class="timeline-content">
-                            <div class="timeline-title">Order Placed</div>
-                            <div class="timeline-date">{{ $order->created_at->format('F d, Y') }}</div>
-                            <div class="timeline-time">{{ $order->created_at->format('h:i A') }}</div>
-                        </div>
-                    </div>
-
-                    @if($order->shipped_at)
-                    <div class="timeline-item">
-                        <div class="timeline-badge bg-info">
-                            <i class="fas fa-shipping-fast"></i>
-                        </div>
-                        <div class="timeline-content">
-                            <div class="timeline-title">Order Shipped</div>
-                            <div class="timeline-date">{{ $order->shipped_at->format('F d, Y') }}</div>
-                            <div class="timeline-time">{{ $order->shipped_at->format('h:i A') }}</div>
-                            @if($order->tracking_number)
-                                <div class="mt-2 small">
-                                    <strong>Tracking:</strong> {{ $order->tracking_number }}
-                                </div>
-                            @endif
-                        </div>
-                    </div>
-                    @endif
-
-                    @if($order->delivered_at)
-                    <div class="timeline-item">
-                        <div class="timeline-badge bg-primary">
-                            <i class="fas fa-box-open"></i>
-                        </div>
-                        <div class="timeline-content">
-                            <div class="timeline-title">Order Delivered</div>
-                            <div class="timeline-date">{{ $order->delivered_at->format('F d, Y') }}</div>
-                            <div class="timeline-time">{{ $order->delivered_at->format('h:i A') }}</div>
-                        </div>
-                    </div>
-                    @endif
-
-                    @if($order->cancelled_at)
-                    <div class="timeline-item">
-                        <div class="timeline-badge bg-danger">
-                            <i class="fas fa-times"></i>
-                        </div>
-                        <div class="timeline-content">
-                            <div class="timeline-title">Order Cancelled</div>
-                            <div class="timeline-date">{{ $order->cancelled_at->format('F d, Y') }}</div>
-                            <div class="timeline-time">{{ $order->cancelled_at->format('h:i A') }}</div>
-                            @if($order->cancellation_reason)
-                                <div class="mt-2 small">
-                                    <strong>Reason:</strong> {{ $order->cancellation_reason }}
-                                </div>
-                            @endif
-                        </div>
-                    </div>
-                    @endif
-                </div>
-            </div>
-        </div>
+<!-- Breadcrumb -->
+<div class="breadcrumb-area">
+    <div class="container">
+        <h1 class="display-5 fw-bold">Our Cakes</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb breadcrumb-custom">
+                <li class="breadcrumb-item"><a href="{{ route('home') }}">Home</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Our Cakes</li>
+            </ol>
+        </nav>
     </div>
+</div>
 
-    <div class="col-md-4">
-        <div class="card border-0 shadow-sm mb-4">
-            <div class="card-header bg-transparent">
-                <h5 class="mb-0 fw-bold">
-                    <i class="fas fa-user text-primary me-2"></i>
-                    Customer Information
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="d-flex align-items-center mb-3">
-                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3"
-                         style="width: 50px; height: 50px; font-size: 20px;">
-                        {{ substr($order->shipping_name, 0, 1) }}
-                    </div>
-                    <div>
-                        <h6 class="mb-1 fw-semibold">{{ $order->shipping_name }}</h6>
-                        <p class="text-muted mb-0 small">{{ $order->shipping_email }}</p>
-                        <p class="text-muted mb-0 small">{{ $order->shipping_phone }}</p>
-                    </div>
-                </div>
-
-                @if($order->user)
-                <hr>
-                <div class="d-flex justify-content-between">
-                    <span class="text-muted">Registered User:</span>
-                    <a href="#" class="fw-bold text-primary">{{ $order->user->name }}</a>
-                </div>
-                @endif
-            </div>
-        </div>
-
-        <div class="card border-0 shadow-sm mb-4">
-            <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
-                <h5 class="mb-0 fw-bold">
-                    <i class="fas fa-map-marker-alt text-danger me-2"></i>
-                    Shipping Address
-                </h5>
-                <a href="{{ route('admin.orders.edit', $order) }}" class="btn btn-sm btn-outline-primary">
-                    <i class="fas fa-edit me-1"></i>Edit
-                </a>
-            </div>
-            <div class="card-body">
-                <address class="mb-0">
-                    <strong>{{ $order->shipping_name }}</strong><br>
-                    {{ $order->shipping_address }}<br>
-                    {{ $order->shipping_city }}, {{ $order->shipping_state }} {{ $order->shipping_zip }}<br>
-                    {{ $order->shipping_country }}<br>
-                    <abbr title="Phone">P:</abbr> {{ $order->shipping_phone }}
-                </address>
-            </div>
-        </div>
-
-        <div class="card border-0 shadow-sm mb-4">
-            <div class="card-header bg-transparent">
-                <h5 class="mb-0 fw-bold">
-                    <i class="fas fa-credit-card text-success me-2"></i>
-                    Payment Information
-                </h5>
-            </div>
-            <div class="card-body">
-                <table class="table table-borderless">
-                    <tr>
-                        <td class="text-muted ps-0">Method:</td>
-                        <td class="fw-semibold">{{ ucfirst($order->payment_method ?? 'Not specified') }}</td>
-                    </tr>
-                    <tr>
-                        <td class="text-muted ps-0">Status:</td>
-                        <td>
-                            <span class="badge {{ $order->payment_status_badge }}">
-                                {{ ucfirst($order->payment_status) }}
+<div class="container mb-5">
+    <div class="row">
+        <!-- Sidebar Filters -->
+        <div class="col-lg-3 mb-4">
+            <div class="card-bakery p-4">
+                <h5 class="fw-bold mb-4">Categories</h5>
+                <ul class="list-unstyled">
+                    <li class="mb-3">
+                        <a href="{{ route('shop') }}" class="text-decoration-none {{ !request('category') ? 'fw-bold' : '' }}"
+                           style="color: {{ !request('category') ? 'var(--terracotta)' : 'var(--olive)' }};">
+                            All Cakes
+                        </a>
+                    </li>
+                    @foreach($categories as $category)
+                    <li class="mb-3">
+                        <a href="{{ route('shop', ['category' => $category->id]) }}"
+                           class="text-decoration-none d-flex justify-content-between align-items-center"
+                           style="color: {{ request('category') == $category->id ? 'var(--terracotta)' : 'var(--olive)' }};">
+                            {{ $category->name }}
+                            <span class="badge rounded-pill" style="background: var(--peach); color: var(--chocolate);">
+                                {{ $category->products_count ?? $category->products->count() }}
                             </span>
-                        </td>
-                    </tr>
-                    @if($order->payment_status == 'paid')
-                    <tr>
-                        <td class="text-muted ps-0">Paid on:</td>
-                        <td>{{ $order->updated_at->format('M d, Y') }}</td>
-                    </tr>
+                        </a>
+                    </li>
+                    @endforeach
+                </ul>
+
+                <hr class="my-4" style="color: var(--sage);">
+
+                <h5 class="fw-bold mb-4">Price Range</h5>
+                <form method="GET" action="{{ route('shop') }}" id="filterForm">
+                    @if(request('category'))
+                        <input type="hidden" name="category" value="{{ request('category') }}">
                     @endif
-                </table>
+
+                    <div class="mb-3">
+                        <label class="form-label small">Min Price ({{ setting('currency_symbol', '₹') }})</label>
+                        <input type="number" name="min_price" class="form-control rounded-pill"
+                               value="{{ request('min_price') }}" min="0" placeholder="0">
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label small">Max Price ({{ setting('currency_symbol', '$') }})</label>
+                        <input type="number" name="max_price" class="form-control rounded-pill"
+                               value="{{ request('max_price') }}" min="0" placeholder="1000">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary-bakery btn-bakery w-100">
+                        Apply Filter
+                    </button>
+
+                    @if(request('min_price') || request('max_price') || request('category'))
+                        <a href="{{ route('shop') }}" class="btn btn-outline-bakery btn-bakery w-100 mt-3">
+                            Reset
+                        </a>
+                    @endif
+                </form>
             </div>
         </div>
 
-        <div class="card border-0 shadow-sm mb-4">
-            <div class="card-header bg-transparent">
-                <h5 class="mb-0 fw-bold">
-                    <i class="fas fa-chart-bar text-warning me-2"></i>
-                    Order Summary
-                </h5>
-            </div>
-            <div class="card-body">
-                <table class="table table-borderless">
-                    <tr>
-                        <td class="text-muted ps-0">Order Number:</td>
-                        <td class="fw-semibold">{{ $order->order_number }}</td>
-                    </tr>
-                    <tr>
-                        <td class="text-muted ps-0">Order Date:</td>
-                        <td>{{ $order->created_at->format('M d, Y') }}</td>
-                    </tr>
-                    <tr>
-                        <td class="text-muted ps-0">Total Items:</td>
-                        <td>{{ $order->items->count() }}</td>
-                    </tr>
-                    <tr>
-                        <td class="text-muted ps-0">Total Amount:</td>
-                        <td class="fw-bold text-success fs-5">{{ format_currency($order->total) }}</td>
-                    </tr>
-                </table>
-            </div>
-        </div>
+        <!-- Products Grid -->
+        <div class="col-lg-9">
+            <!-- Toolbar -->
+            <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+                <p class="mb-2 mb-md-0">
+                    Showing <span class="fw-bold">{{ $products->firstItem() ?? 0 }}</span> -
+                    <span class="fw-bold">{{ $products->lastItem() ?? 0 }}</span> of
+                    <span class="fw-bold">{{ $products->total() }}</span> cakes
+                </p>
 
-        @if($order->admin_notes)
-        <div class="card border-0 shadow-sm mb-4">
-            <div class="card-header bg-transparent">
-                <h5 class="mb-0 fw-bold">
-                    <i class="fas fa-sticky-note text-info me-2"></i>
-                    Admin Notes
-                </h5>
+                <div class="d-flex align-items-center">
+                    <label class="me-2 text-muted small">Sort by:</label>
+                    <select class="form-select form-select-sm rounded-pill" id="sortSelect" style="width: 180px;">
+                        <option value="latest" {{ request('sort') == 'latest' ? 'selected' : '' }}>Latest</option>
+                        <option value="price_low" {{ request('sort') == 'price_low' ? 'selected' : '' }}>Price: Low to High</option>
+                        <option value="price_high" {{ request('sort') == 'price_high' ? 'selected' : '' }}>Price: High to Low</option>
+                        <option value="name_asc" {{ request('sort') == 'name_asc' ? 'selected' : '' }}>Name: A to Z</option>
+                    </select>
+                </div>
             </div>
-            <div class="card-body">
-                <p class="mb-0">{{ $order->admin_notes }}</p>
-            </div>
-        </div>
-        @endif
 
-        <div class="d-flex gap-2">
-            <a href="{{ route('admin.orders.edit', $order) }}" class="btn btn-primary flex-fill">
-                <i class="fas fa-edit me-1"></i>Edit Order
-            </a>
-            <a href="{{ route('admin.orders.invoice', $order) }}" class="btn btn-outline-success flex-fill" target="_blank">
-                <i class="fas fa-print me-1"></i>Invoice
-            </a>
+            <!-- Products Grid - Fixed Image Containers -->
+            <div class="row g-4">
+                @forelse($products as $product)
+                <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="{{ $loop->index * 50 }}">
+                    <div class="card-bakery h-100 d-flex flex-column">
+                        <!-- Image Container - FIXED SIZE -->
+                        <div class="position-relative" style="height: 250px; overflow: hidden; background: var(--peach);">
+                            @if($product->featured_image)
+                                <img src="{{ asset('storage/' . $product->featured_image) }}"
+                                     alt="{{ $product->name }}"
+                                     class="w-100 h-100"
+                                     style="object-fit: cover; object-position: center;">
+                            @else
+                                <div class="w-100 h-100 d-flex align-items-center justify-content-center">
+                                    <i class="fas fa-cake fa-4x" style="color: var(--coral); opacity: 0.5;"></i>
+                                </div>
+                            @endif
+
+                            <!-- Badges -->
+                            @if($product->sale_price && $product->sale_price < $product->regular_price)
+                                <span class="position-absolute top-0 start-0 m-3 badge bg-danger rounded-pill px-3 py-2">
+                                    SALE
+                                </span>
+                            @endif
+
+                            @if($product->is_featured)
+                                <span class="position-absolute top-0 end-0 m-3 badge rounded-pill px-3 py-2"
+                                      style="background: var(--caramel); color: white;">
+                                    <i class="fas fa-crown me-1"></i>Featured
+                                </span>
+                            @endif
+
+                            <!-- Quick View Overlay -->
+                            <div class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
+                                 style="background: rgba(92, 75, 63, 0.5); opacity: 0; transition: opacity 0.3s;">
+                                <a href="{{ route('product.details', $product->slug) }}"
+                                   class="btn btn-light rounded-pill px-4 py-2">
+                                    <i class="fas fa-eye me-2"></i>Quick View
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Content -->
+                        <div class="p-4 d-flex flex-column flex-grow-1">
+                            <p class="small text-muted mb-1">{{ $product->category->name ?? 'Uncategorized' }}</p>
+
+                            <h5 class="fw-bold mb-2" style="min-height: 50px;">
+                                <a href="{{ route('product.details', $product->slug) }}"
+                                   class="text-decoration-none" style="color: var(--chocolate);">
+                                    {{ $product->name }}
+                                </a>
+                            </h5>
+
+                            <!-- Rating -->
+                            <div class="text-warning mb-3">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star-half-alt"></i>
+                                <span class="text-muted ms-2 small">(24)</span>
+                            </div>
+
+                            <!-- Price and Add to Cart -->
+                            <div class="d-flex justify-content-between align-items-center mt-auto">
+                                <div>
+                                    @if($product->sale_price && $product->sale_price < $product->regular_price)
+                                        <span class="text-muted text-decoration-line-through small me-2">
+                                            {{ setting('currency_symbol', '₹') }}{{ number_format($product->regular_price, 2) }}
+                                        </span>
+                                        <span class="fw-bold fs-5" style="color: var(--terracotta);">
+                                            {{ setting('currency_symbol', '₹') }}{{ number_format($product->sale_price, 2) }}
+                                        </span>
+                                    @else
+                                        <span class="fw-bold fs-5" style="color: var(--terracotta);">
+                                            {{ setting('currency_symbol', '₹') }}{{ number_format($product->regular_price, 2) }}
+                                        </span>
+                                    @endif
+                                </div>
+
+                                <form action="{{ route('cart.add', $product) }}" method="POST">
+                                    @csrf
+                                    <input type="hidden" name="quantity" value="1">
+                                    <button type="submit" class="btn btn-primary-bakery rounded-circle p-3"
+                                            style="width: 45px; height: 45px;"
+                                            title="Add to Cart">
+                                        <i class="fas fa-shopping-bag"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                @empty
+                <div class="col-12 text-center py-5">
+                    <i class="fas fa-cake fa-4x text-muted mb-3"></i>
+                    <h4 class="fw-bold">No Cakes Found</h4>
+                    <p class="text-muted">Try adjusting your filters or check back later.</p>
+                    <a href="{{ route('shop') }}" class="btn btn-primary-bakery btn-bakery mt-3">
+                        Clear Filters
+                    </a>
+                </div>
+                @endforelse
+            </div>
+
+            <!-- Pagination -->
+            <div class="d-flex justify-content-center mt-5">
+                {{ $products->appends(request()->query())->links() }}
+            </div>
         </div>
     </div>
 </div>
+
+<style>
+    /* Additional fixes for product cards */
+    .card-bakery {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .card-bakery .position-relative {
+        flex-shrink: 0;
+    }
+
+    .card-bakery:hover .position-absolute.opacity-0 {
+        opacity: 1 !important;
+    }
+
+    /* Fix for Bootstrap pagination */
+    .pagination {
+        gap: 5px;
+    }
+
+    .page-link {
+        border: none;
+        border-radius: 50% !important;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--chocolate);
+        font-weight: 500;
+    }
+
+    .page-item.active .page-link {
+        background: var(--terracotta);
+        color: white;
+    }
+
+    .page-link:hover {
+        background: var(--peach);
+        color: var(--chocolate);
+    }
+</style>
 @endsection
+
+@push('scripts')
+<script>
+    document.getElementById('sortSelect').addEventListener('change', function() {
+        const url = new URL(window.location.href);
+        url.searchParams.set('sort', this.value);
+        window.location.href = url.toString();
+    });
+
+    // Fix for hover effect
+    document.querySelectorAll('.card-bakery').forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            const overlay = this.querySelector('.position-absolute.opacity-0');
+            if (overlay) overlay.style.opacity = '1';
+        });
+        card.addEventListener('mouseleave', function() {
+            const overlay = this.querySelector('.position-absolute.opacity-0');
+            if (overlay) overlay.style.opacity = '0';
+        });
+    });
+</script>
+@endpush
