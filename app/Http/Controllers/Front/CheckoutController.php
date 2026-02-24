@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\DB;
 
+
 class CheckoutController extends Controller
 {
     public function index()
@@ -33,6 +34,9 @@ class CheckoutController extends Controller
         return view('front.checkout', compact('cart', 'total', 'deliveryFee', 'grandTotal'));
     }
 
+    /**
+ * Process checkout
+ */
     public function process(Request $request)
     {
         $request->validate([
@@ -47,9 +51,11 @@ class CheckoutController extends Controller
             'payment_method' => 'required|in:credit_card,paypal,cash_on_delivery',
         ]);
 
-        $cart = Session::get('cart', []);
+        // Get cart from database
+        $cart = Cart::getCart();
+        $cart->load('items.product');
 
-        if (empty($cart)) {
+        if ($cart->items->isEmpty()) {
             return redirect()->route('cart.index')->with('error', 'Your cart is empty!');
         }
 
@@ -57,10 +63,7 @@ class CheckoutController extends Controller
 
         try {
             // Calculate totals
-            $subtotal = 0;
-            foreach ($cart as $item) {
-                $subtotal += $item['price'] * $item['quantity'];
-            }
+            $subtotal = $cart->total_amount;
 
             $deliveryCharge = setting('delivery_charges', 10);
             $freeThreshold = setting('free_delivery_threshold', 100);
@@ -100,25 +103,27 @@ class CheckoutController extends Controller
                 'notes' => $request->notes,
             ]);
 
-            // Create order items
-            foreach ($cart as $item) {
+            // Create order items from cart
+            foreach ($cart->items as $item) {
                 OrderItem::create([
                     'order_id' => $order->id,
-                    'product_id' => $item['id'],
-                    'product_name' => $item['name'],
-                    'sku' => $item['sku'] ?? null,
-                    'quantity' => $item['quantity'],
-                    'price' => $item['price'],
-                    'subtotal' => $item['price'] * $item['quantity'],
-                    'options' => json_encode([
-                        'size' => $item['size'] ?? null,
-                        'flavor' => $item['flavor'] ?? null
-                    ]),
+                    'product_id' => $item->product_id,
+                    'product_name' => $item->product->name,
+                    'sku' => $item->product->sku,
+                    'quantity' => $item->quantity,
+                    'price' => $item->unit_price,
+                    'subtotal' => $item->subtotal,
+                    'options' => json_encode($item->options),
                 ]);
+
+                // Update stock if needed
+                // $item->product->decrement('stock_quantity', $item->quantity);
             }
 
             // Clear cart
-            Session::forget('cart');
+            CartItem::where('cart_id', $cart->id)->delete();
+            $cart->total_amount = 0;
+            $cart->save();
 
             DB::commit();
 

@@ -18,7 +18,7 @@
 </div>
 
 <div class="container mb-5">
-    <!-- ===== SEARCH BAR SECTION ===== -->
+    <!-- Search Bar Section -->
     <div class="row justify-content-center mb-5">
         <div class="col-md-8">
             <div class="search-container" data-aos="fade-up">
@@ -27,7 +27,10 @@
                         <input type="hidden" name="category" value="{{ request('category') }}">
                     @endif
                     @if(request('sort'))
-                        <input type="hidden" name="sort" value="{{ request('sort') }}" id="sortInput">
+                        <input type="hidden" name="sort" value="{{ request('sort') }}">
+                    @endif
+                    @if(request('eggless'))
+                        <input type="hidden" name="eggless" value="{{ request('eggless') }}">
                     @endif
 
                     <div class="search-wrapper">
@@ -88,6 +91,28 @@
 
                 <hr class="my-4" style="background: var(--sand);">
 
+                <!-- Eggless Filter -->
+                <h5 class="mb-4" style="font-family: 'Prata', serif;">Dietary</h5>
+                <div class="mb-4">
+                    <a href="{{ route('shop', array_merge(request()->except('eggless'), ['eggless' => 'yes'])) }}"
+                       class="d-block mb-2 text-decoration-none {{ request('eggless') == 'yes' ? 'fw-bold' : '' }}"
+                       style="color: {{ request('eggless') == 'yes' ? 'var(--terracotta)' : 'var(--taupe)' }};">
+                        <i class="fas fa-leaf me-2" style="color: var(--sage);"></i>Eggless Only
+                    </a>
+                    <a href="{{ route('shop', array_merge(request()->except('eggless'), ['eggless' => 'no'])) }}"
+                       class="d-block mb-2 text-decoration-none {{ request('eggless') == 'no' ? 'fw-bold' : '' }}"
+                       style="color: {{ request('eggless') == 'no' ? 'var(--terracotta)' : 'var(--taupe)' }};">
+                        <i class="fas fa-egg me-2" style="color: var(--gold);"></i>With Egg
+                    </a>
+                    <a href="{{ route('shop', array_merge(request()->except('eggless'), ['eggless' => null])) }}"
+                       class="d-block text-decoration-none"
+                       style="color: var(--taupe);">
+                        <i class="fas fa-undo me-2"></i>Clear Filter
+                    </a>
+                </div>
+
+                <hr class="my-4" style="background: var(--sand);">
+
                 <h5 class="mb-4" style="font-family: 'Prata', serif;">Price Range</h5>
                 <form method="GET" action="{{ route('shop') }}" id="priceFilterForm">
                     @if(request('category'))
@@ -98,6 +123,9 @@
                     @endif
                     @if(request('sort'))
                         <input type="hidden" name="sort" value="{{ request('sort') }}">
+                    @endif
+                    @if(request('eggless'))
+                        <input type="hidden" name="eggless" value="{{ request('eggless') }}">
                     @endif
 
                     <div class="mb-3">
@@ -114,7 +142,7 @@
 
                     <button type="submit" class="btn-modern btn-primary-modern w-100">Apply Filter</button>
 
-                    @if(request('min_price') || request('max_price') || request('category') || request('search'))
+                    @if(request('min_price') || request('max_price') || request('category') || request('search') || request('eggless'))
                         <a href="{{ route('shop') }}" class="btn-modern btn-outline-modern w-100 mt-3">Clear All</a>
                     @endif
                 </form>
@@ -123,7 +151,7 @@
 
         <!-- Products Grid -->
         <div class="col-lg-9">
-            <!-- Sort Bar with Search Results Info -->
+            <!-- Sort Bar -->
             <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
                 <div>
                     @if(request('search'))
@@ -145,8 +173,26 @@
                     <option value="latest" {{ request('sort') == 'latest' ? 'selected' : '' }}>Latest</option>
                     <option value="price_low" {{ request('sort') == 'price_low' ? 'selected' : '' }}>Price: Low to High</option>
                     <option value="price_high" {{ request('sort') == 'price_high' ? 'selected' : '' }}>Price: High to Low</option>
+                    <option value="name_asc" {{ request('sort') == 'name_asc' ? 'selected' : '' }}>Name: A to Z</option>
                 </select>
             </div>
+
+            <!-- Active Filters Display -->
+            @if(request('eggless') || request('sort') && request('sort') != 'latest')
+            <div class="mb-4">
+                <span class="text-muted me-2">Active filters:</span>
+                @if(request('eggless') == 'yes')
+                    <span class="badge bg-light text-dark px-3 py-2 me-2">
+                        Eggless <a href="{{ route('shop', array_merge(request()->except('eggless'), ['eggless' => null])) }}" class="ms-2 text-danger"><i class="fas fa-times"></i></a>
+                    </span>
+                @endif
+                @if(request('eggless') == 'no')
+                    <span class="badge bg-light text-dark px-3 py-2 me-2">
+                        With Egg <a href="{{ route('shop', array_merge(request()->except('eggless'), ['eggless' => null])) }}" class="ms-2 text-danger"><i class="fas fa-times"></i></a>
+                    </span>
+                @endif
+            </div>
+            @endif
 
             <!-- Products Grid -->
             <div class="row g-4">
@@ -163,6 +209,12 @@
                             @if($product->sale_price && $product->sale_price < $product->regular_price)
                                 <span class="product-badge">SALE</span>
                             @endif
+
+                            @if($product->is_eggless)
+                                <span class="product-badge eggless">
+                                    <i class="fas fa-leaf me-1"></i>Eggless
+                                </span>
+                            @endif
                         </div>
 
                         <div class="p-4">
@@ -174,7 +226,6 @@
                                 </a>
                             </h5>
 
-                            <!-- Highlight if search matched description -->
                             @if(request('search') && strpos(strtolower($product->description), strtolower(request('search'))) !== false)
                                 <p class="small text-muted mb-2">
                                     <i class="fas fa-search text-primary me-1"></i>
@@ -198,10 +249,13 @@
                                     @endif
                                 </div>
 
-                                <a href="{{ route('product.details', $product->slug) }}"
-                                   class="text-decoration-none small" style="color: var(--taupe);">
-                                    View <i class="fas fa-arrow-right ms-1"></i>
-                                </a>
+                                <form action="{{ route('cart.add', $product) }}" method="POST" class="add-to-cart-form">
+                                    @csrf
+                                    <input type="hidden" name="quantity" value="1">
+                                    <button type="submit" class="btn-action" title="Add to Cart">
+                                        <i class="fas fa-shopping-cart"></i>
+                                    </button>
+                                </form>
                             </div>
                         </div>
                     </div>
@@ -234,99 +288,186 @@
 </div>
 
 <style>
-/* ===== SEARCH BAR STYLES ===== */
-.search-container {
-    width: 100%;
-    max-width: 600px;
-    margin: 0 auto;
-}
+    /* Search Bar Styles */
+    .search-container {
+        width: 100%;
+        max-width: 600px;
+        margin: 0 auto;
+    }
 
-.search-form {
-    width: 100%;
-}
-
-.search-wrapper {
-    position: relative;
-    width: 100%;
-}
-
-.search-icon {
-    position: absolute;
-    left: 20px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--taupe);
-    font-size: 1.2rem;
-    z-index: 2;
-}
-
-.search-input {
-    width: 100%;
-    height: 60px;
-    padding: 0 50px 0 50px;
-    border: 2px solid var(--sand);
-    border-radius: 50px;
-    font-size: 1rem;
-    transition: all 0.3s ease;
-    background: white;
-    box-shadow: var(--shadow-sm);
-}
-
-.search-input:focus {
-    border-color: var(--terracotta);
-    outline: none;
-    box-shadow: 0 0 0 4px rgba(201, 124, 93, 0.1);
-}
-
-.search-input::placeholder {
-    color: var(--taupe);
-    opacity: 0.7;
-}
-
-.search-clear {
-    position: absolute;
-    right: 20px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--taupe);
-    text-decoration: none;
-    font-size: 1.1rem;
-    z-index: 2;
-    transition: all 0.3s;
-}
-
-.search-clear:hover {
-    color: var(--terracotta);
-}
-
-.search-hints {
-    margin-top: 10px;
-    padding-left: 20px;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-    .search-input {
-        height: 50px;
-        font-size: 0.95rem;
+    .search-wrapper {
+        position: relative;
+        width: 100%;
     }
 
     .search-icon {
-        left: 15px;
+        position: absolute;
+        left: 20px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--taupe);
+        font-size: 1.2rem;
+        z-index: 2;
+    }
+
+    .search-input {
+        width: 100%;
+        height: 60px;
+        padding: 0 50px 0 50px;
+        border: 2px solid var(--sand);
+        border-radius: 50px;
         font-size: 1rem;
+        transition: all 0.3s ease;
+        background: white;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .search-input:focus {
+        border-color: var(--terracotta);
+        outline: none;
+        box-shadow: 0 0 0 4px rgba(201, 124, 93, 0.1);
     }
 
     .search-clear {
-        right: 15px;
+        position: absolute;
+        right: 20px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--taupe);
+        text-decoration: none;
+        font-size: 1.1rem;
+        z-index: 2;
+        transition: all 0.3s;
     }
-}
 
-/* Highlight matching text */
-.search-highlight {
-    background: rgba(201, 124, 93, 0.2);
-    padding: 0 2px;
-    border-radius: 2px;
-}
+    .search-clear:hover {
+        color: var(--terracotta);
+    }
+
+    .search-hints {
+        margin-top: 10px;
+        padding-left: 20px;
+    }
+
+    /* Product Card Styles */
+    .product-image-container {
+        position: relative;
+        height: 280px;
+        overflow: hidden;
+        background: var(--sand);
+    }
+
+    .product-image-container img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+    }
+
+    .card-modern:hover .product-image-container img {
+        transform: scale(1.05);
+    }
+
+    .product-badge {
+        position: absolute;
+        top: 16px;
+        left: 16px;
+        background: var(--terracotta);
+        color: white;
+        padding: 6px 14px;
+        border-radius: 2px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        z-index: 2;
+    }
+
+    .product-badge.eggless {
+        background: var(--sage);
+        left: auto;
+        right: 16px;
+    }
+
+    .btn-action {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: var(--terracotta);
+        border: none;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+
+    .btn-action:hover {
+        background: #b86a4a;
+        transform: scale(1.1);
+    }
+
+    /* Breadcrumb */
+    .breadcrumb-modern {
+        padding: 40px 0 20px;
+        margin-bottom: 40px;
+        border-bottom: 1px solid var(--sand);
+    }
+
+    .breadcrumb-modern h1 {
+        font-size: 2.2rem;
+        margin-bottom: 16px;
+    }
+
+    .breadcrumb-custom {
+        background: transparent;
+        padding: 0;
+    }
+
+    .breadcrumb-custom .breadcrumb-item {
+        font-size: 0.9rem;
+    }
+
+    .breadcrumb-custom .breadcrumb-item a {
+        color: var(--taupe);
+        text-decoration: none;
+    }
+
+    .breadcrumb-custom .breadcrumb-item.active {
+        color: var(--charcoal);
+    }
+
+    .breadcrumb-custom .breadcrumb-item + .breadcrumb-item:before {
+        color: var(--sand);
+    }
+
+    /* Form Elements */
+    .form-control-modern {
+        border: 1px solid var(--sand);
+        border-radius: 2px;
+        padding: 14px 16px;
+        transition: all 0.3s;
+    }
+
+    .form-control-modern:focus {
+        border-color: var(--terracotta);
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(201, 124, 93, 0.1);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .search-input {
+            height: 50px;
+            font-size: 0.95rem;
+        }
+
+        .product-image-container {
+            height: 220px;
+        }
+    }
 </style>
 
 <script>
@@ -337,7 +478,7 @@
         window.location.href = url.toString();
     });
 
-    // Debounced search (waits for user to stop typing)
+    // Debounced search
     let searchTimer;
     document.querySelector('.search-input')?.addEventListener('input', function() {
         clearTimeout(searchTimer);
@@ -351,10 +492,35 @@
                 } else {
                     url.searchParams.delete('search');
                 }
-                url.searchParams.delete('page'); // Reset to first page
+                url.searchParams.delete('page');
                 window.location.href = url.toString();
             }
-        }, 500); // Wait 500ms after user stops typing
+        }, 500);
+    });
+
+    // Update cart count after adding
+    document.querySelectorAll('.add-to-cart-form').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            fetch(this.action, {
+                method: 'POST',
+                body: new FormData(this),
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    toastr.success(data.message);
+                    updateCartCount();
+                }
+            })
+            .catch(error => {
+                toastr.error('Failed to add to cart');
+            });
+        });
     });
 </script>
 @endsection
