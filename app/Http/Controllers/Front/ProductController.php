@@ -110,6 +110,16 @@ class ProductController extends Controller
             $groupedOptions[$option->type][] = $option;
         }
 
+        // ===== SEARCH FUNCTIONALITY =====
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', '%' . $search . '%')
+                ->orWhere('description', 'like', '%' . $search . '%')
+                ->orWhere('short_description', 'like', '%' . $search . '%');
+            });
+        }
+
         return view('front.products.show', compact('product', 'relatedProducts', 'groupedOptions'));
     }
 }

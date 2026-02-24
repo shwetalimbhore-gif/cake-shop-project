@@ -12,10 +12,13 @@ use App\Http\Controllers\ProfileController as UserProfileController;
 use App\Http\Controllers\Front\AccountController;
 use App\Http\Controllers\Front\CheckoutController;
 use App\Http\Controllers\Front\CartController;
-// use App\Http\Controllers\Front\
+use App\Http\Controllers\Admin\AboutUsController;
+use App\Http\Controllers\Front\TrackingController;
+use App\Http\Controllers\Front\AboutController;
+
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
-Route::get('/about', [HomeController::class, 'about'])->name('about');
+// Route::get('/about', [HomeController::class, 'about'])->name('about');
 Route::get('/contact', [HomeController::class, 'contact'])->name('contact');
 
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
@@ -30,18 +33,18 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('products/{product}/toggle-featured', [ProductController::class, 'toggleFeatured'])->name('products.toggle-featured');
 
     Route::prefix('orders')->name('orders.')->group(function () {
-    Route::get('/', [OrderController::class, 'index'])->name('index');
-    Route::get('/{order}', [OrderController::class, 'show'])->name('show');
-    Route::get('/{order}/edit', [OrderController::class, 'edit'])->name('edit');
-    Route::put('/{order}', [OrderController::class, 'update'])->name('update');
-    Route::delete('/{order}', [OrderController::class, 'destroy'])->name('destroy');
-    Route::post('/{order}/status', [OrderController::class, 'updateStatus'])->name('update-status');
-    Route::post('/{order}/payment-status', [OrderController::class, 'updatePaymentStatus'])->name('update-payment-status');
-    Route::get('/{order}/invoice', [OrderController::class, 'printInvoice'])->name('invoice');
-    Route::get('/export/csv', [OrderController::class, 'export'])->name('export');
+        Route::get('/', [OrderController::class, 'index'])->name('index');
+        Route::get('/{order}', [OrderController::class, 'show'])->name('show');
+        Route::get('/{order}/edit', [OrderController::class, 'edit'])->name('edit');
+        Route::put('/{order}', [OrderController::class, 'update'])->name('update');
+        Route::delete('/{order}', [OrderController::class, 'destroy'])->name('destroy');
+        Route::post('/{order}/status', [OrderController::class, 'updateStatus'])->name('update-status');
+        Route::post('/{order}/payment-status', [OrderController::class, 'updatePaymentStatus'])->name('update-payment-status');
+        Route::get('/{order}/invoice', [OrderController::class, 'printInvoice'])->name('invoice');
+        Route::get('/export/csv', [OrderController::class, 'export'])->name('export');
 
-    Route::post('orders/{order}/tracking', [OrderController::class, 'updateTracking'])->name('orders.tracking');
-    Route::post('orders/{order}/driver-location', [OrderController::class, 'updateDriverLocation'])->name('orders.driver-location');
+        Route::post('orders/{order}/tracking', [OrderController::class, 'updateTracking'])->name('orders.tracking');
+        Route::post('orders/{order}/driver-location', [OrderController::class, 'updateDriverLocation'])->name('orders.driver-location');
 
 });
     Route::prefix('profile')->name('profile.')->group(function () {
@@ -57,6 +60,15 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::put('/', [SettingsController::class, 'update'])->name('update');
         Route::post('/upload-logo', [SettingsController::class, 'uploadLogo'])->name('upload-logo');
     });
+
+    Route::prefix('about')->name('about.')->group(function () {
+        Route::get('/', [AboutUsController::class, 'index'])->name('index');
+        Route::put('/', [AboutUsController::class, 'update'])->name('update');
+
+    });
+
+    // Admin route (inside admin group)
+    Route::resource('about', AboutUsController::class);
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -79,9 +91,12 @@ Route::middleware('auth')->group(function () {
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/shop', [HomeController::class, 'shop'])->name('shop');
 Route::get('/product/{slug}', [HomeController::class, 'productDetails'])->name('product.details');
-Route::get('/about', [HomeController::class, 'about'])->name('about');
+// Route::get('/about', [HomeController::class, 'about'])->name('about');
 Route::get('/contact', [HomeController::class, 'contact'])->name('contact');
 Route::post('/contact', [HomeController::class, 'submitContact'])->name('contact.submit');
+
+// Frontend route
+Route::get('/about', [AboutController::class, 'index'])->name('about');
 
 // ============= CART ROUTES =============
 Route::prefix('cart')->name('cart.')->group(function () {
@@ -94,9 +109,9 @@ Route::prefix('cart')->name('cart.')->group(function () {
 });
 
 Route::prefix('tracking')->name('tracking.')->group(function () {
-    Route::get('/', [App\Http\Controllers\Front\TrackingController::class, 'index'])->name('index');
-    Route::post('/track', [App\Http\Controllers\Front\TrackingController::class, 'track'])->name('track');
-    Route::get('/status/{order}', [App\Http\Controllers\Front\TrackingController::class, 'getTrackingStatus'])->name('status');
+    Route::get('/', [TrackingController::class, 'index'])->name('index');
+    Route::post('/track', [TrackingController::class, 'track'])->name('track');
+    Route::get('/status/{order}', [TrackingController::class, 'getTrackingStatus'])->name('status');
 });
 
 // ============= CHECKOUT ROUTES (Require Login) =============
@@ -113,7 +128,7 @@ Route::middleware(['auth'])->prefix('account')->name('account.')->group(function
     Route::get('/orders/{order}', [AccountController::class, 'orderDetails'])->name('order.details');
     Route::get('/profile', [AccountController::class, 'profile'])->name('profile');
     Route::put('/profile', [AccountController::class, 'updateProfile'])->name('profile.update');
-    Route::put('/password', [App\Http\Controllers\Front\AccountController::class, 'changePassword'])->name('password');
+    Route::put('/password', [AccountController::class, 'changePassword'])->name('password');
 
 
 });

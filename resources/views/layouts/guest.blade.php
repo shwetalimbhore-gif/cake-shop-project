@@ -19,6 +19,12 @@
     </head>
     <body class="font-sans text-gray-900 antialiased">
         <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 bg-gray-100">
+
+            <!-- Add this line to show the site name -->
+            <div class="text-center mb-4">
+                <h1 class="text-2xl font-bold text-gray-800">Cozy Craavings</h1>
+            </div>
+
             <div>
                 <a href="/">
                     <x-application-logo class="w-20 h-20 fill-current text-gray-500" />

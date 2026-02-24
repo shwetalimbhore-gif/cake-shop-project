@@ -1,239 +1,181 @@
 @extends('layouts.front')
 
-@section('title', 'About Us - ' . setting('site_name'))
-@section('page-title', 'About Us')
+@section('title', $about->meta_title ?? 'Our Story - ' . setting('site_name'))
+@section('meta_description', $about->meta_description ?? '')
+@section('meta_keywords', $about->meta_keywords ?? '')
 
 @section('content')
-<!-- Breadcrumb -->
-<div class="breadcrumb-area">
-    <div class="container">
-        <h1 class="display-5 fw-bold">About Us</h1>
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{{ route('home') }}">Home</a></li>
-                <li class="breadcrumb-item active" aria-current="page">About Us</li>
-            </ol>
-        </nav>
+<!-- Hero Section -->
+<section class="about-hero" @if($about->hero_image) style="background-image: url('{{ asset('storage/' . $about->hero_image) }}');" @endif>
+    <div class="hero-overlay">
+        <div class="container text-center">
+            <h1 class="display-3 fw-bold text-white">{{ $about->hero_title ?? 'Our Story' }}</h1>
+            <p class="lead text-white">{{ $about->hero_subtitle ?? 'The journey of our bakery' }}</p>
+        </div>
     </div>
-</div>
+</section>
 
-<!-- Our Story -->
+<!-- Our Story Section -->
 <section class="py-5">
     <div class="container">
-        <div class="row align-items-center">
-            <div class="col-lg-6 mb-4">
-                <img src="https://images.unsplash.com/photo-1588195538326-c5b1e9f80a1b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1950&q=80"
-                     alt="Our Bakery"
-                     class="img-fluid rounded-4 shadow-lg">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-6" data-aos="fade-right">
+                @if($about->story_image)
+                    <img src="{{ asset('storage/' . $about->story_image) }}"
+                         alt="{{ $about->story_title }}"
+                         class="img-fluid rounded-4 shadow">
+                @else
+                    <img src="https://images.unsplash.com/photo-1588195538326-c5b1e9f80a1b"
+                         alt="Our Bakery"
+                         class="img-fluid rounded-4 shadow">
+                @endif
             </div>
-            <div class="col-lg-6">
-                <h2 class="display-6 fw-bold mb-4">Our Sweet Story</h2>
-                <p class="lead text-muted mb-4">Founded in 2020, {{ setting('site_name', 'MyCakeShop') }} started with a simple mission: to create joy through delicious, handcrafted cakes.</p>
-                <p class="text-muted mb-4">What began as a small home bakery has grown into a beloved local destination for cake lovers. Every cake we create is made with love, using the finest ingredients and traditional baking methods passed down through generations.</p>
-                <p class="text-muted mb-4">Our team of skilled bakers and decorators pour their hearts into every creation, ensuring that each cake not only tastes amazing but looks beautiful too. Whether it's a birthday celebration, wedding, or just a Tuesday treat, we're here to make your moments sweeter.</p>
-
-                <div class="row mt-5">
-                    <div class="col-4 text-center">
-                        <h3 class="text-primary fw-bold">500+</h3>
-                        <p class="text-muted">Happy Customers</p>
-                    </div>
-                    <div class="col-4 text-center">
-                        <h3 class="text-primary fw-bold">50+</h3>
-                        <p class="text-muted">Cake Flavors</p>
-                    </div>
-                    <div class="col-4 text-center">
-                        <h3 class="text-primary fw-bold">4.9</h3>
-                        <p class="text-muted">Customer Rating</p>
-                    </div>
-                </div>
+            <div class="col-lg-6" data-aos="fade-left">
+                <span class="section-subtitle">{{ $about->story_tagline ?? 'Since ' . ($about->story_year ?? '2020') }}</span>
+                <h2 class="section-title">{{ $about->story_title ?? 'Our Sweet Beginning' }}</h2>
+                <p class="text-muted">{{ $about->story_content ?? '' }}</p>
             </div>
         </div>
     </div>
 </section>
 
-<!-- Our Values -->
+<!-- Mission & Vision -->
 <section class="py-5 bg-light">
     <div class="container">
-        <div class="text-center mb-5">
-            <h2 class="display-6 fw-bold">Our Core Values</h2>
-            <p class="text-muted">The principles that guide everything we do</p>
-        </div>
-
         <div class="row g-4">
-            <div class="col-lg-4">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body text-center p-4">
-                        <div class="bg-soft-primary rounded-circle d-flex align-items-center justify-content-center mx-auto mb-4" style="width: 80px; height: 80px;">
-                            <i class="fas fa-heart fa-2x text-primary"></i>
-                        </div>
-                        <h4 class="fw-semibold mb-3">Made with Love</h4>
-                        <p class="text-muted mb-0">Every cake is baked with passion and attention to detail, ensuring each bite brings a smile.</p>
+            <div class="col-md-6" data-aos="fade-up">
+                <div class="card-modern p-5 text-center h-100">
+                    <div class="mb-4">
+                        <i class="fas fa-bullseye fa-3x" style="color: var(--terracotta);"></i>
                     </div>
+                    <h3 class="mb-3">{{ $about->mission_title ?? 'Our Mission' }}</h3>
+                    <p class="text-muted">{{ $about->mission_description ?? '' }}</p>
                 </div>
             </div>
-
-            <div class="col-lg-4">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body text-center p-4">
-                        <div class="bg-soft-success rounded-circle d-flex align-items-center justify-content-center mx-auto mb-4" style="width: 80px; height: 80px;">
-                            <i class="fas fa-leaf fa-2x text-success"></i>
-                        </div>
-                        <h4 class="fw-semibold mb-3">Quality Ingredients</h4>
-                        <p class="text-muted mb-0">We use only the finest, freshest ingredients. No preservatives, no shortcuts.</p>
+            <div class="col-md-6" data-aos="fade-up" data-aos-delay="100">
+                <div class="card-modern p-5 text-center h-100">
+                    <div class="mb-4">
+                        <i class="fas fa-eye fa-3x" style="color: var(--terracotta);"></i>
                     </div>
-                </div>
-            </div>
-
-            <div class="col-lg-4">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body text-center p-4">
-                        <div class="bg-soft-warning rounded-circle d-flex align-items-center justify-content-center mx-auto mb-4" style="width: 80px; height: 80px;">
-                            <i class="fas fa-hand-holding-heart fa-2x text-warning"></i>
-                        </div>
-                        <h4 class="fw-semibold mb-3">Customer First</h4>
-                        <p class="text-muted mb-0">Your satisfaction is our priority. We work closely with you to create your dream cake.</p>
-                    </div>
+                    <h3 class="mb-3">{{ $about->vision_title ?? 'Our Vision' }}</h3>
+                    <p class="text-muted">{{ $about->vision_description ?? '' }}</p>
                 </div>
             </div>
         </div>
     </div>
 </section>
 
-<!-- Our Team -->
+<!-- Core Values -->
+@if($about->values)
 <section class="py-5">
     <div class="container">
-        <div class="text-center mb-5">
-            <h2 class="display-6 fw-bold">Meet Our Team</h2>
-            <p class="text-muted">The talented people behind your favorite cakes</p>
+        <div class="section-header" data-aos="fade-up">
+            <h2 class="section-title">Our Core Values</h2>
+            <p class="section-description">The principles that guide everything we do</p>
         </div>
-
         <div class="row g-4">
-            <div class="col-lg-4">
-                <div class="card border-0 shadow-sm text-center">
-                    <div class="card-body p-4">
-                        <img src="https://ui-avatars.com/api/?name=Sarah+Johnson&size=128&background=ff6b8b&color=fff&length=2&font-size=0.50&bold=true&rounded=true"
-                             alt="Sarah Johnson"
-                             class="rounded-circle mb-4"
-                             style="width: 120px; height: 120px; object-fit: cover;">
-                        <h5 class="fw-semibold mb-1">Sarah Johnson</h5>
-                        <p class="text-primary mb-3">Head Baker</p>
-                        <p class="text-muted small">With over 10 years of experience, Sarah creates magic in the kitchen.</p>
+            @foreach($about->values as $value)
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="{{ $loop->index * 100 }}">
+                <div class="card-modern p-4 text-center">
+                    <div class="mb-3">
+                        <i class="fas {{ $value['icon'] ?? 'fa-star' }} fa-3x" style="color: var(--terracotta);"></i>
                     </div>
+                    <h5 class="fw-bold mb-3">{{ $value['title'] }}</h5>
+                    <p class="text-muted">{{ $value['description'] }}</p>
                 </div>
             </div>
-
-            <div class="col-lg-4">
-                <div class="card border-0 shadow-sm text-center">
-                    <div class="card-body p-4">
-                        <img src="https://ui-avatars.com/api/?name=Michael+Chen&size=128&background=ff6b8b&color=fff&length=2&font-size=0.50&bold=true&rounded=true"
-                             alt="Michael Chen"
-                             class="rounded-circle mb-4"
-                             style="width: 120px; height: 120px; object-fit: cover;">
-                        <h5 class="fw-semibold mb-1">Michael Chen</h5>
-                        <p class="text-primary mb-3">Master Decorator</p>
-                        <p class="text-muted small">Michael's artistic touch turns cakes into edible masterpieces.</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-lg-4">
-                <div class="card border-0 shadow-sm text-center">
-                    <div class="card-body p-4">
-                        <img src="https://ui-avatars.com/api/?name=Emily+Rodriguez&size=128&background=ff6b8b&color=fff&length=2&font-size=0.50&bold=true&rounded=true"
-                             alt="Emily Rodriguez"
-                             class="rounded-circle mb-4"
-                             style="width: 120px; height: 120px; object-fit: cover;">
-                        <h5 class="fw-semibold mb-1">Emily Rodriguez</h5>
-                        <p class="text-primary mb-3">Customer Experience</p>
-                        <p class="text-muted small">Emily ensures every customer gets exactly what they dreamed of.</p>
-                    </div>
-                </div>
-            </div>
+            @endforeach
         </div>
     </div>
 </section>
+@endif
 
-<!-- Testimonials -->
+<!-- Statistics -->
+@if($about->statistics)
 <section class="py-5 bg-light">
     <div class="container">
-        <div class="text-center mb-5">
-            <h2 class="display-6 fw-bold">What Our Customers Say</h2>
-            <p class="text-muted">Don't just take our word for it</p>
-        </div>
-
         <div class="row g-4">
-            <div class="col-lg-4">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body p-4">
-                        <div class="mb-3">
-                            <i class="fas fa-star text-warning"></i>
-                            <i class="fas fa-star text-warning"></i>
-                            <i class="fas fa-star text-warning"></i>
-                            <i class="fas fa-star text-warning"></i>
-                            <i class="fas fa-star text-warning"></i>
-                        </div>
-                        <p class="text-muted mb-4">"The birthday cake I ordered was absolutely stunning and delicious! Everyone at the party couldn't stop raving about it."</p>
-                        <div class="d-flex align-items-center">
-                            <img src="https://ui-avatars.com/api/?name=John+Smith&size=40&background=random&rounded=true"
-                                 alt="John Smith"
-                                 class="rounded-circle me-3">
-                            <div>
-                                <h6 class="fw-semibold mb-0">John Smith</h6>
-                                <small class="text-muted">Happy Customer</small>
-                            </div>
-                        </div>
-                    </div>
+            @foreach($about->statistics as $stat)
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="{{ $loop->index * 100 }}">
+                <div class="text-center">
+                    <h2 class="display-3 fw-bold" style="color: var(--terracotta);">{{ $stat['value'] }}{{ $stat['suffix'] }}</h2>
+                    <p class="text-muted">{{ $stat['label'] }}</p>
                 </div>
             </div>
-
-            <div class="col-lg-4">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body p-4">
-                        <div class="mb-3">
-                            <i class="fas fa-star text-warning"></i>
-                            <i class="fas fa-star text-warning"></i>
-                            <i class="fas fa-star text-warning"></i>
-                            <i class="fas fa-star text-warning"></i>
-                            <i class="fas fa-star text-warning"></i>
-                        </div>
-                        <p class="text-muted mb-4">"Our wedding cake was everything we dreamed of and more. The design was perfect and it tasted amazing!"</p>
-                        <div class="d-flex align-items-center">
-                            <img src="https://ui-avatars.com/api/?name=Jessica+Taylor&size=40&background=random&rounded=true"
-                                 alt="Jessica Taylor"
-                                 class="rounded-circle me-3">
-                            <div>
-                                <h6 class="fw-semibold mb-0">Jessica Taylor</h6>
-                                <small class="text-muted">Bride</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-lg-4">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body p-4">
-                        <div class="mb-3">
-                            <i class="fas fa-star text-warning"></i>
-                            <i class="fas fa-star text-warning"></i>
-                            <i class="fas fa-star text-warning"></i>
-                            <i class="fas fa-star text-warning"></i>
-                            <i class="fas fa-star text-warning"></i>
-                        </div>
-                        <p class="text-muted mb-4">"I order cupcakes for every office event. They're always fresh, beautiful, and delivered on time. Highly recommend!"</p>
-                        <div class="d-flex align-items-center">
-                            <img src="https://ui-avatars.com/api/?name=David+Wilson&size=40&background=random&rounded=true"
-                                 alt="David Wilson"
-                                 class="rounded-circle me-3">
-                            <div>
-                                <h6 class="fw-semibold mb-0">David Wilson</h6>
-                                <small class="text-muted">Regular Customer</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            @endforeach
         </div>
     </div>
 </section>
+@endif
+
+<!-- Team Section -->
+@if($about->team_members)
+<section class="py-5">
+    <div class="container">
+        <div class="section-header" data-aos="fade-up">
+            <h2 class="section-title">{{ $about->team_title ?? 'Meet Our Team' }}</h2>
+            <p class="section-description">{{ $about->team_description ?? '' }}</p>
+        </div>
+        <div class="row g-4">
+            @foreach($about->team_members as $member)
+            <div class="col-lg-4" data-aos="fade-up" data-aos-delay="{{ $loop->index * 100 }}">
+                <div class="card-modern text-center p-4">
+                    @if(isset($member['image']) && !empty($member['image']))
+                        <img src="{{ asset('storage/' . $member['image']) }}"
+                             alt="{{ $member['name'] }}"
+                             class="rounded-circle mb-4"
+                             style="width: 150px; height: 150px; object-fit: cover;">
+                    @else
+                        <div class="rounded-circle bg-light d-flex align-items-center justify-content-center mx-auto mb-4"
+                             style="width: 150px; height: 150px;">
+                            <i class="fas fa-user fa-4x text-muted"></i>
+                        </div>
+                    @endif
+                    <h5 class="fw-bold mb-1">{{ $member['name'] }}</h5>
+                    <p class="text-primary mb-2">{{ $member['position'] }}</p>
+                    <p class="text-muted small">{{ $member['bio'] }}</p>
+                </div>
+            </div>
+            @endforeach
+        </div>
+    </div>
+</section>
+@endif
+
+<style>
+.about-hero {
+    height: 60vh;
+    min-height: 500px;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+}
+
+.hero-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.section-subtitle {
+    color: var(--taupe);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    display: block;
+    margin-bottom: 10px;
+}
+
+.section-title {
+    font-size: 2.5rem;
+    color: var(--charcoal);
+    margin-bottom: 20px;
+}
+</style>
 @endsection

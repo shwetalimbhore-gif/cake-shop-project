@@ -200,7 +200,7 @@
         min-height: 90vh;
         background: linear-gradient(135deg, var(--cream) 0%, var(--ivory) 100%);
         position: relative;
-        padding: 40px 0;
+        padding: 10px 20px;
     }
 
     .hero-subtitle {
@@ -216,6 +216,7 @@
         font-family: 'Prata', serif;
         color: var(--charcoal);
         line-height: 1.1;
+        margin-bottom: 25px; /* Add space below title */
     }
 
     .hero-highlight {
@@ -239,6 +240,7 @@
         color: var(--taupe);
         font-size: 1.1rem;
         max-width: 500px;
+        margin-bottom: 30px; /* Add space before buttons */
     }
 
     .hero-image-wrapper {
@@ -250,10 +252,19 @@
         position: relative;
         overflow: hidden;
         box-shadow: var(--shadow-lg);
+        /* aspect-ratio: 16/9; Maintains consistent shape */
+        width: 100%; /* Control container width */
+        max-width: 600px; /* Limit maximum size */
+        height: auto;
+        margin: 0 auto; /* Center the image */
     }
 
     .hero-main-image {
         transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+        width: 100%; /* Make image responsive */
+        height: 630px; /* Maintain aspect ratio */
+        object-fit: cover; /* or contain */
+        max-height: 800px; /* Limit height if needed */
     }
 
     .hero-image-container:hover .hero-main-image {
@@ -281,6 +292,16 @@
 
     .min-vh-90 {
         min-height: 90vh;
+    }
+
+    /* If "ARTISANALBAKERY" is in a header/nav bar */
+    .navbar-brand {
+        font-family: 'Prata', serif;
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--terracotta); /* or your preferred color */
+        text-transform: uppercase;
+        letter-spacing: 3px;
     }
 
     @media (max-width: 768px) {
