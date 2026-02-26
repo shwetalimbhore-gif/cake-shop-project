@@ -11,61 +11,75 @@ use Illuminate\Http\Request;
 class ProductController extends Controller
 {
     /**
-     * Display all products
+     * Display all products with filters and sorting
      */
     public function index(Request $request)
     {
         // Start with active products
-        $query = Product::with(['category', 'primaryImage', 'images'])
+        $query = Product::with(['category', 'images'])
             ->where('is_active', true);
 
         // Filter by category if provided
-        if ($request->has('category')) {
-            $query->whereHas('category', function($q) use ($request) {
-                $q->where('slug', $request->category);
+        if ($request->filled('category')) {
+            $query->where('category_id', $request->category);
+        }
+
+        // Search functionality
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', '%' . $search . '%')
+                  ->orWhere('description', 'like', '%' . $search . '%')
+                  ->orWhere('short_description', 'like', '%' . $search . '%');
             });
         }
 
-        // Search if provided
-        if ($request->has('search')) {
-            $query->where(function($q) use ($request) {
-                $q->where('name', 'like', '%' . $request->search . '%')
-                  ->orWhere('description', 'like', '%' . $request->search . '%');
-            });
+        // ===== EGGLESS FILTER (FIXED) =====
+        if ($request->filled('eggless')) {
+            if ($request->eggless == 'yes') {
+                $query->where('is_eggless', true);
+            } elseif ($request->eggless == 'no') {
+                $query->where('is_eggless', false);
+            }
         }
 
-        // Filter by price range
-        if ($request->has('min_price')) {
-            $query->where('base_price', '>=', $request->min_price);
+        // Price range filter (FIXED: using regular_price)
+        if ($request->filled('min_price')) {
+            $query->where('regular_price', '>=', $request->min_price);
         }
 
-        if ($request->has('max_price')) {
-            $query->where('base_price', '<=', $request->max_price);
+        if ($request->filled('max_price')) {
+            $query->where('regular_price', '<=', $request->max_price);
         }
 
-        // Sorting
-        $sort = $request->get('sort', 'newest');
+        // ===== COMPLETE SORTING OPTIONS =====
+        $sort = $request->get('sort', 'latest');
         switch ($sort) {
             case 'price_low':
-                $query->orderBy('base_price', 'asc');
+                $query->orderBy('regular_price', 'asc');
                 break;
             case 'price_high':
-                $query->orderBy('base_price', 'desc');
+                $query->orderBy('regular_price', 'desc');
                 break;
-            case 'name':
+            case 'name_asc':
                 $query->orderBy('name', 'asc');
                 break;
-            default: // newest
+            case 'name_desc':  // FIXED: Added Z to A sorting
+                $query->orderBy('name', 'desc');
+                break;
+            case 'latest':
+            default:
                 $query->orderBy('created_at', 'desc');
+                break;
         }
 
         // Pagination
-        $products = $query->paginate(12);
+        $products = $query->paginate(12)->withQueryString();
 
         // Get categories for filter sidebar
         $categories = Category::where('is_active', true)->get();
 
-        return view('front.products.index', compact('products', 'categories'));
+        return view('front.shop', compact('products', 'categories'));
     }
 
     /**
@@ -73,53 +87,40 @@ class ProductController extends Controller
      */
     public function byCategory($slug)
     {
-        $category = Category::where('slug', $slug)->where('is_active', true)->firstOrFail();
+        $category = Category::where('slug', $slug)
+            ->where('is_active', true)
+            ->firstOrFail();
 
-        $products = Product::with(['category', 'primaryImage'])
+        $products = Product::with(['category', 'images'])
             ->where('category_id', $category->id)
             ->where('is_active', true)
-            ->paginate(12);
+            ->paginate(12)
+            ->withQueryString();
 
-        return view('front.products.category', compact('products', 'category'));
+        return view('front.shop', compact('products', 'category'));
     }
 
     /**
-     * Display single product
+     * Display single product (FIXED: removed die statement)
      */
     public function show($slug)
     {
-        die("innn");
-        $product = Product::with(['category', 'images', 'options' => function($query) {
-            $query->where('is_active', true)->orderBy('type')->orderBy('order');
-        }])
-        ->where('slug', $slug)
-        ->where('is_active', true)
-        ->firstOrFail();
+        $product = Product::with(['category', 'images'])
+            ->where('slug', $slug)
+            ->where('is_active', true)
+            ->firstOrFail();
+
+        // Increment view count
+        $product->increment('views');
 
         // Get related products (same category)
-        $relatedProducts = Product::with(['primaryImage'])
+        $relatedProducts = Product::with(['images'])
             ->where('category_id', $product->category_id)
             ->where('id', '!=', $product->id)
             ->where('is_active', true)
             ->limit(4)
             ->get();
 
-        // Group options by type
-        $groupedOptions = [];
-        foreach ($product->options as $option) {
-            $groupedOptions[$option->type][] = $option;
-        }
-
-        // ===== SEARCH FUNCTIONALITY =====
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('name', 'like', '%' . $search . '%')
-                ->orWhere('description', 'like', '%' . $search . '%')
-                ->orWhere('short_description', 'like', '%' . $search . '%');
-            });
-        }
-
-        return view('front.products.show', compact('product', 'relatedProducts', 'groupedOptions'));
+        return view('front.product-details', compact('product', 'relatedProducts'));
     }
 }

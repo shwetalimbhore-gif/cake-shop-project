@@ -26,8 +26,10 @@ class Product extends Model
         'sizes',
         'flavors',
         'is_featured',
+        'is_eggless',
         'is_active',
         'views'
+
     ];
 
     protected $casts = [
@@ -37,6 +39,7 @@ class Product extends Model
         'regular_price' => 'decimal:2',
         'sale_price' => 'decimal:2',
         'is_featured' => 'boolean',
+        'is_eggless' => 'boolean',
         'is_active' => 'boolean',
         'in_stock' => 'boolean'
     ];

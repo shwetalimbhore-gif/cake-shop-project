@@ -72,7 +72,14 @@ class ProductController extends Controller
             'featured_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'is_active' => 'boolean',
             'is_featured' => 'boolean',
+            'is_eggless' => 'sometimes|boolean',
+
         ]);
+
+          // ===== IMPORTANT: Handle checkbox values =====
+        $validated['is_active'] = $request->has('is_active') ? true : false;
+        $validated['is_featured'] = $request->has('is_featured') ? true : false;
+        $validated['is_eggless'] = $request->has('is_eggless') ? true : false;
 
         if ($request->hasFile('featured_image')) {
             $path = $request->file('featured_image')->store('products', 'public');
@@ -105,7 +112,13 @@ class ProductController extends Controller
             'featured_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'is_active' => 'boolean',
             'is_featured' => 'boolean',
+            'is_eggless' => 'sometimes|boolean',
         ]);
+
+         // ===== IMPORTANT: Handle checkbox values =====
+        $validated['is_active'] = $request->has('is_active') ? true : false;
+        $validated['is_featured'] = $request->has('is_featured') ? true : false;
+        $validated['is_eggless'] = $request->has('is_eggless') ? true : false;
 
         if ($request->hasFile('featured_image')) {
             if ($product->featured_image) {

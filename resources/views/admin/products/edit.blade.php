@@ -30,7 +30,8 @@
 
                     <div class="row">
                         <div class="col-md-8">
-                            <div class="mb-4">
+                            <!-- Product Name -->
+                            <div class="mb-3">
                                 <label for="name" class="form-label fw-semibold">Product Name <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control @error('name') is-invalid @enderror"
                                        id="name" name="name" value="{{ old('name', $product->name) }}" required>
@@ -39,7 +40,8 @@
                                 @enderror
                             </div>
 
-                            <div class="row mb-4">
+                            <!-- SKU and Category -->
+                            <div class="row mb-3">
                                 <div class="col-md-6">
                                     <label for="sku" class="form-label fw-semibold">SKU <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control @error('sku') is-invalid @enderror"
@@ -64,7 +66,8 @@
                                 </div>
                             </div>
 
-                            <div class="mb-4">
+                            <!-- Short Description -->
+                            <div class="mb-3">
                                 <label for="short_description" class="form-label fw-semibold">Short Description</label>
                                 <textarea class="form-control @error('short_description') is-invalid @enderror"
                                           id="short_description" name="short_description" rows="2">{{ old('short_description', $product->short_description) }}</textarea>
@@ -73,7 +76,8 @@
                                 @enderror
                             </div>
 
-                            <div class="mb-4">
+                            <!-- Full Description -->
+                            <div class="mb-3">
                                 <label for="description" class="form-label fw-semibold">Full Description</label>
                                 <textarea class="form-control @error('description') is-invalid @enderror"
                                           id="description" name="description" rows="5">{{ old('description', $product->description) }}</textarea>
@@ -84,10 +88,11 @@
                         </div>
 
                         <div class="col-md-4">
-                            <div class="mb-4">
+                            <!-- Prices -->
+                            <div class="mb-3">
                                 <label for="regular_price" class="form-label fw-semibold">Regular Price <span class="text-danger">*</span></label>
                                 <div class="input-group">
-                                    <span class="input-group-text">{{ setting('currency_symbol', '₹') }}</span>
+                                    <span class="input-group-text">{{ setting('currency_symbol', '$') }}</span>
                                     <input type="number" step="0.01" class="form-control @error('regular_price') is-invalid @enderror"
                                            id="regular_price" name="regular_price" value="{{ old('regular_price', $product->regular_price) }}" required>
                                 </div>
@@ -96,10 +101,10 @@
                                 @enderror
                             </div>
 
-                            <div class="mb-4">
+                            <div class="mb-3">
                                 <label for="sale_price" class="form-label fw-semibold">Sale Price</label>
                                 <div class="input-group">
-                                    <span class="input-group-text">{{ setting('currency_symbol', '₹') }}</span>
+                                    <span class="input-group-text">{{ setting('currency_symbol', '$') }}</span>
                                     <input type="number" step="0.01" class="form-control @error('sale_price') is-invalid @enderror"
                                            id="sale_price" name="sale_price" value="{{ old('sale_price', $product->sale_price) }}">
                                 </div>
@@ -108,7 +113,8 @@
                                 @enderror
                             </div>
 
-                            <div class="mb-4">
+                            <!-- Stock -->
+                            <div class="mb-3">
                                 <label for="stock_quantity" class="form-label fw-semibold">Stock Quantity <span class="text-danger">*</span></label>
                                 <input type="number" class="form-control @error('stock_quantity') is-invalid @enderror"
                                        id="stock_quantity" name="stock_quantity" value="{{ old('stock_quantity', $product->stock_quantity) }}" min="0" required>
@@ -117,8 +123,9 @@
                                 @enderror
                             </div>
 
+                            <!-- Current Image -->
                             @if($product->featured_image)
-                            <div class="mb-4">
+                            <div class="mb-3">
                                 <label class="form-label fw-semibold">Current Image</label>
                                 <div class="border rounded-3 p-3 text-center bg-light">
                                     <img src="{{ asset('storage/' . $product->featured_image) }}"
@@ -128,36 +135,50 @@
                             </div>
                             @endif
 
-                            <div class="mb-4">
+                            <!-- New Image -->
+                            <div class="mb-3">
                                 <label for="featured_image" class="form-label fw-semibold">New Image</label>
                                 <input type="file" class="form-control @error('featured_image') is-invalid @enderror"
                                        id="featured_image" name="featured_image" accept="image/*">
                                 @error('featured_image')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
-                                <div class="form-text mt-2">
-                                    <i class="fas fa-info-circle me-1"></i>
-                                    Leave empty to keep current image
-                                </div>
+                                <small class="text-muted">Leave empty to keep current image</small>
                             </div>
 
-                            <div class="mb-4" id="imagePreview" style="display: none;">
+                            <!-- Image Preview -->
+                            <div class="mb-3" id="imagePreview" style="display: none;">
                                 <label class="form-label fw-semibold">Preview</label>
                                 <div class="border rounded-3 p-3 text-center bg-light">
                                     <img src="" alt="Preview" style="max-width: 100%; max-height: 150px;">
                                 </div>
                             </div>
 
-                            <div class="mb-4">
+                            <!-- ===== EGG-EGGLESS TOGGLES ===== -->
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Dietary Options</label>
+
                                 <div class="form-check form-switch mb-2">
                                     <input type="checkbox" class="form-check-input" id="is_active" name="is_active" value="1"
                                            {{ old('is_active', $product->is_active) ? 'checked' : '' }}>
                                     <label class="form-check-label fw-semibold" for="is_active">Active</label>
                                 </div>
-                                <div class="form-check form-switch">
+
+                                <div class="form-check form-switch mb-2">
                                     <input type="checkbox" class="form-check-input" id="is_featured" name="is_featured" value="1"
                                            {{ old('is_featured', $product->is_featured) ? 'checked' : '' }}>
                                     <label class="form-check-label fw-semibold" for="is_featured">Featured Product</label>
+                                </div>
+
+                                <!-- EGG-EGGLESS OPTION -->
+                                <div class="form-check form-switch mt-3 pt-2 border-top">
+                                    <input type="checkbox" class="form-check-input" id="is_eggless" name="is_eggless" value="1"
+                                           {{ old('is_eggless', $product->is_eggless) ? 'checked' : '' }}>
+                                    <label class="form-check-label fw-semibold" for="is_eggless">
+                                        <i class="fas fa-leaf me-1" style="color: #2e7d32;"></i>
+                                        <span style="color: #2e7d32;">Eggless Cake</span>
+                                    </label>
+                                    <small class="text-muted d-block mt-1">Check this if the cake contains NO eggs</small>
                                 </div>
                             </div>
                         </div>
@@ -179,22 +200,22 @@
 
 @push('scripts')
 <script>
-document.getElementById('featured_image').addEventListener('change', function(e) {
-    const preview = document.getElementById('imagePreview');
-    const previewImg = preview.querySelector('img');
+    document.getElementById('featured_image').addEventListener('change', function(e) {
+        const preview = document.getElementById('imagePreview');
+        const previewImg = preview.querySelector('img');
 
-    if (this.files && this.files[0]) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            previewImg.src = e.target.result;
-            preview.style.display = 'block';
+        if (this.files && this.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                previewImg.src = e.target.result;
+                preview.style.display = 'block';
+            }
+            reader.readAsDataURL(this.files[0]);
+        } else {
+            preview.style.display = 'none';
+            previewImg.src = '';
         }
-        reader.readAsDataURL(this.files[0]);
-    } else {
-        preview.style.display = 'none';
-        previewImg.src = '';
-    }
-});
+    });
 </script>
 @endpush
 @endsection

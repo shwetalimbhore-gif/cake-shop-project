@@ -10,7 +10,7 @@
             <div class="card-header bg-transparent">
                 <h5 class="mb-0 fw-bold">
                     <i class="fas fa-plus-circle text-primary me-2"></i>
-                    Product Information
+                    Create New Product
                 </h5>
             </div>
             <div class="card-body">
@@ -29,20 +29,22 @@
 
                     <div class="row">
                         <div class="col-md-8">
-                            <div class="mb-4">
+                            <!-- Product Name -->
+                            <div class="mb-3">
                                 <label for="name" class="form-label fw-semibold">Product Name <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control @error('name') is-invalid @enderror"
-                                       id="name" name="name" value="{{ old('name') }}" placeholder="Enter product name" required>
+                                       id="name" name="name" value="{{ old('name') }}" required>
                                 @error('name')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
 
-                            <div class="row mb-4">
+                            <!-- SKU and Category -->
+                            <div class="row mb-3">
                                 <div class="col-md-6">
                                     <label for="sku" class="form-label fw-semibold">SKU <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control @error('sku') is-invalid @enderror"
-                                           id="sku" name="sku" value="{{ old('sku') }}" placeholder="Enter SKU" required>
+                                           id="sku" name="sku" value="{{ old('sku') }}" required>
                                     @error('sku')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -63,19 +65,21 @@
                                 </div>
                             </div>
 
-                            <div class="mb-4">
+                            <!-- Short Description -->
+                            <div class="mb-3">
                                 <label for="short_description" class="form-label fw-semibold">Short Description</label>
                                 <textarea class="form-control @error('short_description') is-invalid @enderror"
-                                          id="short_description" name="short_description" rows="2" placeholder="Brief description">{{ old('short_description') }}</textarea>
+                                          id="short_description" name="short_description" rows="2">{{ old('short_description') }}</textarea>
                                 @error('short_description')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
 
-                            <div class="mb-4">
+                            <!-- Full Description -->
+                            <div class="mb-3">
                                 <label for="description" class="form-label fw-semibold">Full Description</label>
                                 <textarea class="form-control @error('description') is-invalid @enderror"
-                                          id="description" name="description" rows="5" placeholder="Detailed product description">{{ old('description') }}</textarea>
+                                          id="description" name="description" rows="5">{{ old('description') }}</textarea>
                                 @error('description')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -83,31 +87,33 @@
                         </div>
 
                         <div class="col-md-4">
-                            <div class="mb-4">
+                            <!-- Prices -->
+                            <div class="mb-3">
                                 <label for="regular_price" class="form-label fw-semibold">Regular Price <span class="text-danger">*</span></label>
                                 <div class="input-group">
-                                    <span class="input-group-text">{{ setting('currency_symbol', '₹') }}</span>
+                                    <span class="input-group-text">{{ setting('currency_symbol', '$') }}</span>
                                     <input type="number" step="0.01" class="form-control @error('regular_price') is-invalid @enderror"
-                                           id="regular_price" name="regular_price" value="{{ old('regular_price') }}" placeholder="0.00" required>
+                                           id="regular_price" name="regular_price" value="{{ old('regular_price') }}" required>
                                 </div>
                                 @error('regular_price')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
 
-                            <div class="mb-4">
+                            <div class="mb-3">
                                 <label for="sale_price" class="form-label fw-semibold">Sale Price</label>
                                 <div class="input-group">
-                                    <span class="input-group-text">{{ setting('currency_symbol', '₹') }}</span>
+                                    <span class="input-group-text">{{ setting('currency_symbol', '$') }}</span>
                                     <input type="number" step="0.01" class="form-control @error('sale_price') is-invalid @enderror"
-                                           id="sale_price" name="sale_price" value="{{ old('sale_price') }}" placeholder="0.00">
+                                           id="sale_price" name="sale_price" value="{{ old('sale_price') }}">
                                 </div>
                                 @error('sale_price')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
 
-                            <div class="mb-4">
+                            <!-- Stock -->
+                            <div class="mb-3">
                                 <label for="stock_quantity" class="form-label fw-semibold">Stock Quantity <span class="text-danger">*</span></label>
                                 <input type="number" class="form-control @error('stock_quantity') is-invalid @enderror"
                                        id="stock_quantity" name="stock_quantity" value="{{ old('stock_quantity', 0) }}" min="0" required>
@@ -116,34 +122,47 @@
                                 @enderror
                             </div>
 
-                            <div class="mb-4">
+                            <!-- Featured Image -->
+                            <div class="mb-3">
                                 <label for="featured_image" class="form-label fw-semibold">Featured Image</label>
                                 <input type="file" class="form-control @error('featured_image') is-invalid @enderror"
                                        id="featured_image" name="featured_image" accept="image/*">
                                 @error('featured_image')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
-                                <div class="form-text mt-2">
-                                    <i class="fas fa-info-circle me-1"></i>
-                                    Allowed: JPEG, PNG, JPG, GIF (Max: 2MB)
-                                </div>
+                                <small class="text-muted">Allowed: JPEG, PNG, JPG, GIF (Max: 2MB)</small>
                             </div>
 
-                            <div class="mb-4" id="imagePreview" style="display: none;">
+                            <!-- Image Preview -->
+                            <div class="mb-3" id="imagePreview" style="display: none;">
                                 <label class="form-label fw-semibold">Preview</label>
                                 <div class="border rounded-3 p-3 text-center bg-light">
                                     <img src="" alt="Preview" style="max-width: 100%; max-height: 150px;">
                                 </div>
                             </div>
 
-                            <div class="mb-4">
+                            <!-- ===== EGG-EGGLESS TOGGLES ===== -->
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Dietary Options</label>
+
                                 <div class="form-check form-switch mb-2">
                                     <input type="checkbox" class="form-check-input" id="is_active" name="is_active" value="1" checked>
                                     <label class="form-check-label fw-semibold" for="is_active">Active</label>
                                 </div>
-                                <div class="form-check form-switch">
+
+                                <div class="form-check form-switch mb-2">
                                     <input type="checkbox" class="form-check-input" id="is_featured" name="is_featured" value="1">
                                     <label class="form-check-label fw-semibold" for="is_featured">Featured Product</label>
+                                </div>
+
+                                <!-- EGG-EGGLESS OPTION -->
+                                <div class="form-check form-switch mt-3 pt-2 border-top">
+                                    <input type="checkbox" class="form-check-input" id="is_eggless" name="is_eggless" value="1">
+                                    <label class="form-check-label fw-semibold" for="is_eggless">
+                                        <i class="fas fa-leaf me-1" style="color: #2e7d32;"></i>
+                                        <span style="color: #2e7d32;">Eggless Cake</span>
+                                    </label>
+                                    <small class="text-muted d-block mt-1">Check this if the cake contains NO eggs</small>
                                 </div>
                             </div>
                         </div>
@@ -165,33 +184,22 @@
 
 @push('scripts')
 <script>
-document.getElementById('featured_image').addEventListener('change', function(e) {
-    const preview = document.getElementById('imagePreview');
-    const previewImg = preview.querySelector('img');
+    document.getElementById('featured_image').addEventListener('change', function(e) {
+        const preview = document.getElementById('imagePreview');
+        const previewImg = preview.querySelector('img');
 
-    if (this.files && this.files[0]) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            previewImg.src = e.target.result;
-            preview.style.display = 'block';
+        if (this.files && this.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                previewImg.src = e.target.result;
+                preview.style.display = 'block';
+            }
+            reader.readAsDataURL(this.files[0]);
+        } else {
+            preview.style.display = 'none';
+            previewImg.src = '';
         }
-        reader.readAsDataURL(this.files[0]);
-    } else {
-        preview.style.display = 'none';
-        previewImg.src = '';
-    }
-});
-
-// Auto-calculate discount percentage
-document.getElementById('sale_price').addEventListener('input', function() {
-    const regularPrice = parseFloat(document.getElementById('regular_price').value) || 0;
-    const salePrice = parseFloat(this.value) || 0;
-
-    if (regularPrice > 0 && salePrice > 0 && salePrice < regularPrice) {
-        const discount = ((regularPrice - salePrice) / regularPrice * 100).toFixed(0);
-        // You can display this somewhere if needed
-    }
-});
+    });
 </script>
 @endpush
 @endsection

@@ -189,6 +189,27 @@
         </div>
     </div>
 
+    <!-- Add this in the product details page -->
+    <div class="product-eggless-info mb-4">
+        @if($product->is_eggless)
+            <div class="eggless-badge-large">
+                <i class="fas fa-leaf fa-2x me-3"></i>
+                <div>
+                    <h5 class="fw-bold mb-1">100% Eggless</h5>
+                    <p class="text-muted mb-0">This cake contains no eggs. Perfect for vegetarians!</p>
+                </div>
+            </div>
+        @else
+            <div class="with-egg-badge-large">
+                <i class="fas fa-egg fa-2x me-3"></i>
+                <div>
+                    <h5 class="fw-bold mb-1">Contains Egg</h5>
+                    <p class="text-muted mb-0">This traditional recipe includes fresh eggs.</p>
+                </div>
+            </div>
+        @endif
+    </div>
+
     <!-- Related Products -->
     @if($relatedProducts->count() > 0)
     <div class="row mt-5">
