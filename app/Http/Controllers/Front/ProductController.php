@@ -101,7 +101,7 @@ class ProductController extends Controller
     }
 
     /**
-     * Display single product (FIXED: removed die statement)
+     * Display single product
      */
     public function show($slug)
     {
@@ -113,13 +113,23 @@ class ProductController extends Controller
         // Increment view count
         $product->increment('views');
 
-        // Get related products (same category)
-        $relatedProducts = Product::with(['images'])
+        // ===== FIXED: Get related products (same category, exclude current product) =====
+        $relatedProducts = Product::with(['category', 'images'])
             ->where('category_id', $product->category_id)
             ->where('id', '!=', $product->id)
             ->where('is_active', true)
             ->limit(4)
             ->get();
+
+        // If no products in same category, get any other active products
+        if ($relatedProducts->isEmpty()) {
+            $relatedProducts = Product::with(['category', 'images'])
+                ->where('id', '!=', $product->id)
+                ->where('is_active', true)
+                ->inRandomOrder()
+                ->limit(4)
+                ->get();
+        }
 
         return view('front.product-details', compact('product', 'relatedProducts'));
     }

@@ -5,38 +5,44 @@ namespace App\Http\Controllers\Front;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\Cart;
+use App\Models\CartItem;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\DB;
-
+use Illuminate\Support\Facades\Session;
 
 class CheckoutController extends Controller
 {
+    /**
+     * Show checkout page
+     */
     public function index()
     {
-        $cart = Session::get('cart', []);
+        // Get cart from database
+        $cart = Cart::getCart();
+        $cart->load('items.product');
 
-        if (empty($cart)) {
+        // Check if cart is empty
+        if ($cart->items->isEmpty()) {
             return redirect()->route('cart.index')->with('error', 'Your cart is empty!');
         }
 
-        $total = 0;
-        foreach ($cart as $item) {
-            $total += $item['price'] * $item['quantity'];
-        }
+        // Calculate totals
+        $subtotal = $cart->total_amount;
 
         $deliveryCharge = setting('delivery_charges', 10);
         $freeThreshold = setting('free_delivery_threshold', 100);
-        $deliveryFee = ($total >= $freeThreshold) ? 0 : $deliveryCharge;
+        $deliveryFee = ($subtotal >= $freeThreshold) ? 0 : $deliveryCharge;
 
-        $grandTotal = $total + $deliveryFee;
+        $tax = $subtotal * (setting('tax_rate', 10) / 100);
+        $grandTotal = $subtotal + $tax + $deliveryFee;
 
-        return view('front.checkout', compact('cart', 'total', 'deliveryFee', 'grandTotal'));
+        return view('front.checkout', compact('cart', 'subtotal', 'deliveryFee', 'tax', 'grandTotal'));
     }
 
     /**
- * Process checkout
- */
+     * Process checkout
+     */
     public function process(Request $request)
     {
         $request->validate([
@@ -120,7 +126,7 @@ class CheckoutController extends Controller
                 // $item->product->decrement('stock_quantity', $item->quantity);
             }
 
-            // Clear cart
+            // Clear cart items
             CartItem::where('cart_id', $cart->id)->delete();
             $cart->total_amount = 0;
             $cart->save();
@@ -135,8 +141,12 @@ class CheckoutController extends Controller
         }
     }
 
+    /**
+     * Show checkout success page
+     */
     public function success(Order $order)
     {
+        // Ensure user can only view their own orders
         if ($order->user_id !== auth()->id()) {
             abort(403);
         }

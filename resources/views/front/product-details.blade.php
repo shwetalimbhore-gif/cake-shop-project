@@ -210,41 +210,65 @@
         @endif
     </div>
 
-    <!-- Related Products -->
-    @if($relatedProducts->count() > 0)
-    <div class="row mt-5">
-        <div class="col-12">
-            <h3 class="mb-4">You May Also Like</h3>
-            <div class="row">
+    <!-- You May Also Like Section -->
+    @if($relatedProducts->isNotEmpty())
+    <section class="related-products mt-5 pt-4">
+        <div class="container">
+            <h2 class="section-title text-center mb-4">You May Also Like</h2>
+            <div class="row g-4">
                 @foreach($relatedProducts as $related)
-                <div class="col-lg-3 col-md-4 col-6">
-                    <div class="product-card">
-                        <div class="product-image">
-                            @if($related->featured_image)
-                                <img src="{{ asset('storage/' . $related->featured_image) }}" alt="{{ $related->name }}">
-                            @else
-                                <img src="https://via.placeholder.com/300x300" alt="{{ $related->name }}">
-                            @endif
+                <div class="col-lg-3 col-md-6">
+                    <div class="related-product-card">
+                        <div class="related-product-image">
+                            <a href="{{ route('product.details', $related->slug) }}">
+                                @if($related->featured_image)
+                                    <img src="{{ asset('storage/' . $related->featured_image) }}"
+                                        alt="{{ $related->name }}"
+                                        class="img-fluid">
+                                @else
+                                    <img src="https://images.unsplash.com/photo-1578985545062-69928b1d9587"
+                                        alt="{{ $related->name }}"
+                                        class="img-fluid">
+                                @endif
+                            </a>
 
-                            <div class="product-overlay">
-                                <a href="{{ route('product.details', $related->slug) }}" class="btn btn-light">
-                                    <i class="fas fa-eye me-2"></i>View
-                                </a>
-                            </div>
+                            <!-- Quick Badge -->
+                            @if($related->is_eggless)
+                                <span class="related-badge eggless-badge">
+                                    <i class="fas fa-leaf"></i>
+                                </span>
+                            @endif
                         </div>
 
-                        <div class="product-info">
-                            <h5 class="product-title">
+                        <div class="related-product-info">
+                            <p class="related-category">{{ $related->category->name ?? 'Cake' }}</p>
+                            <h5 class="related-title">
                                 <a href="{{ route('product.details', $related->slug) }}">{{ $related->name }}</a>
                             </h5>
-                            <div class="product-price">{{ format_currency($related->regular_price) }}</div>
+
+                            <div class="related-price">
+                                @if($related->sale_price && $related->sale_price < $related->regular_price)
+                                    <span class="old-price">{{ format_currency($related->regular_price) }}</span>
+                                    <span class="new-price">{{ format_currency($related->sale_price) }}</span>
+                                @else
+                                    <span class="new-price">{{ format_currency($related->regular_price) }}</span>
+                                @endif
+                            </div>
+
+                            <form action="{{ route('cart.add', $related) }}" method="POST" class="mt-2">
+                                @csrf
+                                <input type="hidden" name="quantity" value="1">
+                                <button type="submit" class="btn-related-add">
+                                    <i class="fas fa-shopping-cart me-2"></i>Add to Cart
+                                </button>
+                            </form>
                         </div>
                     </div>
                 </div>
                 @endforeach
             </div>
         </div>
-    </div>
+    </section>
     @endif
 </div>
 

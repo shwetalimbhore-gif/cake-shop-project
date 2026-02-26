@@ -9,7 +9,7 @@
     <title>@yield('title', setting('site_name', 'Cozy Cravings'))</title>
 
     <!-- Favicon -->
-    <link rel="icon" type="image/png" sizes="180x180" href="{{ asset('favicon.png') }}">
+    <link rel="icon" type="image/png" sizes="124x124" href="{{ asset('favicon.png') }}">
 
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -17,7 +17,7 @@
     <!-- Font Awesome 6 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <!-- Google Fonts - Modern, Clean Fonts -->
+    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Prata&display=swap" rel="stylesheet">
 
     <!-- AOS Animation -->
@@ -57,10 +57,6 @@
             letter-spacing: -0.02em;
         }
 
-        .display-1, .display-2, .display-3, .display-4, .display-5, .display-6 {
-            font-family: 'Prata', serif;
-        }
-
         /* Modern Navbar */
         .navbar-modern {
             background: rgba(253, 248, 242, 0.9);
@@ -82,30 +78,20 @@
             color: var(--terracotta) !important;
             letter-spacing: -0.02em;
             transition: opacity 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
         }
 
         .navbar-brand-modern:hover {
             opacity: 0.8;
         }
 
-        /* ===== IMPROVED LOGO SIZE ===== */
-        .navbar-brand-modern img {
-            height: 65px;        /* Increased from 45px to 65px */
+        .navbar-logo {
+            height: 55px;
             width: auto;
             object-fit: contain;
-            transition: transform 0.3s ease;
-        }
-
-        /* Optional hover effect */
-        .navbar-brand-modern img:hover {
-            transform: scale(1.02);
-        }
-
-        /* Mobile responsive */
-        @media (max-width: 768px) {
-            .navbar-brand-modern img {
-                height: 45px;    /* Smaller on mobile */
-            }
         }
 
         .nav-link-modern {
@@ -143,6 +129,23 @@
 
         .nav-link-modern.active {
             opacity: 1;
+            font-weight: 600;
+        }
+
+        /* Cart Badge */
+        .cart-badge-modern {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            background: var(--terracotta);
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             font-weight: 600;
         }
 
@@ -187,112 +190,7 @@
             transform: translateY(-2px);
         }
 
-        /* Modern Cards */
-        .card-modern {
-            background: white;
-            border: none;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: var(--shadow-sm);
-            transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .card-modern:hover {
-            transform: translateY(-8px);
-            box-shadow: var(--shadow-md);
-        }
-
-        /* Product Image Container - Fixed */
-        .product-image-container {
-            position: relative;
-            height: 280px;
-            overflow: hidden;
-            background: var(--sand);
-        }
-
-        .product-image-container img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
-        }
-
-        .card-modern:hover .product-image-container img {
-            transform: scale(1.05);
-        }
-
-        .product-badge {
-            position: absolute;
-            top: 16px;
-            left: 16px;
-            background: var(--terracotta);
-            color: white;
-            padding: 6px 14px;
-            border-radius: 2px;
-            font-size: 0.7rem;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-            z-index: 2;
-        }
-
-        .product-badge.featured {
-            background: var(--gold);
-            color: var(--charcoal);
-            left: auto;
-            right: 16px;
-        }
-
-        /* Cart Badge */
-        .cart-badge-modern {
-            position: absolute;
-            top: -6px;
-            right: -6px;
-            background: var(--terracotta);
-            color: white;
-            border-radius: 50%;
-            width: 18px;
-            height: 18px;
-            font-size: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-        }
-
-        /* Section Headers */
-        .section-header {
-            text-align: center;
-            margin-bottom: 60px;
-        }
-
-        .section-subtitle {
-            color: var(--taupe);
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            letter-spacing: 3px;
-            margin-bottom: 16px;
-            display: block;
-        }
-
-        .section-title {
-            font-size: 2.8rem;
-            color: var(--charcoal);
-            margin-bottom: 20px;
-            line-height: 1.2;
-        }
-
-        .section-description {
-            color: var(--taupe);
-            font-size: 1.1rem;
-            max-width: 600px;
-            margin: 0 auto;
-        }
-
-        /* Dropdown Modern */
+        /* Dropdown */
         .dropdown-menu-modern {
             border: none;
             border-radius: 4px;
@@ -343,41 +241,7 @@
             color: white;
         }
 
-        /* Breadcrumb */
-        .breadcrumb-modern {
-            padding: 40px 0 20px;
-            margin-bottom: 40px;
-            border-bottom: 1px solid var(--sand);
-        }
-
-        .breadcrumb-modern h1 {
-            font-size: 2.2rem;
-            margin-bottom: 16px;
-        }
-
-        .breadcrumb-custom {
-            background: transparent;
-            padding: 0;
-        }
-
-        .breadcrumb-custom .breadcrumb-item {
-            font-size: 0.9rem;
-        }
-
-        .breadcrumb-custom .breadcrumb-item a {
-            color: var(--taupe);
-            text-decoration: none;
-        }
-
-        .breadcrumb-custom .breadcrumb-item.active {
-            color: var(--charcoal);
-        }
-
-        .breadcrumb-custom .breadcrumb-item + .breadcrumb-item:before {
-            color: var(--sand);
-        }
-
-        /* Footer Modern */
+        /* Footer */
         .footer-modern {
             background: var(--charcoal);
             color: var(--cream);
@@ -447,73 +311,169 @@
             font-size: 0.85rem;
         }
 
-        /* Pagination Modern */
-        .pagination-modern {
-            gap: 8px;
-        }
-
-        .page-link-modern {
-            border: none;
-            border-radius: 2px;
-            padding: 10px 16px;
-            color: var(--charcoal);
-            font-weight: 500;
-            transition: all 0.3s;
-            background: transparent;
-        }
-
-        .page-link-modern:hover {
-            background: var(--sand);
-            color: var(--charcoal);
-        }
-
-        .page-item-modern.active .page-link-modern {
-            background: var(--terracotta);
-            color: white;
-        }
-
-        /* Form Elements */
-        .form-control-modern {
-            border: 1px solid var(--sand);
-            border-radius: 2px;
-            padding: 14px 16px;
-            transition: all 0.3s;
-        }
-
-        .form-control-modern:focus {
-            border-color: var(--terracotta);
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(201, 124, 93, 0.1);
-        }
-
-        /* Animations */
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .fade-in {
-            animation: fadeIn 0.8s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
-        }
-
         /* Responsive */
         @media (max-width: 768px) {
-            .section-title {
-                font-size: 2rem;
-            }
-
             .navbar-brand-modern {
                 font-size: 1.5rem;
             }
 
-            .product-image-container {
-                height: 220px;
+            .navbar-logo {
+                height: 40px;
+            }
+        }
+
+        /* ===== RELATED PRODUCTS STYLES ===== */
+        .related-products {
+            border-top: 2px solid var(--sand);
+        }
+
+        .section-title {
+            font-family: 'Prata', serif;
+            font-size: 2rem;
+            color: var(--charcoal);
+            position: relative;
+            display: inline-block;
+            padding-bottom: 10px;
+        }
+
+        .section-title:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 3px;
+            background: var(--terracotta);
+        }
+
+        .related-product-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.3s;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .related-product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .related-product-image {
+            position: relative;
+            height: 180px;
+            overflow: hidden;
+        }
+
+        .related-product-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s;
+        }
+
+        .related-product-card:hover .related-product-image img {
+            transform: scale(1.05);
+        }
+
+        .related-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            background: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #a5d6a7;
+        }
+
+        .related-product-info {
+            padding: 15px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .related-category {
+            color: var(--taupe);
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
+        }
+
+        .related-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            line-height: 1.3;
+            height: 40px;
+            overflow: hidden;
+        }
+
+        .related-title a {
+            color: var(--charcoal);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .related-title a:hover {
+            color: var(--terracotta);
+        }
+
+        .related-price {
+            margin-bottom: 10px;
+        }
+
+        .old-price {
+            color: var(--taupe);
+            text-decoration: line-through;
+            font-size: 0.8rem;
+            margin-right: 5px;
+        }
+
+        .new-price {
+            color: var(--terracotta);
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .btn-related-add {
+            width: 100%;
+            padding: 8px;
+            background: transparent;
+            color: var(--terracotta);
+            border: 1px solid var(--terracotta);
+            border-radius: 30px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .btn-related-add:hover {
+            background: var(--terracotta);
+            color: white;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .related-product-image {
+                height: 150px;
+            }
+
+            .related-title {
+                font-size: 0.9rem;
+                height: 35px;
             }
         }
     </style>
@@ -526,7 +486,9 @@
         <div class="container">
             <a class="navbar-brand-modern" href="{{ route('home') }}">
                 @if(setting('site_logo'))
-                    <img src="{{ asset('storage/' . setting('site_logo')) }}" alt="{{ setting('site_name') }}">
+                    <img src="{{ asset('storage/' . setting('site_logo')) }}"
+                         alt="{{ setting('site_name') }}"
+                         class="navbar-logo">
                 @else
                     {{ setting('site_name', 'Cozy Cravings') }}
                 @endif
@@ -557,11 +519,22 @@
 
                 <div class="d-flex align-items-center gap-4">
                     <!-- Cart -->
-                    <a href="{{ route('cart.index') }}" class="position-relative">
+                    <a href="{{ route('cart.index') }}" class="position-relative" id="cart-icon">
                         <i class="fas fa-shopping-bag" style="color: var(--charcoal); font-size: 1.2rem;"></i>
-                        @php $cartCount = count(Session::get('cart', [])); @endphp
+                        @php
+                            $cartCount = 0;
+                            if (auth()->check()) {
+                                $cart = App\Models\Cart::where('user_id', auth()->id())->first();
+                                $cartCount = $cart ? $cart->items()->sum('quantity') : 0;
+                            } else {
+                                $cart = App\Models\Cart::where('session_id', session()->getId())->first();
+                                $cartCount = $cart ? $cart->items()->sum('quantity') : 0;
+                            }
+                        @endphp
                         @if($cartCount > 0)
-                            <span class="cart-badge-modern">{{ $cartCount }}</span>
+                            <span class="cart-badge-modern" id="cart-count">{{ $cartCount }}</span>
+                        @else
+                            <span class="cart-badge-modern" id="cart-count" style="display: none;">0</span>
                         @endif
                     </a>
 
@@ -624,7 +597,7 @@
     <!-- Spacer -->
     <div style="height: 90px;"></div>
 
-    <!-- Modern Alerts -->
+    <!-- Alerts -->
     @if(session('success'))
         <div class="alert-modern alert-success-modern alert-dismissible fade show" role="alert">
             <div class="container">
@@ -646,7 +619,7 @@
     <!-- Main Content -->
     @yield('content')
 
-    <!-- Modern Footer -->
+    <!-- Footer -->
     <footer class="footer-modern">
         <div class="container">
             <div class="row g-5">
@@ -746,6 +719,21 @@
                 bsAlert.close();
             });
         }, 5000);
+
+        // Update cart count function
+        function updateCartCount() {
+            fetch('/cart/count')
+                .then(response => response.json())
+                .then(data => {
+                    const cartCount = document.getElementById('cart-count');
+                    if (data.count > 0) {
+                        cartCount.textContent = data.count;
+                        cartCount.style.display = 'flex';
+                    } else {
+                        cartCount.style.display = 'none';
+                    }
+                });
+        }
     </script>
 
     @stack('scripts')

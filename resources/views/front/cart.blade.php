@@ -172,9 +172,16 @@
                             </span>
                         </div>
 
-                        <a href="{{ route('checkout.index') }}" class="btn-modern btn-primary-modern w-100">
-                            Proceed to Checkout <i class="fas fa-arrow-right ms-2"></i>
-                        </a>
+                        <!-- FIXED: Check if cart is not empty before showing checkout button -->
+                        @if($cart->items->isNotEmpty())
+                            <a href="{{ route('checkout.index') }}" class="btn-modern btn-primary-modern w-100">
+                                Proceed to Checkout <i class="fas fa-arrow-right ms-2"></i>
+                            </a>
+                        @else
+                            <a href="{{ route('shop') }}" class="btn-modern btn-primary-modern w-100">
+                                Shop Now <i class="fas fa-shopping-bag ms-2"></i>
+                            </a>
+                        @endif
 
                         <p class="text-muted small text-center mt-3 mb-0">
                             <i class="fas fa-shield-alt me-1"></i>
