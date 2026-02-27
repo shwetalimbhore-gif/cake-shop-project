@@ -44,7 +44,7 @@ if (!function_exists('site_logo')) {
 if (!function_exists('format_currency')) {
     function format_currency($amount)
     {
-        $symbol = setting('currency_symbol', '$');
+        $symbol = setting('currency_symbol', '₹');
         return $symbol . number_format($amount, 2);
     }
 }

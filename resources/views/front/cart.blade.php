@@ -19,10 +19,10 @@
 </div>
 
 <div class="container mb-5">
-    @if($cart->items->isEmpty())
+    @if(!isset($cart) || $cart->items->isEmpty())
         <!-- Empty Cart -->
-        <div class="text-center py-5">
-            <div class="mb-4">
+        <div class="empty-cart text-center py-5">
+            <div class="empty-cart-icon mb-4">
                 <i class="fas fa-shopping-cart fa-5x" style="color: var(--sand);"></i>
             </div>
             <h3 class="mb-3">Your Cart is Empty</h3>
@@ -35,226 +35,535 @@
         <div class="row">
             <!-- Cart Items -->
             <div class="col-lg-8">
-                <div class="card-modern mb-4">
-                    <div class="card-header bg-transparent p-4">
+                <div class="cart-items-container">
+                    <div class="cart-header">
                         <h5 class="mb-0">Cart Items ({{ $cart->items->sum('quantity') }})</h5>
                     </div>
 
-                    <div class="p-4">
+                    <div class="cart-items-list">
                         @foreach($cart->items as $item)
-                        <div class="row align-items-center cart-item mb-4 pb-4 border-bottom">
-                            <div class="col-md-2 col-4">
-                                @if($item->product->featured_image)
-                                    <img src="{{ asset('storage/' . $item->product->featured_image) }}"
-                                         alt="{{ $item->product->name }}"
-                                         class="img-fluid rounded-3">
-                                @else
-                                    <img src="https://via.placeholder.com/100x100"
-                                         alt="{{ $item->product->name }}"
-                                         class="img-fluid rounded-3">
-                                @endif
+                        <div class="cart-item" data-id="{{ $item->id }}">
+                            <div class="cart-item-image">
+                                <a href="{{ route('product.details', $item->product->slug) }}">
+                                    @if($item->product->featured_image)
+                                        <img src="{{ asset('storage/' . $item->product->featured_image) }}"
+                                             alt="{{ $item->product->name }}">
+                                    @else
+                                        <img src="https://images.unsplash.com/photo-1578985545062-69928b1d9587"
+                                             alt="{{ $item->product->name }}">
+                                    @endif
+                                </a>
                             </div>
 
-                            <div class="col-md-4 col-8">
-                                <h6 class="fw-semibold mb-2">
-                                    <a href="{{ route('product.details', $item->product->slug) }}"
-                                       class="text-decoration-none" style="color: var(--charcoal);">
+                            <div class="cart-item-details">
+                                <h5 class="cart-item-title">
+                                    <a href="{{ route('product.details', $item->product->slug) }}">
                                         {{ $item->product->name }}
                                     </a>
-                                </h6>
-                                @if($item->options_text)
-                                    <p class="mb-0 small text-muted">{{ $item->options_text }}</p>
-                                @endif
-                            </div>
+                                </h5>
 
-                            <div class="col-md-3 col-6 mt-3 mt-md-0">
-                                <div class="input-group" style="width: 120px;">
-                                    <button class="btn btn-outline-secondary update-cart"
-                                            data-id="{{ $item->id }}"
-                                            data-action="decrease">-</button>
-                                    <input type="text" class="form-control text-center quantity-input"
-                                           value="{{ $item->quantity }}"
-                                           data-id="{{ $item->id }}"
-                                           style="width: 40px;">
-                                    <button class="btn btn-outline-secondary update-cart"
-                                            data-id="{{ $item->id }}"
-                                            data-action="increase">+</button>
+                                @if($item->options)
+                                    <div class="cart-item-options">
+                                        @php $options = is_array($item->options) ? $item->options : json_decode($item->options, true); @endphp
+                                        @if(!empty($options['size']))
+                                            <span class="option-badge">Size: {{ $options['size'] }}</span>
+                                        @endif
+                                        @if(!empty($options['flavor']))
+                                            <span class="option-badge">Flavor: {{ $options['flavor'] }}</span>
+                                        @endif
+                                    </div>
+                                @endif
+
+                                <div class="cart-item-price">
+                                    {{ format_currency($item->unit_price) }} each
                                 </div>
                             </div>
 
-                            <div class="col-md-2 col-4 mt-3 mt-md-0 text-center">
-                                <span class="fw-bold" style="color: var(--terracotta);">
-                                    {{ format_currency($item->subtotal) }}
-                                </span>
+                            <div class="cart-item-quantity">
+                                <div class="quantity-control">
+                                    <button class="quantity-btn update-cart" data-id="{{ $item->id }}" data-action="decrease">-</button>
+                                    <input type="text" class="quantity-input" value="{{ $item->quantity }}"
+                                           data-id="{{ $item->id }}" readonly>
+                                    <button class="quantity-btn update-cart" data-id="{{ $item->id }}" data-action="increase">+</button>
+                                </div>
                             </div>
 
-                            <div class="col-md-1 col-2 mt-3 mt-md-0 text-end">
-                                <form action="{{ route('cart.remove', $item->id) }}" method="POST" class="d-inline">
+                            <div class="cart-item-subtotal">
+                                <span class="subtotal-label">Subtotal:</span>
+                                <span class="subtotal-value">{{ format_currency($item->unit_price * $item->quantity) }}</span>
+                            </div>
+
+                            <div class="cart-item-remove">
+                                <form action="{{ route('cart.remove', $item->id) }}" method="POST" class="remove-form">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="btn btn-link text-danger p-0"
-                                            onclick="return confirm('Remove this item?')">
-                                        <i class="fas fa-trash fa-lg"></i>
+                                    <button type="submit" class="remove-btn" title="Remove item">
+                                        <i class="fas fa-trash"></i>
                                     </button>
                                 </form>
                             </div>
                         </div>
                         @endforeach
+                    </div>
 
-                        <div class="d-flex justify-content-between mt-4">
-                            <a href="{{ route('shop') }}" class="btn-modern btn-outline-modern">
-                                <i class="fas fa-arrow-left me-2"></i>Continue Shopping
-                            </a>
+                    <div class="cart-actions">
+                        <a href="{{ route('shop') }}" class="btn-continue">
+                            <i class="fas fa-arrow-left me-2"></i>Continue Shopping
+                        </a>
 
-                            <form action="{{ route('cart.clear') }}" method="POST">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn-modern btn-outline-modern"
-                                        onclick="return confirm('Clear all items?')">
-                                    <i class="fas fa-trash me-2"></i>Clear Cart
-                                </button>
-                            </form>
-                        </div>
+                        <form action="{{ route('cart.clear') }}" method="POST" class="clear-form">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="btn-clear" onclick="return confirm('Clear all items?')">
+                                <i class="fas fa-trash me-2"></i>Clear Cart
+                            </button>
+                        </form>
                     </div>
                 </div>
             </div>
 
             <!-- Cart Summary -->
             <div class="col-lg-4">
-                <div class="card-modern">
-                    <div class="card-header bg-transparent p-4">
-                        <h5 class="mb-0">Order Summary</h5>
+                <div class="cart-summary">
+                    <h5 class="summary-title">Order Summary</h5>
+
+                    @php
+                        $subtotal = $cart->total_amount;
+                        $deliveryCharge = setting('delivery_charges', 10);
+                        $freeThreshold = setting('free_delivery_threshold', 100);
+                        $deliveryFee = ($subtotal >= $freeThreshold) ? 0 : $deliveryCharge;
+                        $tax = $subtotal * (setting('tax_rate', 10) / 100);
+                        $grandTotal = $subtotal + $tax + $deliveryFee;
+                    @endphp
+
+                    <div class="summary-row">
+                        <span class="summary-label">Subtotal:</span>
+                        <span class="summary-value">{{ format_currency($subtotal) }}</span>
                     </div>
 
-                    <div class="p-4">
-                        @php
-                            $deliveryCharge = setting('delivery_charges', 10);
-                            $freeThreshold = setting('free_delivery_threshold', 100);
-                            $deliveryFee = ($cart->total_amount >= $freeThreshold) ? 0 : $deliveryCharge;
-                            $tax = $cart->total_amount * (setting('tax_rate', 10) / 100);
-                            $grandTotal = $cart->total_amount + $tax + $deliveryFee;
-                        @endphp
-
-                        <div class="d-flex justify-content-between mb-3">
-                            <span class="text-muted">Subtotal:</span>
-                            <span class="fw-semibold">{{ format_currency($cart->total_amount) }}</span>
-                        </div>
-
-                        <div class="d-flex justify-content-between mb-3">
-                            <span class="text-muted">Tax ({{ setting('tax_rate', 10) }}%):</span>
-                            <span class="fw-semibold">{{ format_currency($tax) }}</span>
-                        </div>
-
-                        <div class="d-flex justify-content-between mb-3">
-                            <span class="text-muted">Delivery:</span>
-                            <span class="fw-semibold">
-                                @if($deliveryFee == 0)
-                                    <span class="text-success">Free</span>
-                                @else
-                                    {{ format_currency($deliveryFee) }}
-                                @endif
-                            </span>
-                        </div>
-
-                        @if($cart->total_amount < $freeThreshold)
-                            <div class="alert alert-info py-2 small mb-3">
-                                <i class="fas fa-info-circle me-2"></i>
-                                Add {{ format_currency($freeThreshold - $cart->total_amount) }} more for free delivery!
-                            </div>
-                        @endif
-
-                        <hr>
-
-                        <div class="d-flex justify-content-between mb-4">
-                            <span class="fw-bold">Total:</span>
-                            <span class="fw-bold fs-4" style="color: var(--terracotta);">
-                                {{ format_currency($grandTotal) }}
-                            </span>
-                        </div>
-
-                        <!-- FIXED: Check if cart is not empty before showing checkout button -->
-                        @if($cart->items->isNotEmpty())
-                            <a href="{{ route('checkout.index') }}" class="btn-modern btn-primary-modern w-100">
-                                Proceed to Checkout <i class="fas fa-arrow-right ms-2"></i>
-                            </a>
-                        @else
-                            <a href="{{ route('shop') }}" class="btn-modern btn-primary-modern w-100">
-                                Shop Now <i class="fas fa-shopping-bag ms-2"></i>
-                            </a>
-                        @endif
-
-                        <p class="text-muted small text-center mt-3 mb-0">
-                            <i class="fas fa-shield-alt me-1"></i>
-                            Secure checkout - SSL encrypted
-                        </p>
+                    <div class="summary-row">
+                        <span class="summary-label">Tax ({{ setting('tax_rate', 10) }}%):</span>
+                        <span class="summary-value">{{ format_currency($tax) }}</span>
                     </div>
+
+                    <div class="summary-row">
+                        <span class="summary-label">Delivery:</span>
+                        <span class="summary-value">
+                            @if($deliveryFee == 0)
+                                <span class="text-success">Free</span>
+                            @else
+                                {{ format_currency($deliveryFee) }}
+                            @endif
+                        </span>
+                    </div>
+
+                    @if($subtotal < $freeThreshold)
+                        <div class="delivery-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Add {{ format_currency($freeThreshold - $subtotal) }} more for free delivery!
+                        </div>
+                    @endif
+
+                    <hr class="summary-divider">
+
+                    <div class="summary-row total">
+                        <span class="total-label">Total:</span>
+                        <span class="total-value">{{ format_currency($grandTotal) }}</span>
+                    </div>
+
+                    <a href="{{ route('checkout.index') }}" class="checkout-btn">
+                        Proceed to Checkout <i class="fas fa-arrow-right ms-2"></i>
+                    </a>
+
+                    <p class="secure-info">
+                        <i class="fas fa-shield-alt me-1"></i>
+                        Secure checkout - SSL encrypted
+                    </p>
                 </div>
             </div>
         </div>
     @endif
 </div>
 
-@push('scripts')
+<style>
+/* ===== CART STYLES ===== */
+.cart-items-container {
+    background: white;
+    border-radius: 20px;
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+}
+
+.cart-header {
+    padding: 20px;
+    border-bottom: 1px solid var(--sand);
+    background: var(--cream);
+}
+
+.cart-header h5 {
+    font-family: 'Prata', serif;
+    color: var(--charcoal);
+    margin: 0;
+}
+
+.cart-items-list {
+    padding: 20px;
+}
+
+.cart-item {
+    display: grid;
+    grid-template-columns: 100px 1fr auto auto auto;
+    gap: 20px;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid var(--sand);
+    transition: all 0.3s;
+}
+
+.cart-item:last-child {
+    border-bottom: none;
+}
+
+.cart-item:hover {
+    background: var(--cream);
+}
+
+.cart-item-image {
+    width: 100px;
+    height: 100px;
+    overflow: hidden;
+    border-radius: 12px;
+}
+
+.cart-item-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s;
+}
+
+.cart-item-image img:hover {
+    transform: scale(1.05);
+}
+
+.cart-item-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.cart-item-title a {
+    color: var(--charcoal);
+    text-decoration: none;
+    transition: color 0.3s;
+}
+
+.cart-item-title a:hover {
+    color: var(--terracotta);
+}
+
+.cart-item-options {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.option-badge {
+    background: var(--cream);
+    padding: 4px 10px;
+    border-radius: 30px;
+    font-size: 0.7rem;
+    color: var(--charcoal);
+    border: 1px solid var(--sand);
+}
+
+.cart-item-price {
+    color: var(--taupe);
+    font-size: 0.9rem;
+}
+
+.cart-item-quantity {
+    text-align: center;
+}
+
+.quantity-control {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--cream);
+    border-radius: 30px;
+    padding: 3px;
+}
+
+.quantity-btn {
+    width: 30px;
+    height: 30px;
+    border: none;
+    background: white;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-weight: bold;
+}
+
+.quantity-btn:hover {
+    background: var(--terracotta);
+    color: white;
+}
+
+.quantity-input {
+    width: 40px;
+    text-align: center;
+    border: none;
+    background: transparent;
+    font-weight: 600;
+}
+
+.cart-item-subtotal {
+    text-align: right;
+}
+
+.subtotal-label {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--taupe);
+}
+
+.subtotal-value {
+    font-weight: 700;
+    color: var(--terracotta);
+    font-size: 1.2rem;
+}
+
+.cart-item-remove .remove-btn {
+    background: none;
+    border: none;
+    color: var(--danger);
+    cursor: pointer;
+    transition: all 0.3s;
+    font-size: 1.1rem;
+}
+
+.cart-item-remove .remove-btn:hover {
+    transform: scale(1.1);
+    color: #ff4757;
+}
+
+.cart-actions {
+    padding: 20px;
+    background: var(--cream);
+    display: flex;
+    justify-content: space-between;
+    border-top: 1px solid var(--sand);
+}
+
+.btn-continue {
+    padding: 10px 20px;
+    background: white;
+    color: var(--charcoal);
+    text-decoration: none;
+    border-radius: 30px;
+    transition: all 0.3s;
+    border: 1px solid var(--sand);
+}
+
+.btn-continue:hover {
+    background: var(--sand);
+}
+
+.btn-clear {
+    padding: 10px 20px;
+    background: white;
+    color: var(--danger);
+    border: 1px solid var(--danger);
+    border-radius: 30px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-clear:hover {
+    background: var(--danger);
+    color: white;
+}
+
+/* ===== CART SUMMARY ===== */
+.cart-summary {
+    background: white;
+    border-radius: 20px;
+    padding: 25px;
+    box-shadow: var(--shadow-sm);
+    position: sticky;
+    top: 100px;
+}
+
+.summary-title {
+    font-family: 'Prata', serif;
+    font-size: 1.2rem;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--sand);
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+}
+
+.summary-label {
+    color: var(--taupe);
+}
+
+.summary-value {
+    font-weight: 600;
+    color: var(--charcoal);
+}
+
+.total {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 2px solid var(--sand);
+}
+
+.total-label {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--charcoal);
+}
+
+.total-value {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--terracotta);
+}
+
+.delivery-info {
+    background: #e3f2fd;
+    color: #0d47a1;
+    padding: 10px 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    font-size: 0.9rem;
+}
+
+.checkout-btn {
+    display: block;
+    width: 100%;
+    padding: 15px;
+    background: var(--terracotta);
+    color: white;
+    text-align: center;
+    text-decoration: none;
+    border-radius: 12px;
+    font-weight: 600;
+    margin-top: 20px;
+    transition: all 0.3s;
+}
+
+.checkout-btn:hover {
+    background: #b86a4a;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.secure-info {
+    text-align: center;
+    color: var(--taupe);
+    font-size: 0.8rem;
+    margin-top: 15px;
+}
+
+/* ===== EMPTY CART ===== */
+.empty-cart {
+    background: white;
+    border-radius: 20px;
+    padding: 60px 20px;
+    box-shadow: var(--shadow-sm);
+}
+
+.empty-cart-icon {
+    color: var(--sand);
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 992px) {
+    .cart-item {
+        grid-template-columns: 80px 1fr auto;
+        gap: 15px;
+    }
+
+    .cart-item-subtotal {
+        grid-column: 1 / -1;
+        text-align: left;
+        padding-left: 95px;
+    }
+}
+
+@media (max-width: 768px) {
+    .cart-item {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+
+    .cart-item-image {
+        margin: 0 auto;
+    }
+
+    .cart-item-subtotal {
+        padding-left: 0;
+        text-align: center;
+    }
+
+    .cart-actions {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .btn-continue, .btn-clear {
+        width: 100%;
+        text-align: center;
+    }
+}
+</style>
+
 <script>
     // Update cart via AJAX
-    $('.update-cart').click(function(e) {
-        e.preventDefault();
-        let button = $(this);
-        let id = button.data('id');
-        let action = button.data('action');
-        let input = button.closest('.input-group').find('.quantity-input');
-        let currentVal = parseInt(input.val());
+    document.querySelectorAll('.update-cart').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const id = this.dataset.id;
+            const action = this.dataset.action;
+            const input = this.closest('.quantity-control').querySelector('.quantity-input');
+            let currentVal = parseInt(input.value);
 
-        let newVal = action === 'increase' ? currentVal + 1 : currentVal - 1;
+            let newVal = action === 'increase' ? currentVal + 1 : currentVal - 1;
 
-        if (newVal >= 1) {
-            $.ajax({
-                url: '{{ route("cart.update", ":id") }}'.replace(':id', id),
-                type: 'POST',
-                data: {
-                    _token: '{{ csrf_token() }}',
-                    quantity: newVal
-                },
-                success: function(response) {
-                    if (response.success) {
+            if (newVal >= 1) {
+                fetch(`/cart/update/${id}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({ quantity: newVal })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
                         location.reload();
                     }
-                },
-                error: function(xhr) {
-                    toastr.error('Failed to update cart');
-                }
-            });
-        }
+                });
+            }
+        });
     });
 
-    // Update on manual input
-    $('.quantity-input').change(function() {
-        let input = $(this);
-        let id = input.data('id');
-        let newVal = parseInt(input.val());
-
-        if (newVal >= 1) {
-            $.ajax({
-                url: '{{ route("cart.update", ":id") }}'.replace(':id', id),
-                type: 'POST',
-                data: {
-                    _token: '{{ csrf_token() }}',
-                    quantity: newVal
-                },
-                success: function(response) {
-                    if (response.success) {
-                        location.reload();
-                    }
-                },
-                error: function(xhr) {
-                    toastr.error('Failed to update cart');
-                    input.val(1);
-                }
-            });
-        } else {
-            input.val(1);
-        }
+    // Remove form confirmation
+    document.querySelectorAll('.remove-form').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            if (!confirm('Remove this item from cart?')) {
+                e.preventDefault();
+            }
+        });
     });
 </script>
-@endpush
 @endsection

@@ -5,10 +5,10 @@
 
 @section('content')
 <!-- Modern Hero Section -->
-<section class="hero-modern position-relative overflow-hidden">
+<section class="hero-section position-relative overflow-hidden">
     <div class="container">
-        <div class="row min-vh-90 align-items-center">
-            <div class="col-lg-6" data-aos="fade-right" data-aos-duration="1200">
+        <div class="row align-items-center min-vh-90">
+            <div class="col-lg-6" data-aos="fade-right">
                 <span class="hero-subtitle">Artisanal Bakery</span>
                 <h1 class="hero-title display-1 fw-bold mb-4">
                     Crafting<br>
@@ -30,27 +30,21 @@
                 </div>
             </div>
 
-            <div class="col-lg-6" data-aos="fade-left" data-aos-duration="1200">
+            <div class="col-lg-6" data-aos="fade-left">
                 <div class="hero-image-wrapper">
-                    <div class="hero-image-container">
-                        <img src="/images/homePageImage.jpg"
-                             alt="Artisanal cake"
-                             class="img-fluid hero-main-image">
-                        <div class="hero-image-overlay"></div>
-                    </div>
+                    <img src="https://images.unsplash.com/photo-1562777717-dc6984f65c63?ixlib=rb-4.0.3&auto=format&fit=crop&w=1287&q=80"
+                         alt="Artisanal cake"
+                         class="img-fluid hero-main-image">
                 </div>
             </div>
         </div>
     </div>
-
-    <!-- Minimal Decoration -->
-    <div class="hero-decoration"></div>
 </section>
 
 <!-- Featured Categories -->
 <section class="py-5">
     <div class="container">
-        <div class="section-header" data-aos="fade-up">
+        <div class="section-header text-center" data-aos="fade-up">
             <span class="section-subtitle">Curated Selection</span>
             <h2 class="section-title">Our Collections</h2>
             <p class="section-description">Discover our thoughtfully curated collections, each telling its own story</p>
@@ -60,19 +54,29 @@
             @forelse($categories as $category)
             <div class="col-lg-3 col-md-4 col-6" data-aos="fade-up" data-aos-delay="{{ $loop->index * 50 }}">
                 <a href="{{ route('shop', ['category' => $category->id]) }}" class="text-decoration-none">
-                    <div class="card-modern">
-                        <div class="product-image-container" style="height: 200px;">
+                    <div class="category-card">
+                        <div class="category-image-container">
                             @if($category->image)
-                                <img src="{{ asset('storage/' . $category->image) }}" alt="{{ $category->name }}">
+                                <img src="{{ asset('storage/' . $category->image) }}"
+                                     alt="{{ $category->name }}"
+                                     class="category-image">
                             @else
-                                <div class="w-100 h-100 d-flex align-items-center justify-content-center bg-light">
-                                    <i class="fas fa-cake" style="color: var(--sand); font-size: 3rem;"></i>
+                                <div class="category-image-placeholder">
+                                    @if($category->name == 'Birthday Cakes')
+                                        <i class="fas fa-birthday-cake"></i>
+                                    @elseif($category->name == 'Wedding Cakes')
+                                        <i class="fas fa-heart"></i>
+                                    @elseif($category->name == 'Cupcakes')
+                                        <i class="fas fa-candy-cane"></i>
+                                    @else
+                                        <i class="fas fa-cake"></i>
+                                    @endif
                                 </div>
                             @endif
                         </div>
-                        <div class="p-4 text-center">
-                            <h5 class="mb-2" style="font-family: 'Prata', serif;">{{ $category->name }}</h5>
-                            <span class="small text-muted">{{ $category->products_count ?? $category->products->count() }} items</span>
+                        <div class="category-info">
+                            <h5 class="category-name">{{ $category->name }}</h5>
+                            <span class="category-count">{{ $category->products_count ?? $category->products->count() }} items</span>
                         </div>
                     </div>
                 </a>
@@ -87,9 +91,9 @@
 </section>
 
 <!-- Featured Products -->
-<section class="py-5" style="background: var(--ivory);">
+<section class="py-5 bg-light">
     <div class="container">
-        <div class="section-header" data-aos="fade-up">
+        <div class="section-header text-center" data-aos="fade-up">
             <span class="section-subtitle">Signature Selection</span>
             <h2 class="section-title">Featured Creations</h2>
             <p class="section-description">Our most cherished recipes, perfected over generations</p>
@@ -98,54 +102,44 @@
         <div class="row g-4">
             @forelse($featuredProducts as $product)
             <div class="col-lg-3 col-md-4 col-6" data-aos="fade-up" data-aos-delay="{{ $loop->index * 50 }}">
-                <div class="card-modern">
+                <div class="product-card">
                     <div class="product-image-container">
                         @if($product->featured_image)
-                            <img src="{{ asset('storage/' . $product->featured_image) }}" alt="{{ $product->name }}">
+                            <img src="{{ asset('storage/' . $product->featured_image) }}"
+                                 alt="{{ $product->name }}"
+                                 class="product-image">
                         @else
-                            <img src="https://images.unsplash.com/photo-1578985545062-69928b1d9587" alt="{{ $product->name }}">
+                            <img src="https://images.unsplash.com/photo-1578985545062-69928b1d9587"
+                                 alt="{{ $product->name }}"
+                                 class="product-image">
                         @endif
 
                         @if($product->sale_price && $product->sale_price < $product->regular_price)
-                            <span class="product-badge">Sale</span>
+                            <span class="product-badge sale-badge">SALE</span>
                         @endif
 
-                        @if($product->is_featured)
-                            <span class="product-badge featured">Featured</span>
+                        @if($product->is_eggless)
+                            <span class="product-badge eggless-badge">
+                                <i class="fas fa-leaf"></i> Eggless
+                            </span>
                         @endif
                     </div>
 
-                    <div class="p-4">
-                        <p class="small text-muted mb-2">{{ $product->category->name ?? 'Uncategorized' }}</p>
-                        <h5 class="mb-3" style="font-family: 'Prata', serif;">
-                            <a href="{{ route('product.details', $product->slug) }}" class="text-decoration-none" style="color: var(--charcoal);">
+                    <div class="product-info">
+                        <p class="product-category">{{ $product->category->name ?? 'Cake' }}</p>
+                        <h5 class="product-title">
+                            <a href="{{ route('product.details', $product->slug) }}">
                                 {{ $product->name }}
                             </a>
                         </h5>
 
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                @if($product->sale_price && $product->sale_price < $product->regular_price)
-                                    <span class="text-muted text-decoration-line-through small me-2">
-                                        {{ setting('currency_symbol', '$') }}{{ number_format($product->regular_price, 2) }}
-                                    </span>
-                                    <span class="fw-bold" style="color: var(--terracotta);">
-                                        {{ setting('currency_symbol', '$') }}{{ number_format($product->sale_price, 2) }}
-                                    </span>
-                                @else
-                                    <span class="fw-bold" style="color: var(--terracotta);">
-                                        {{ setting('currency_symbol', '$') }}{{ number_format($product->regular_price, 2) }}
-                                    </span>
-                                @endif
-                            </div>
-
-                            <form action="{{ route('cart.add', $product) }}" method="POST">
-                                @csrf
-                                <input type="hidden" name="quantity" value="1">
-                                <button type="submit" class="btn-modern btn-primary-modern" style="padding: 8px 16px;">
-                                    <i class="fas fa-plus"></i>
-                                </button>
-                            </form>
+                        <div class="product-price">
+                            @if($product->sale_price && $product->sale_price < $product->regular_price)
+                                <span class="original-price">{{ format_currency($product->regular_price) }}</span>
+                                <span class="sale-price">{{ format_currency($product->sale_price) }}</span>
+                            @else
+                                <span class="regular-price">{{ format_currency($product->regular_price) }}</span>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -158,164 +152,253 @@
         </div>
     </div>
 </section>
-
-<!-- Philosophy Section -->
-<section class="py-5">
-    <div class="container">
-        <div class="row align-items-center g-5">
-            <div class="col-lg-6" data-aos="fade-right">
-                <img src="https://images.unsplash.com/photo-1588195538326-c5b1e9f80a1b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1950&q=80"
-                     alt="Our bakery"
-                     class="img-fluid rounded-0 shadow-sm">
-            </div>
-            <div class="col-lg-6" data-aos="fade-left">
-                <span class="section-subtitle">Our Philosophy</span>
-                <h2 class="section-title" style="font-size: 2.2rem;">Where Craft Meets Passion</h2>
-                <p class="text-muted mb-4" style="color: var(--taupe);">
-                    Founded on the belief that exceptional cakes come from exceptional care,
-                    we've dedicated ourselves to perfecting our craft. Every creation begins
-                    with the finest ingredients and is brought to life through time-honored
-                    techniques passed down through generations.
-                </p>
-                <div class="row g-4 mt-4">
-                    <div class="col-6">
-                        <h3 class="fw-bold" style="color: var(--terracotta); font-size: 2.5rem;">70+</h3>
-                        <p class="text-muted small">Years of tradition</p>
-                    </div>
-                    <div class="col-6">
-                        <h3 class="fw-bold" style="color: var(--terracotta); font-size: 2.5rem;">50+</h3>
-                        <p class="text-muted small">Signature recipes</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
 @endsection
 
 @push('styles')
 <style>
-    /* Modern Hero */
-    .hero-modern {
-        min-height: 90vh;
-        background: linear-gradient(135deg, var(--cream) 0%, var(--ivory) 100%);
-        position: relative;
-        padding: 10px 20px;
-    }
+/* ===== HERO SECTION ===== */
+.hero-section {
+    background: linear-gradient(135deg, #fdf8f2 0%, #f7e6e0 100%);
+    min-height: 90vh;
+    padding: 80px 0;
+}
 
-    .hero-subtitle {
-        font-size: 0.9rem;
-        text-transform: uppercase;
-        letter-spacing: 4px;
-        color: var(--taupe);
-        display: block;
-        margin-bottom: 20px;
-    }
+.hero-subtitle {
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    color: var(--taupe);
+    display: block;
+    margin-bottom: 20px;
+}
 
+.hero-title {
+    font-family: 'Prata', serif;
+    color: var(--charcoal);
+    line-height: 1.1;
+}
+
+.hero-highlight {
+    color: var(--terracotta);
+    position: relative;
+    display: inline-block;
+}
+
+.hero-description {
+    color: var(--taupe);
+    font-size: 1.1rem;
+    max-width: 500px;
+}
+
+.hero-main-image {
+    border-radius: 30px;
+    box-shadow: var(--shadow-lg);
+    width: 100%;
+    height: auto;
+}
+
+/* ===== CATEGORY CARDS ===== */
+.category-card {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.3s;
+    height: 100%;
+}
+
+.category-card:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-md);
+}
+
+.category-image-container {
+    height: 200px;
+    overflow: hidden;
+    position: relative;
+}
+
+.category-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s;
+}
+
+.category-card:hover .category-image {
+    transform: scale(1.05);
+}
+
+.category-image-placeholder {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, var(--cream), var(--sand));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 4rem;
+    color: var(--terracotta);
+}
+
+.category-info {
+    padding: 20px;
+    text-align: center;
+}
+
+.category-name {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--charcoal);
+    margin-bottom: 8px;
+}
+
+.category-count {
+    color: var(--taupe);
+    font-size: 0.9rem;
+}
+
+/* ===== PRODUCT CARDS ===== */
+.product-card {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.3s;
+    height: 100%;
+}
+
+.product-card:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-md);
+}
+
+.product-image-container {
+    position: relative;
+    height: 220px;
+    overflow: hidden;
+}
+
+.product-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s;
+}
+
+.product-card:hover .product-image {
+    transform: scale(1.05);
+}
+
+.product-badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    padding: 4px 12px;
+    border-radius: 30px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    z-index: 2;
+}
+
+.sale-badge {
+    background: #ff4757;
+    color: white;
+}
+
+.eggless-badge {
+    background: #e8f5e9;
+    color: #2e7d32;
+    left: auto;
+    right: 10px;
+}
+
+.product-info {
+    padding: 20px;
+}
+
+.product-category {
+    color: var(--taupe);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 5px;
+}
+
+.product-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.product-title a {
+    color: var(--charcoal);
+    text-decoration: none;
+    transition: color 0.3s;
+}
+
+.product-title a:hover {
+    color: var(--terracotta);
+}
+
+.product-price {
+    margin-bottom: 15px;
+}
+
+.original-price {
+    color: var(--taupe);
+    text-decoration: line-through;
+    font-size: 0.9rem;
+    margin-right: 8px;
+}
+
+.sale-price, .regular-price {
+    color: var(--terracotta);
+    font-weight: 700;
+    font-size: 1.2rem;
+}
+
+/* ===== SECTION HEADERS ===== */
+.section-header {
+    margin-bottom: 50px;
+}
+
+.section-subtitle {
+    color: var(--taupe);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    display: block;
+    margin-bottom: 15px;
+}
+
+.section-title {
+    font-family: 'Prata', serif;
+    font-size: 2.5rem;
+    color: var(--charcoal);
+    margin-bottom: 15px;
+}
+
+.section-description {
+    color: var(--taupe);
+    font-size: 1.1rem;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
     .hero-title {
-        font-family: 'Prata', serif;
-        color: var(--charcoal);
-        line-height: 1.1;
-        margin-bottom: 25px; /* Add space below title */
+        font-size: 2.5rem;
     }
 
-    .hero-highlight {
-        color: var(--terracotta);
-        position: relative;
-        display: inline-block;
+    .section-title {
+        font-size: 2rem;
     }
 
-    .hero-highlight:after {
-        content: '';
-        position: absolute;
-        bottom: 10px;
-        left: 0;
-        width: 100%;
-        height: 8px;
-        background: rgba(201, 124, 93, 0.1);
-        z-index: -1;
+    .category-image-container,
+    .product-image-container {
+        height: 180px;
     }
-
-    .hero-description {
-        color: var(--taupe);
-        font-size: 1.1rem;
-        max-width: 500px;
-        margin-bottom: 30px; /* Add space before buttons */
-    }
-
-    .hero-image-wrapper {
-        position: relative;
-        padding: 20px;
-    }
-
-    .hero-image-container {
-        position: relative;
-        overflow: hidden;
-        box-shadow: var(--shadow-lg);
-        /* aspect-ratio: 16/9; Maintains consistent shape */
-        width: 100%; /* Control container width */
-        max-width: 600px; /* Limit maximum size */
-        height: auto;
-        margin: 0 auto; /* Center the image */
-    }
-
-    .hero-main-image {
-        transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
-        width: 100%; /* Make image responsive */
-        height: 630px; /* Maintain aspect ratio */
-        object-fit: cover; /* or contain */
-        max-height: 800px; /* Limit height if needed */
-    }
-
-    .hero-image-container:hover .hero-main-image {
-        transform: scale(1.02);
-    }
-
-    .hero-image-overlay {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: linear-gradient(135deg, rgba(201, 124, 93, 0.1), transparent);
-        pointer-events: none;
-    }
-
-    .hero-decoration {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        width: 100%;
-        height: 1px;
-        background: linear-gradient(90deg, transparent, var(--taupe), transparent);
-    }
-
-    .min-vh-90 {
-        min-height: 90vh;
-    }
-
-    /* If "ARTISANALBAKERY" is in a header/nav bar */
-    .navbar-brand {
-        font-family: 'Prata', serif;
-        font-size: 1.8rem;
-        font-weight: 700;
-        color: var(--terracotta); /* or your preferred color */
-        text-transform: uppercase;
-        letter-spacing: 3px;
-    }
-
-    @media (max-width: 768px) {
-        .hero-title {
-            font-size: 3rem;
-        }
-
-        .min-vh-90 {
-            min-height: auto;
-        }
-
-        .hero-modern {
-            padding: 60px 0;
-        }
-    }
+}
 </style>
 @endpush

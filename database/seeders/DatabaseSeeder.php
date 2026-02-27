@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
     {
         // Call Settings Seeder first
         $this->call(SettingsSeeder::class);
+        $this->call(ProductCategorySeeder::class);
 
         // Create admin user only if not exists
         User::firstOrCreate(

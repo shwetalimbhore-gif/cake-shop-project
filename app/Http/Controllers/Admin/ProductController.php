@@ -70,6 +70,10 @@ class ProductController extends Controller
             'description' => 'nullable|string',
             'short_description' => 'nullable|string|max:500',
             'featured_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'sizes' => 'nullable|array',
+            'size_prices' => 'nullable|array',
+            'flavors' => 'nullable|array',
+            'flavor_prices' => 'nullable|array',
             'is_active' => 'boolean',
             'is_featured' => 'boolean',
             'is_eggless' => 'sometimes|boolean',
@@ -80,6 +84,18 @@ class ProductController extends Controller
         $validated['is_active'] = $request->has('is_active') ? true : false;
         $validated['is_featured'] = $request->has('is_featured') ? true : false;
         $validated['is_eggless'] = $request->has('is_eggless') ? true : false;
+
+         // Handle sizes and flavors as JSON
+        if ($request->has('sizes')) {
+            $validated['sizes'] = json_encode(array_filter($request->sizes));
+            $validated['size_prices'] = json_encode($request->size_prices ?? []);
+        }
+
+        if ($request->has('flavors')) {
+            $validated['flavors'] = json_encode(array_filter($request->flavors));
+            $validated['flavor_prices'] = json_encode($request->flavor_prices ?? []);
+        }
+
 
         if ($request->hasFile('featured_image')) {
             $path = $request->file('featured_image')->store('products', 'public');
@@ -109,9 +125,13 @@ class ProductController extends Controller
             'stock_quantity' => 'required|integer|min:0',
             'description' => 'nullable|string',
             'short_description' => 'nullable|string|max:500',
+            'sizes' => 'nullable|array',
+            'size_prices' => 'nullable|array',
+            'flavors' => 'nullable|array',
+            'flavor_prices' => 'nullable|array',
             'featured_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'is_active' => 'boolean',
-            'is_featured' => 'boolean',
+            'is_active' => 'sometimes|boolean',
+            'is_featured' => 'sometimes|boolean',
             'is_eggless' => 'sometimes|boolean',
         ]);
 
@@ -119,6 +139,17 @@ class ProductController extends Controller
         $validated['is_active'] = $request->has('is_active') ? true : false;
         $validated['is_featured'] = $request->has('is_featured') ? true : false;
         $validated['is_eggless'] = $request->has('is_eggless') ? true : false;
+
+        // Handle sizes and flavors as JSON
+        if ($request->has('sizes')) {
+            $validated['sizes'] = json_encode(array_filter($request->sizes));
+            $validated['size_prices'] = json_encode($request->size_prices ?? []);
+        }
+
+        if ($request->has('flavors')) {
+            $validated['flavors'] = json_encode(array_filter($request->flavors));
+            $validated['flavor_prices'] = json_encode($request->flavor_prices ?? []);
+        }
 
         if ($request->hasFile('featured_image')) {
             if ($product->featured_image) {

@@ -99,13 +99,14 @@ Route::post('/contact', [HomeController::class, 'submitContact'])->name('contact
 Route::get('/about', [AboutController::class, 'index'])->name('about');
 
 // ============= CART ROUTES =============
+// Cart routes
 Route::prefix('cart')->name('cart.')->group(function () {
-    Route::get('/', [CartController::class, 'index'])->name('index');
-    Route::post('/add/{product}', [CartController::class, 'add'])->name('add');
-    Route::post('/update/{id}', [CartController::class, 'update'])->name('update');
-    Route::delete('/remove/{id}', [CartController::class, 'remove'])->name('remove');
-    Route::delete('/clear', [CartController::class, 'clear'])->name('clear');
-
+    Route::get('/', [App\Http\Controllers\Front\CartController::class, 'index'])->name('index');
+    Route::post('/add/{product}', [App\Http\Controllers\Front\CartController::class, 'add'])->name('add');
+    Route::post('/update/{item}', [App\Http\Controllers\Front\CartController::class, 'update'])->name('update');
+    Route::delete('/remove/{item}', [App\Http\Controllers\Front\CartController::class, 'remove'])->name('remove');
+    Route::delete('/clear', [App\Http\Controllers\Front\CartController::class, 'clear'])->name('clear');
+    Route::get('/count', [App\Http\Controllers\Front\CartController::class, 'getCount'])->name('count');
 });
 
 Route::prefix('tracking')->name('tracking.')->group(function () {
@@ -122,15 +123,15 @@ Route::middleware(['auth'])->prefix('checkout')->name('checkout.')->group(functi
 });
 
 // ============= USER ACCOUNT ROUTES (Require Login) =============
+
 Route::middleware(['auth'])->prefix('account')->name('account.')->group(function () {
-    Route::get('/dashboard', [AccountController::class, 'dashboard'])->name('dashboard');
-    Route::get('/orders', [AccountController::class, 'orders'])->name('orders');
-    Route::get('/orders/{order}', [AccountController::class, 'orderDetails'])->name('order.details');
-    Route::get('/profile', [AccountController::class, 'profile'])->name('profile');
-    Route::put('/profile', [AccountController::class, 'updateProfile'])->name('profile.update');
-    Route::put('/password', [AccountController::class, 'changePassword'])->name('password');
-
-
+    Route::get('/dashboard', [App\Http\Controllers\Front\AccountController::class, 'dashboard'])->name('dashboard');
+    Route::get('/profile', [App\Http\Controllers\Front\AccountController::class, 'profile'])->name('profile');
+    Route::put('/profile', [App\Http\Controllers\Front\AccountController::class, 'updateProfile'])->name('profile.update');
+    Route::get('/password', [App\Http\Controllers\Front\AccountController::class, 'password'])->name('password');
+    Route::put('/password', [App\Http\Controllers\Front\AccountController::class, 'updatePassword'])->name('password.update');
+    Route::get('/orders', [App\Http\Controllers\Front\AccountController::class, 'orders'])->name('orders');
+    Route::get('/orders/{order}', [App\Http\Controllers\Front\AccountController::class, 'orderDetails'])->name('order.details');
 });
 
 

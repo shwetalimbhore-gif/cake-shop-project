@@ -28,7 +28,9 @@ class Product extends Model
         'is_featured',
         'is_eggless',
         'is_active',
-        'views'
+        'views',
+        'size_prices',
+        'flavor_prices',
 
     ];
 
@@ -41,7 +43,9 @@ class Product extends Model
         'is_featured' => 'boolean',
         'is_eggless' => 'boolean',
         'is_active' => 'boolean',
-        'in_stock' => 'boolean'
+        'in_stock' => 'boolean',
+        'size_prices' => 'array',
+        'flavor_prices' => 'array',
     ];
 
     protected static function boot()

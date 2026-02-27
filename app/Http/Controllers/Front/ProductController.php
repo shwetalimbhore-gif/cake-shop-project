@@ -105,31 +105,23 @@ class ProductController extends Controller
      */
     public function show($slug)
     {
-        $product = Product::with(['category', 'images'])
-            ->where('slug', $slug)
-            ->where('is_active', true)
-            ->firstOrFail();
+        $product = Product::with(['category', 'images', 'reviews' => function($query) {
+            $query->where('is_approved', true)->latest();
+        }])
+        ->where('slug', $slug)
+        ->where('is_active', true)
+        ->firstOrFail();
 
         // Increment view count
         $product->increment('views');
 
-        // ===== FIXED: Get related products (same category, exclude current product) =====
+        // Get related products
         $relatedProducts = Product::with(['category', 'images'])
             ->where('category_id', $product->category_id)
             ->where('id', '!=', $product->id)
             ->where('is_active', true)
             ->limit(4)
             ->get();
-
-        // If no products in same category, get any other active products
-        if ($relatedProducts->isEmpty()) {
-            $relatedProducts = Product::with(['category', 'images'])
-                ->where('id', '!=', $product->id)
-                ->where('is_active', true)
-                ->inRandomOrder()
-                ->limit(4)
-                ->get();
-        }
 
         return view('front.product-details', compact('product', 'relatedProducts'));
     }

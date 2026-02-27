@@ -33,6 +33,7 @@ class CartController extends Controller
             'quantity' => 'required|integer|min:1',
             'size' => 'nullable|string',
             'flavor' => 'nullable|string',
+            'calculated_price' => 'required|numeric',
         ]);
 
         DB::beginTransaction();
@@ -56,7 +57,9 @@ class CartController extends Controller
             if ($existingItem) {
                 // Update quantity
                 $existingItem->quantity += $request->quantity;
+                $existingItem->unit_price = $request->calculated_price;
                 $existingItem->save();
+                $message = 'Cart updated successfully!';
             } else {
                 // Create new cart item
                 CartItem::create([
@@ -66,6 +69,7 @@ class CartController extends Controller
                     'unit_price' => $price,
                     'options' => $options,
                 ]);
+                $message = 'Product added to cart!';
             }
 
             // Update cart total
@@ -79,13 +83,13 @@ class CartController extends Controller
             if ($request->ajax()) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'Product added to cart!',
+                    'message' => $message,
                     'cart_count' => $cartCount,
                     'cart_total' => $cart->total_amount
                 ]);
             }
 
-            return redirect()->back()->with('success', 'Product added to cart!');
+            return redirect()->back()->with('success', $message);
 
         } catch (\Exception $e) {
             DB::rollBack();
