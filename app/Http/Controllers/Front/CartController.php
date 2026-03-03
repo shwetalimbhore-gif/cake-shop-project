@@ -24,8 +24,8 @@ class CartController extends Controller
         return view('front.cart', compact('cart'));
     }
 
-    /**
-     * Add item to cart
+        /**
+     * Add item to cart with stock validation
      */
     public function add(Request $request, Product $product)
     {
@@ -33,8 +33,29 @@ class CartController extends Controller
             'quantity' => 'required|integer|min:1',
             'size' => 'nullable|string',
             'flavor' => 'nullable|string',
-            'calculated_price' => 'required|numeric',
         ]);
+
+        // Check if product is available
+        if (!$product->isAvailable()) {
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This product is out of stock.'
+                ], 400);
+            }
+            return redirect()->back()->with('error', 'This product is out of stock.');
+        }
+
+        // Check if requested quantity is available
+        if ($request->quantity > $product->stock_quantity) {
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Only ' . $product->stock_quantity . ' items available.'
+                ], 400);
+            }
+            return redirect()->back()->with('error', 'Only ' . $product->stock_quantity . ' items available.');
+        }
 
         DB::beginTransaction();
 
@@ -55,9 +76,21 @@ class CartController extends Controller
                 ->first();
 
             if ($existingItem) {
+                // Check if total quantity would exceed stock
+                $newTotal = $existingItem->quantity + $request->quantity;
+                if ($newTotal > $product->stock_quantity) {
+                    DB::rollBack();
+                    if ($request->ajax()) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Cannot add more than available stock (' . $product->stock_quantity . ')'
+                        ], 400);
+                    }
+                    return redirect()->back()->with('error', 'Cannot add more than available stock');
+                }
+
                 // Update quantity
-                $existingItem->quantity += $request->quantity;
-                $existingItem->unit_price = $request->calculated_price;
+                $existingItem->quantity = $newTotal;
                 $existingItem->save();
                 $message = 'Cart updated successfully!';
             } else {
@@ -85,7 +118,7 @@ class CartController extends Controller
                     'success' => true,
                     'message' => $message,
                     'cart_count' => $cartCount,
-                    'cart_total' => $cart->total_amount
+                    'cart_total' => format_currency($cart->total_amount)
                 ]);
             }
 
@@ -97,16 +130,15 @@ class CartController extends Controller
             if ($request->ajax()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Failed to add product to cart.'
+                    'message' => 'Failed to add product to cart: ' . $e->getMessage()
                 ], 500);
             }
 
             return redirect()->back()->with('error', 'Failed to add product to cart.');
         }
     }
-
     /**
-     * Update cart item quantity
+     * Update cart item quantity - FIXED
      */
     public function update(Request $request, $itemId)
     {
@@ -122,14 +154,21 @@ class CartController extends Controller
             // Verify cart belongs to current user/session
             $cart = Cart::getCart();
             if ($cartItem->cart_id != $cart->id) {
-                abort(403);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized access.'
+                ], 403);
             }
 
+            $oldQuantity = $cartItem->quantity;
             $cartItem->quantity = $request->quantity;
             $cartItem->save();
 
             // Update cart total
             $cart->calculateTotal();
+
+            // Calculate new subtotal for this item
+            $itemSubtotal = $cartItem->unit_price * $cartItem->quantity;
 
             DB::commit();
 
@@ -137,8 +176,10 @@ class CartController extends Controller
                 return response()->json([
                     'success' => true,
                     'message' => 'Cart updated!',
-                    'item_subtotal' => $cartItem->subtotal,
-                    'cart_total' => $cart->total_amount
+                    'item_subtotal' => format_currency($itemSubtotal),
+                    'cart_total' => format_currency($cart->total_amount),
+                    'quantity' => $cartItem->quantity,
+                    'item_id' => $cartItem->id
                 ]);
             }
 
@@ -150,7 +191,7 @@ class CartController extends Controller
             if ($request->ajax()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Failed to update cart.'
+                    'message' => 'Failed to update cart: ' . $e->getMessage()
                 ], 500);
             }
 

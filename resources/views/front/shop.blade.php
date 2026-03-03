@@ -182,7 +182,7 @@
                                 <div class="price-input-group">
                                     <label class="price-label">Min</label>
                                     <div class="price-field">
-                                        <span class="price-currency">{{ setting('currency_symbol', '$') }}</span>
+                                        <span class="price-currency">{{ setting('currency_symbol', '₹') }}</span>
                                         <input type="number" name="min_price"
                                                class="price-input"
                                                value="{{ request('min_price') }}"
@@ -196,7 +196,7 @@
                                 <div class="price-input-group">
                                     <label class="price-label">Max</label>
                                     <div class="price-field">
-                                        <span class="price-currency">{{ setting('currency_symbol', '$') }}</span>
+                                        <span class="price-currency">{{ setting('currency_symbol', '₹') }}</span>
                                         <input type="number" name="max_price"
                                                class="price-input"
                                                value="{{ request('max_price') }}"
@@ -303,7 +303,7 @@
 
                     @if(request('min_price'))
                         <span class="filter-tag">
-                            Min: {{ setting('currency_symbol', '$') }}{{ request('min_price') }}
+                            Min: {{ setting('currency_symbol', '₹') }}{{ request('min_price') }}
                             <a href="{{ route('shop', array_merge(request()->except('min_price'), ['min_price' => null])) }}" class="remove-filter">
                                 <i class="fas fa-times"></i>
                             </a>
@@ -312,7 +312,7 @@
 
                     @if(request('max_price'))
                         <span class="filter-tag">
-                            Max: {{ setting('currency_symbol', '$') }}{{ request('max_price') }}
+                            Max: {{ setting('currency_symbol', '₹') }}{{ request('max_price') }}
                             <a href="{{ route('shop', array_merge(request()->except('max_price'), ['max_price' => null])) }}" class="remove-filter">
                                 <i class="fas fa-times"></i>
                             </a>
@@ -358,20 +358,37 @@
                                         <i class="fas fa-crown"></i> Featured
                                     </span>
                                 @endif
+
+                                <!-- Stock Badge - NEW -->
+                                @if($product->stock_quantity <= 0)
+                                    <span class="badge-out-of-stock">
+                                        <i class="fas fa-times-circle me-1"></i> Out of Stock
+                                    </span>
+                                @elseif($product->stock_quantity < 5)
+                                    <span class="badge-low-stock">
+                                        <i class="fas fa-exclamation-triangle me-1"></i> Only {{ $product->stock_quantity }} left
+                                    </span>
+                                @endif
                             </div>
 
-                            <!-- Quick Actions -->
+                            <!-- Quick Actions - Add to Cart button disabled if out of stock -->
                             <div class="cake-actions">
                                 <a href="{{ route('product.details', $product->slug) }}" class="action-btn view-btn" title="Quick View">
                                     <i class="fas fa-eye"></i>
                                 </a>
-                                <form action="{{ route('cart.add', $product) }}" method="POST" class="add-to-cart-form d-inline">
-                                    @csrf
-                                    <input type="hidden" name="quantity" value="1">
-                                    <button type="submit" class="action-btn cart-btn" title="Add to Cart">
+                                @if($product->stock_quantity > 0)
+                                    <form action="{{ route('cart.add', $product) }}" method="POST" class="add-to-cart-form d-inline">
+                                        @csrf
+                                        <input type="hidden" name="quantity" value="1">
+                                        <button type="submit" class="action-btn cart-btn" title="Add to Cart">
+                                            <i class="fas fa-shopping-cart"></i>
+                                        </button>
+                                    </form>
+                                @else
+                                    <button class="action-btn cart-btn disabled" title="Out of Stock" disabled>
                                         <i class="fas fa-shopping-cart"></i>
                                     </button>
-                                </form>
+                                @endif
                             </div>
                         </div>
 
@@ -387,7 +404,7 @@
                                 </a>
                             </h3>
 
-                            <!-- Eggless Badge (INSIDE THE LOOP) -->
+                            <!-- Eggless Badge -->
                             <div class="cake-dietary-badge">
                                 @if($product->is_eggless)
                                     <span class="dietary-badge eggless-badge">
@@ -400,21 +417,28 @@
                                 @endif
                             </div>
 
+                            <!-- Stock Status Text - NEW -->
+                            @if($product->stock_quantity > 0 && $product->stock_quantity < 5)
+                                <div class="stock-warning">
+                                    <i class="fas fa-exclamation-circle"></i> Hurry! Only {{ $product->stock_quantity }} left
+                                </div>
+                            @endif
+
                             <!-- Price -->
                             <div class="cake-price">
                                 @if($product->sale_price && $product->sale_price < $product->regular_price)
                                     <span class="original-price">
-                                        {{ setting('currency_symbol', '$') }}{{ number_format($product->regular_price, 2) }}
+                                        {{ setting('currency_symbol', '₹') }}{{ number_format($product->regular_price, 2) }}
                                     </span>
                                     <span class="sale-price">
-                                        {{ setting('currency_symbol', '$') }}{{ number_format($product->sale_price, 2) }}
+                                        {{ setting('currency_symbol', '₹') }}{{ number_format($product->sale_price, 2) }}
                                     </span>
                                     <span class="discount-badge">
                                         -{{ round((($product->regular_price - $product->sale_price) / $product->regular_price) * 100) }}%
                                     </span>
                                 @else
                                     <span class="regular-price">
-                                        {{ setting('currency_symbol', '$') }}{{ number_format($product->regular_price, 2) }}
+                                        {{ setting('currency_symbol', '₹') }}{{ number_format($product->regular_price, 2) }}
                                     </span>
                                 @endif
                             </div>
@@ -807,7 +831,7 @@
     font-size: 0.7rem;
 }
 
-/* Cake Cards */
+/* ===== UPDATED CAKE CARD STYLES WITH STOCK BADGES ===== */
 .cake-card {
     background: white;
     border-radius: 16px;
@@ -869,6 +893,44 @@
     font-weight: 600;
 }
 
+/* NEW: Stock Badges */
+.badge-out-of-stock {
+    background: #dc3545;
+    color: white;
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-size: 0.65rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+}
+
+.badge-low-stock {
+    background: #ffc107;
+    color: #333;
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-size: 0.65rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+}
+
+.stock-warning {
+    color: #dc3545;
+    font-size: 0.7rem;
+    margin: 5px 0;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+}
+
+.stock-warning i {
+    font-size: 0.65rem;
+}
+
 .cake-actions {
     position: absolute;
     bottom: -40px;
@@ -906,6 +968,22 @@
 .action-btn:hover {
     background: var(--terracotta);
     color: white;
+}
+
+/* NEW: Disabled button style */
+.action-btn.disabled,
+.action-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: #ccc;
+    color: #666;
+}
+
+.action-btn.disabled:hover,
+.action-btn:disabled:hover {
+    background: #ccc;
+    color: #666;
+    transform: none;
 }
 
 .cake-info {
@@ -1072,7 +1150,7 @@
         }, 800);
     });
 
-    // Add to cart AJAX
+    // Add to cart AJAX - Updated to handle errors better
     document.querySelectorAll('.add-to-cart-form').forEach(form => {
         form.addEventListener('submit', function(e) {
             e.preventDefault();
@@ -1094,23 +1172,44 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    toastr.success('Product added to cart!');
+                    toastr.success(data.message || 'Product added to cart!');
                     if (typeof updateCartCount === 'function') {
                         updateCartCount();
                     }
                 } else {
-                    toastr.error('Failed to add to cart');
+                    toastr.error(data.message || 'Failed to add to cart');
+                    // Re-enable button on error
+                    submitButton.innerHTML = originalHtml;
+                    submitButton.disabled = false;
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                toastr.error('Failed to add to cart');
-            })
-            .finally(() => {
+                toastr.error('Failed to add to cart. Please try again.');
+                // Re-enable button on error
                 submitButton.innerHTML = originalHtml;
                 submitButton.disabled = false;
             });
         });
     });
+
+    // Update cart count function
+    function updateCartCount() {
+        fetch('/cart/count')
+            .then(response => response.json())
+            .then(data => {
+                const cartCount = document.getElementById('cart-count');
+                if (cartCount) {
+                    if (data.count > 0) {
+                        cartCount.textContent = data.count;
+                        cartCount.style.display = 'flex';
+                    } else {
+                        cartCount.textContent = '0';
+                        cartCount.style.display = 'none';
+                    }
+                }
+            })
+            .catch(error => console.error('Error updating cart count:', error));
+    }
 </script>
 @endsection

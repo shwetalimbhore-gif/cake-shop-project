@@ -635,6 +635,156 @@
             border-top: 1px solid #f1f5f9;
             padding: 20px 25px;
         }
+        /* ===== RESPONSIVE ADMIN STYLES ===== */
+@media (max-width: 576px) {
+    .container-fluid {
+        padding-left: 10px !important;
+        padding-right: 10px !important;
+    }
+
+    .card-body {
+        padding: 1rem !important;
+    }
+
+    .form-label {
+        font-size: 0.9rem;
+    }
+
+    .btn {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.9rem;
+    }
+
+    /* Make input groups stack on mobile */
+    .input-group {
+        flex-wrap: wrap;
+    }
+
+    .input-group > .form-control {
+        width: 100%;
+        margin-bottom: 5px;
+    }
+
+    /* Adjust card headers */
+    .card-header {
+        padding: 0.75rem 1rem;
+    }
+
+    /* Make badges full width on mobile */
+    .badge {
+        width: auto;
+        display: inline-block;
+    }
+}
+
+@media (min-width: 577px) and (max-width: 768px) {
+    .card-body {
+        padding: 1.25rem;
+    }
+
+    /* Adjust column layouts for tablets */
+    .row.g-4 > [class*="col-"] {
+        margin-bottom: 1rem;
+    }
+}
+
+/* Tablet Landscape */
+@media (min-width: 769px) and (max-width: 992px) {
+    .card-body {
+        padding: 1.5rem;
+    }
+}
+
+/* Improve touch targets on mobile */
+@media (max-width: 768px) {
+    button,
+    .btn,
+    .form-check-input,
+    .nav-link {
+        min-height: 44px;
+        min-width: 44px;
+    }
+
+    .form-control,
+    .form-select {
+        font-size: 16px; /* Prevents zoom on iOS */
+        padding: 0.6rem 0.75rem;
+    }
+
+    /* Stack buttons on mobile */
+    .d-flex.gap-2 {
+        gap: 0.5rem !important;
+    }
+
+    /* Make remove buttons easier to tap */
+    .remove-size,
+    .remove-flavor {
+        padding: 0.6rem !important;
+    }
+}
+
+/* Fix for very small devices */
+@media (max-width: 360px) {
+    .card-header {
+        flex-direction: column;
+        align-items: start !important;
+        gap: 0.5rem;
+    }
+
+    .badge {
+        align-self: flex-start;
+    }
+
+    .col-sm-2, .col-sm-5 {
+        width: 100%;
+    }
+
+    .btn-sm.w-100 {
+        margin-top: 5px;
+    }
+}
+
+    /* Responsive table styles if needed */
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Improve form spacing on mobile */
+    @media (max-width: 768px) {
+        .mb-3, .mb-4 {
+            margin-bottom: 1rem !important;
+        }
+
+        .row.g-4 {
+            --bs-gutter-y: 1rem;
+        }
+    }
+
+    /* Card hover effects - disable on mobile */
+    @media (hover: hover) {
+        .card:hover {
+            transition: all 0.3s ease;
+        }
+    }
+
+    @media (hover: none) {
+        .card:hover {
+            transform: none;
+        }
+    }
+
+    /* Print styles */
+    @media print {
+        .btn,
+        .btn-close,
+        .remove-size,
+        .remove-flavor,
+        #add-size,
+        #add-flavor {
+            display: none !important;
+        }
+    }
     </style>
     @yield('styles')
 </head>

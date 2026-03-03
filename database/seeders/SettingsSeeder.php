@@ -11,7 +11,7 @@ class SettingsSeeder extends Seeder
     {
         $settings = [
             // General Settings
-            ['key' => 'site_name', 'value' => 'MyCakeShop', 'type' => 'text', 'group' => 'general'],
+            ['key' => 'site_name', 'value' => 'Cozy Cravings', 'type' => 'text', 'group' => 'general'],
             ['key' => 'site_logo', 'value' => null, 'type' => 'image', 'group' => 'general'],
             ['key' => 'site_favicon', 'value' => null, 'type' => 'image', 'group' => 'general'],
             ['key' => 'site_description', 'value' => 'Delicious cakes for every occasion', 'type' => 'textarea', 'group' => 'general'],
@@ -50,8 +50,8 @@ class SettingsSeeder extends Seeder
 
             // Advanced Settings
             ['key' => 'tax_rate', 'value' => '10', 'type' => 'number', 'group' => 'general'],
-            ['key' => 'currency', 'value' => 'USD', 'type' => 'text', 'group' => 'general'],
-            ['key' => 'currency_symbol', 'value' => '$', 'type' => 'text', 'group' => 'general'],
+            ['key' => 'currency', 'value' => 'Rupee', 'type' => 'text', 'group' => 'general'],
+            ['key' => 'currency_symbol', 'value' => '₹', 'type' => 'text', 'group' => 'general'],
             ['key' => 'order_prefix', 'value' => 'ORD-', 'type' => 'text', 'group' => 'general'],
             ['key' => 'enable_reviews', 'value' => '1', 'type' => 'boolean', 'group' => 'general'],
             ['key' => 'maintenance_mode', 'value' => '0', 'type' => 'boolean', 'group' => 'general'],

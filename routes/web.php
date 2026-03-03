@@ -103,7 +103,7 @@ Route::get('/about', [AboutController::class, 'index'])->name('about');
 Route::prefix('cart')->name('cart.')->group(function () {
     Route::get('/', [App\Http\Controllers\Front\CartController::class, 'index'])->name('index');
     Route::post('/add/{product}', [App\Http\Controllers\Front\CartController::class, 'add'])->name('add');
-    Route::post('/update/{item}', [App\Http\Controllers\Front\CartController::class, 'update'])->name('update');
+    Route::post('/update/{item}', [App\Http\Controllers\Front\CartController::class, 'update'])->name('update'); // This should be POST
     Route::delete('/remove/{item}', [App\Http\Controllers\Front\CartController::class, 'remove'])->name('remove');
     Route::delete('/clear', [App\Http\Controllers\Front\CartController::class, 'clear'])->name('clear');
     Route::get('/count', [App\Http\Controllers\Front\CartController::class, 'getCount'])->name('count');

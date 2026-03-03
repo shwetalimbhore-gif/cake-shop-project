@@ -10,28 +10,23 @@ use Illuminate\Http\Request;
 
 class HomeController extends Controller
 {
-    public function index()
+   public function index()
     {
-        // Get featured products
+        // Get featured products - only in-stock
         $featuredProducts = Product::with('category')
             ->where('is_featured', true)
             ->where('is_active', true)
+            ->where('in_stock', true)  // Only in-stock
             ->take(8)
             ->get();
 
-        // Get categories for display
+        // Get categories
         $categories = Category::where('is_active', true)
             ->orderBy('order')
             ->take(6)
             ->get();
 
-        // Get latest products
-        $latestProducts = Product::where('is_active', true)
-            ->latest()
-            ->take(4)
-            ->get();
-
-        return view('front.home', compact('featuredProducts', 'categories', 'latestProducts'));
+        return view('front.home', compact('featuredProducts', 'categories'));
     }
 
     public function shop(Request $request)

@@ -42,7 +42,7 @@
 
                     <div class="cart-items-list">
                         @foreach($cart->items as $item)
-                        <div class="cart-item" data-id="{{ $item->id }}">
+                        <div class="cart-item" data-id="{{ $item->id }}" data-item-id="{{ $item->id }}">
                             <div class="cart-item-image">
                                 <a href="{{ route('product.details', $item->product->slug) }}">
                                     @if($item->product->featured_image)
@@ -79,18 +79,31 @@
                                 </div>
                             </div>
 
+                            <!-- ===== FIXED: Quantity Controls with Clickable Buttons ===== -->
                             <div class="cart-item-quantity">
                                 <div class="quantity-control">
-                                    <button class="quantity-btn update-cart" data-id="{{ $item->id }}" data-action="decrease">-</button>
-                                    <input type="text" class="quantity-input" value="{{ $item->quantity }}"
-                                           data-id="{{ $item->id }}" readonly>
-                                    <button class="quantity-btn update-cart" data-id="{{ $item->id }}" data-action="increase">+</button>
+                                    <button type="button" class="quantity-btn decrease-qty"
+                                            data-id="{{ $item->id }}"
+                                            data-action="decrease">
+                                        <i class="fas fa-minus"></i>
+                                    </button>
+                                    <input type="text" class="quantity-input"
+                                           value="{{ $item->quantity }}"
+                                           data-id="{{ $item->id }}"
+                                           readonly>
+                                    <button type="button" class="quantity-btn increase-qty"
+                                            data-id="{{ $item->id }}"
+                                            data-action="increase">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
                                 </div>
                             </div>
 
                             <div class="cart-item-subtotal">
                                 <span class="subtotal-label">Subtotal:</span>
-                                <span class="subtotal-value">{{ format_currency($item->unit_price * $item->quantity) }}</span>
+                                <span class="subtotal-value" id="subtotal-{{ $item->id }}">
+                                    {{ format_currency($item->unit_price * $item->quantity) }}
+                                </span>
                             </div>
 
                             <div class="cart-item-remove">
@@ -138,17 +151,17 @@
 
                     <div class="summary-row">
                         <span class="summary-label">Subtotal:</span>
-                        <span class="summary-value">{{ format_currency($subtotal) }}</span>
+                        <span class="summary-value" id="cart-subtotal">{{ format_currency($subtotal) }}</span>
                     </div>
 
                     <div class="summary-row">
                         <span class="summary-label">Tax ({{ setting('tax_rate', 10) }}%):</span>
-                        <span class="summary-value">{{ format_currency($tax) }}</span>
+                        <span class="summary-value" id="cart-tax">{{ format_currency($tax) }}</span>
                     </div>
 
                     <div class="summary-row">
                         <span class="summary-label">Delivery:</span>
-                        <span class="summary-value">
+                        <span class="summary-value" id="cart-delivery">
                             @if($deliveryFee == 0)
                                 <span class="text-success">Free</span>
                             @else
@@ -158,9 +171,9 @@
                     </div>
 
                     @if($subtotal < $freeThreshold)
-                        <div class="delivery-info">
+                        <div class="delivery-info" id="delivery-info">
                             <i class="fas fa-info-circle me-2"></i>
-                            Add {{ format_currency($freeThreshold - $subtotal) }} more for free delivery!
+                            Add <span id="amount-needed">{{ format_currency($freeThreshold - $subtotal) }}</span> more for free delivery!
                         </div>
                     @endif
 
@@ -168,7 +181,7 @@
 
                     <div class="summary-row total">
                         <span class="total-label">Total:</span>
-                        <span class="total-value">{{ format_currency($grandTotal) }}</span>
+                        <span class="total-value" id="cart-total">{{ format_currency($grandTotal) }}</span>
                     </div>
 
                     <a href="{{ route('checkout.index') }}" class="checkout-btn">
@@ -282,6 +295,7 @@
     font-size: 0.9rem;
 }
 
+/* ===== FIXED: Quantity Controls ===== */
 .cart-item-quantity {
     text-align: center;
 }
@@ -296,31 +310,48 @@
 }
 
 .quantity-btn {
-    width: 30px;
-    height: 30px;
+    width: 35px;
+    height: 35px;
     border: none;
     background: white;
     border-radius: 50%;
     cursor: pointer;
     transition: all 0.3s;
     font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--charcoal);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
 .quantity-btn:hover {
     background: var(--terracotta);
     color: white;
+    transform: scale(1.05);
+}
+
+.quantity-btn:active {
+    transform: scale(0.95);
+}
+
+.quantity-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 .quantity-input {
-    width: 40px;
+    width: 45px;
     text-align: center;
     border: none;
     background: transparent;
     font-weight: 600;
+    font-size: 1rem;
 }
 
 .cart-item-subtotal {
     text-align: right;
+    min-width: 100px;
 }
 
 .subtotal-label {
@@ -342,11 +373,18 @@
     cursor: pointer;
     transition: all 0.3s;
     font-size: 1.1rem;
+    width: 35px;
+    height: 35px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
 }
 
 .cart-item-remove .remove-btn:hover {
-    transform: scale(1.1);
+    background: rgba(255, 71, 87, 0.1);
     color: #ff4757;
+    transform: scale(1.1);
 }
 
 .cart-actions {
@@ -481,8 +519,61 @@
     box-shadow: var(--shadow-sm);
 }
 
+/* Loading spinner for buttons */
+.quantity-btn.loading {
+    position: relative;
+    color: transparent !important;
+    pointer-events: none;
+}
+
+.quantity-btn.loading::after {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    top: 50%;
+    left: 50%;
+    margin-left: -8px;
+    margin-top: -8px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: #fff;
+    animation: spin 0.8s linear infinite;
+}
+
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
 .empty-cart-icon {
     color: var(--sand);
+}
+
+/* ===== LOADING STATE ===== */
+.quantity-btn.loading {
+    opacity: 0.5;
+    pointer-events: none;
+    position: relative;
+}
+
+.quantity-btn.loading i {
+    display: none;
+}
+
+.quantity-btn.loading::after {
+    content: '';
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--taupe);
+    border-top-color: var(--terracotta);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    position: absolute;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
 }
 
 /* ===== RESPONSIVE ===== */
@@ -514,6 +605,10 @@
         text-align: center;
     }
 
+    .quantity-control {
+        justify-content: center;
+    }
+
     .cart-actions {
         flex-direction: column;
         gap: 10px;
@@ -527,42 +622,182 @@
 </style>
 
 <script>
-    // Update cart via AJAX
-    document.querySelectorAll('.update-cart').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            const id = this.dataset.id;
-            const action = this.dataset.action;
-            const input = this.closest('.quantity-control').querySelector('.quantity-input');
-            let currentVal = parseInt(input.value);
+    document.addEventListener('DOMContentLoaded', function() {
+        // ===== FIXED: Quantity increment/decrement with AJAX =====
+        const csrfToken = '{{ csrf_token() }}';
 
-            let newVal = action === 'increase' ? currentVal + 1 : currentVal - 1;
+        // Function to handle quantity update
+        function updateQuantity(itemId, newQuantity, button) {
+            // Show loading state
+            if (button) {
+                button.classList.add('loading');
+                button.disabled = true;
+            }
 
-            if (newVal >= 1) {
-                fetch(`/cart/update/${id}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    },
-                    body: JSON.stringify({ quantity: newVal })
+            // Send AJAX request to update cart
+            fetch(`/cart/update/${itemId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({
+                    quantity: newQuantity
                 })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        location.reload();
-                    }
-                });
-            }
-        });
-    });
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    // Find the cart item row
+                    const cartItem = document.querySelector(`.cart-item[data-item-id="${itemId}"]`);
 
-    // Remove form confirmation
-    document.querySelectorAll('.remove-form').forEach(form => {
-        form.addEventListener('submit', function(e) {
-            if (!confirm('Remove this item from cart?')) {
+                    if (cartItem) {
+                        // Update quantity input
+                        const quantityInput = cartItem.querySelector('.quantity-input');
+                        if (quantityInput) {
+                            quantityInput.value = newQuantity;
+                        }
+
+                        // Update item subtotal
+                        const subtotalSpan = document.getElementById(`subtotal-${itemId}`);
+                        if (subtotalSpan && data.item_subtotal) {
+                            subtotalSpan.textContent = data.item_subtotal;
+                        }
+                    }
+
+                    // Update cart summary
+                    updateCartSummary(data);
+
+                    // Show success message
+                    if (typeof toastr !== 'undefined') {
+                        toastr.success('Cart updated');
+                    }
+                } else {
+                    // Show error message
+                    if (typeof toastr !== 'undefined') {
+                        toastr.error(data.message || 'Failed to update cart');
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                if (typeof toastr !== 'undefined') {
+                    toastr.error('Failed to update cart. Please try again.');
+                }
+            })
+            .finally(() => {
+                // Remove loading state
+                if (button) {
+                    button.classList.remove('loading');
+                    button.disabled = false;
+                }
+            });
+        }
+
+        // Add event listeners to increase buttons
+        document.querySelectorAll('.increase-qty').forEach(button => {
+            button.addEventListener('click', function(e) {
                 e.preventDefault();
+
+                const itemId = this.dataset.id;
+                const cartItem = this.closest('.cart-item');
+                const quantityInput = cartItem.querySelector('.quantity-input');
+                const currentQty = parseInt(quantityInput.value);
+                const newQty = currentQty + 1;
+
+                updateQuantity(itemId, newQty, this);
+            });
+        });
+
+        // Add event listeners to decrease buttons
+        document.querySelectorAll('.decrease-qty').forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+
+                const itemId = this.dataset.id;
+                const cartItem = this.closest('.cart-item');
+                const quantityInput = cartItem.querySelector('.quantity-input');
+                const currentQty = parseInt(quantityInput.value);
+
+                if (currentQty > 1) {
+                    const newQty = currentQty - 1;
+                    updateQuantity(itemId, newQty, this);
+                }
+            });
+        });
+
+        // ===== Function to update cart summary =====
+        function updateCartSummary(data) {
+            if (data.cart_total) {
+                const subtotalElement = document.getElementById('cart-subtotal');
+                if (subtotalElement) {
+                    subtotalElement.textContent = data.cart_total;
+                }
+
+                // Extract numeric value from formatted currency
+                const subtotal = parseFloat(data.cart_total.replace(/[^0-9.-]+/g, ''));
+
+                if (!isNaN(subtotal)) {
+                    const taxRate = {{ setting('tax_rate', 10) }};
+                    const deliveryCharge = {{ setting('delivery_charges', 10) }};
+                    const freeThreshold = {{ setting('free_delivery_threshold', 100) }};
+
+                    const tax = subtotal * (taxRate / 100);
+                    const deliveryFee = subtotal >= freeThreshold ? 0 : deliveryCharge;
+                    const total = subtotal + tax + deliveryFee;
+
+                    // Format currency
+                    const formatCurrency = (amount) => {
+                        return '{{ setting('currency_symbol', '$') }}' + amount.toFixed(2);
+                    };
+
+                    // Update display
+                    const taxElement = document.getElementById('cart-tax');
+                    if (taxElement) {
+                        taxElement.textContent = formatCurrency(tax);
+                    }
+
+                    const deliveryElement = document.getElementById('cart-delivery');
+                    if (deliveryElement) {
+                        deliveryElement.textContent = deliveryFee === 0 ? 'Free' : formatCurrency(deliveryFee);
+                    }
+
+                    const totalElement = document.getElementById('cart-total');
+                    if (totalElement) {
+                        totalElement.textContent = formatCurrency(total);
+                    }
+
+                    // Update delivery info
+                    const deliveryInfo = document.getElementById('delivery-info');
+                    const amountNeeded = document.getElementById('amount-needed');
+
+                    if (deliveryInfo && amountNeeded) {
+                        if (subtotal < freeThreshold) {
+                            const needed = formatCurrency(freeThreshold - subtotal);
+                            amountNeeded.textContent = needed;
+                            deliveryInfo.style.display = 'block';
+                        } else {
+                            deliveryInfo.style.display = 'none';
+                        }
+                    }
+                }
             }
+        }
+
+        // ===== Remove form confirmation =====
+        document.querySelectorAll('.remove-form').forEach(form => {
+            form.addEventListener('submit', function(e) {
+                if (!confirm('Remove this item from cart?')) {
+                    e.preventDefault();
+                }
+            });
         });
     });
 </script>

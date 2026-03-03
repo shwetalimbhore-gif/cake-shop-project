@@ -39,7 +39,6 @@ class CheckoutController extends Controller
 
         return view('front.checkout', compact('cart', 'subtotal', 'deliveryFee', 'tax', 'grandTotal'));
     }
-
     /**
      * Process checkout
      */
@@ -63,6 +62,19 @@ class CheckoutController extends Controller
 
         if ($cart->items->isEmpty()) {
             return redirect()->route('cart.index')->with('error', 'Your cart is empty!');
+        }
+
+        // Validate stock for all items
+        foreach ($cart->items as $item) {
+            if (!$item->product->isAvailable()) {
+                return redirect()->route('cart.index')
+                    ->with('error', $item->product->name . ' is out of stock. Please remove it from your cart.');
+            }
+
+            if ($item->quantity > $item->product->stock_quantity) {
+                return redirect()->route('cart.index')
+                    ->with('error', 'Only ' . $item->product->stock_quantity . ' of ' . $item->product->name . ' available.');
+            }
         }
 
         DB::beginTransaction();
@@ -109,7 +121,7 @@ class CheckoutController extends Controller
                 'notes' => $request->notes,
             ]);
 
-            // Create order items from cart
+            // Create order items from cart and decrement stock
             foreach ($cart->items as $item) {
                 OrderItem::create([
                     'order_id' => $order->id,
@@ -122,8 +134,8 @@ class CheckoutController extends Controller
                     'options' => json_encode($item->options),
                 ]);
 
-                // Update stock if needed
-                // $item->product->decrement('stock_quantity', $item->quantity);
+                // Decrement stock
+                $item->product->decrementStock($item->quantity);
             }
 
             // Clear cart items

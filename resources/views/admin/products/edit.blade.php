@@ -150,7 +150,7 @@
                                             </div>
                                             <div class="col-md-5">
                                                 <div class="input-group">
-                                                    <span class="input-group-text">{{ setting('currency_symbol', '$') }}</span>
+                                                    <span class="input-group-text">{{ setting('currency_symbol', '₹') }}</span>
                                                     <input type="number" name="size_prices[]" class="form-control"
                                                            placeholder="Price"
                                                            value="{{ old('size_prices.' . $index, $sizePrices[$index] ?? 29.99) }}"
@@ -200,7 +200,7 @@
                                             </div>
                                             <div class="col-md-5">
                                                 <div class="input-group">
-                                                    <span class="input-group-text">{{ setting('currency_symbol', '$') }}</span>
+                                                    <span class="input-group-text">{{ setting('currency_symbol', '₹') }}</span>
                                                     <input type="number" name="flavor_prices[]" class="form-control"
                                                            placeholder="Extra Price"
                                                            value="{{ old('flavor_prices.' . $index, $flavorPrices[$index] ?? 0) }}"
@@ -241,7 +241,7 @@
                                             Regular Price <span class="text-danger">*</span>
                                         </label>
                                         <div class="input-group">
-                                            <span class="input-group-text">{{ setting('currency_symbol', '$') }}</span>
+                                            <span class="input-group-text">{{ setting('currency_symbol', '₹') }}</span>
                                             <input type="number" step="0.01"
                                                    class="form-control @error('regular_price') is-invalid @enderror"
                                                    id="regular_price"
@@ -257,7 +257,7 @@
                                     <div class="mb-3">
                                         <label for="sale_price" class="form-label fw-semibold">Sale Price</label>
                                         <div class="input-group">
-                                            <span class="input-group-text">{{ setting('currency_symbol', '$') }}</span>
+                                            <span class="input-group-text">{{ setting('currency_symbol', '₹') }}</span>
                                             <input type="number" step="0.01"
                                                    class="form-control @error('sale_price') is-invalid @enderror"
                                                    id="sale_price"
@@ -403,7 +403,7 @@
             </div>
             <div class="col-md-5">
                 <div class="input-group">
-                    <span class="input-group-text">{{ setting('currency_symbol', '$') }}</span>
+                    <span class="input-group-text">{{ setting('currency_symbol', '₹') }}</span>
                     <input type="number" name="size_prices[]" class="form-control" placeholder="Price" step="0.01" min="0" required>
                 </div>
             </div>
@@ -427,7 +427,7 @@
             </div>
             <div class="col-md-5">
                 <div class="input-group">
-                    <span class="input-group-text">{{ setting('currency_symbol', '$') }}</span>
+                    <span class="input-group-text">{{ setting('currency_symbol', '₹') }}</span>
                     <input type="number" name="flavor_prices[]" class="form-control" placeholder="Extra Price" step="0.01" min="0">
                 </div>
             </div>

@@ -15,9 +15,10 @@ class ProductController extends Controller
      */
     public function index(Request $request)
     {
-        // Start with active products
+        // Start with active AND in-stock products
         $query = Product::with(['category', 'images'])
-            ->where('is_active', true);
+            ->where('is_active', true)
+            ->where('in_stock', true);  // Only show in-stock products
 
         // Filter by category if provided
         if ($request->filled('category')) {
@@ -29,12 +30,12 @@ class ProductController extends Controller
             $search = $request->search;
             $query->where(function($q) use ($search) {
                 $q->where('name', 'like', '%' . $search . '%')
-                  ->orWhere('description', 'like', '%' . $search . '%')
-                  ->orWhere('short_description', 'like', '%' . $search . '%');
+                ->orWhere('description', 'like', '%' . $search . '%')
+                ->orWhere('short_description', 'like', '%' . $search . '%');
             });
         }
 
-        // ===== EGGLESS FILTER (FIXED) =====
+        // Eggless filter
         if ($request->filled('eggless')) {
             if ($request->eggless == 'yes') {
                 $query->where('is_eggless', true);
@@ -43,7 +44,7 @@ class ProductController extends Controller
             }
         }
 
-        // Price range filter (FIXED: using regular_price)
+        // Price range filter
         if ($request->filled('min_price')) {
             $query->where('regular_price', '>=', $request->min_price);
         }
@@ -52,7 +53,7 @@ class ProductController extends Controller
             $query->where('regular_price', '<=', $request->max_price);
         }
 
-        // ===== COMPLETE SORTING OPTIONS =====
+        // Sorting options
         $sort = $request->get('sort', 'latest');
         switch ($sort) {
             case 'price_low':
@@ -64,7 +65,7 @@ class ProductController extends Controller
             case 'name_asc':
                 $query->orderBy('name', 'asc');
                 break;
-            case 'name_desc':  // FIXED: Added Z to A sorting
+            case 'name_desc':
                 $query->orderBy('name', 'desc');
                 break;
             case 'latest':
@@ -74,30 +75,12 @@ class ProductController extends Controller
         }
 
         // Pagination
-        $products = $query->paginate(12)->withQueryString();
+       $products = $query->paginate(12)->appends(request()->query());
 
         // Get categories for filter sidebar
         $categories = Category::where('is_active', true)->get();
 
         return view('front.shop', compact('products', 'categories'));
-    }
-
-    /**
-     * Display products by category
-     */
-    public function byCategory($slug)
-    {
-        $category = Category::where('slug', $slug)
-            ->where('is_active', true)
-            ->firstOrFail();
-
-        $products = Product::with(['category', 'images'])
-            ->where('category_id', $category->id)
-            ->where('is_active', true)
-            ->paginate(12)
-            ->withQueryString();
-
-        return view('front.shop', compact('products', 'category'));
     }
 
     /**
@@ -109,17 +92,18 @@ class ProductController extends Controller
             $query->where('is_approved', true)->latest();
         }])
         ->where('slug', $slug)
-        ->where('is_active', true)
+        ->where('is_active', true)  // Must be active
         ->firstOrFail();
 
         // Increment view count
         $product->increment('views');
 
-        // Get related products
+        // Get related products (only in-stock)
         $relatedProducts = Product::with(['category', 'images'])
             ->where('category_id', $product->category_id)
             ->where('id', '!=', $product->id)
             ->where('is_active', true)
+            ->where('in_stock', true)  // Only show in-stock related products
             ->limit(4)
             ->get();
 
