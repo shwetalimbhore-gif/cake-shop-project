@@ -43,7 +43,7 @@ class AccountController extends Controller
         return view('front.account.profile', compact('user'));
     }
 
-    /**
+   /**
      * Update customer profile
      */
     public function updateProfile(Request $request)

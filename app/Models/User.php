@@ -16,10 +16,13 @@ class User extends Authenticatable
         'email',
         'password',
         'is_admin',
-        'avatar',
-        'phone',
-        'bio',
-        'settings',
+        'phone',        // ADD THIS
+        'address',      // ADD THIS
+        'city',         // ADD THIS
+        'state',        // ADD THIS
+        'zip',          // ADD THIS
+        'country',      // ADD THIS
+        'avatar',       // ADD THIS
     ];
 
     protected $hidden = [
