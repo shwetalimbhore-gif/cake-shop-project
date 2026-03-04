@@ -4,506 +4,552 @@
 @section('page-title', 'Edit Product: ' . $product->name)
 
 @section('content')
-<div class="row">
-    <div class="col-12">
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
-                <h5 class="mb-0 fw-bold">
-                    <i class="fas fa-edit text-primary me-2"></i>
-                    Edit Product
-                </h5>
-                <div>
-                    <a href="{{ route('admin.products.index') }}" class="btn btn-outline-secondary me-2">
-                        <i class="fas fa-arrow-left me-2"></i>Back to Products
-                    </a>
-                    <a href="{{ route('admin.products.create') }}" class="btn btn-outline-primary">
-                        <i class="fas fa-plus me-2"></i>Add New
-                    </a>
+<div class="container-fluid px-0 px-md-2 px-lg-3">
+    <div class="row">
+        <div class="col-12">
+            <!-- Header Card -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-transparent py-3 d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="fas fa-edit text-primary me-2"></i>
+                        Edit Product: {{ $product->name }}
+                    </h5>
+                    <div class="d-flex gap-2">
+                        <a href="{{ route('admin.products.index') }}" class="btn btn-outline-secondary btn-sm">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Products
+                        </a>
+                    </div>
                 </div>
             </div>
-            <div class="card-body">
-                @if($errors->any())
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        <strong><i class="fas fa-exclamation-triangle me-2"></i>Please fix the following errors:</strong>
-                        <ul class="mb-0 mt-2">
-                            @foreach($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                @endif
 
-                <form action="{{ route('admin.products.update', $product) }}" method="POST" enctype="multipart/form-data" id="productForm">
-                    @csrf
-                    @method('PUT')
+            <!-- Error Messages -->
+            @if($errors->any())
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <strong><i class="fas fa-exclamation-triangle me-2"></i>Please fix the following errors:</strong>
+                    <ul class="mb-0 mt-2 ps-3">
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            @endif
 
-                    <div class="row">
-                        <!-- Left Column - Main Details -->
-                        <div class="col-md-8">
-                            <div class="card border-0 shadow-sm mb-4">
-                                <div class="card-header bg-transparent">
-                                    <h6 class="mb-0 fw-semibold">Basic Information</h6>
-                                </div>
-                                <div class="card-body">
-                                    <!-- Product Name -->
-                                    <div class="mb-3">
-                                        <label for="name" class="form-label fw-semibold">
-                                            Product Name <span class="text-danger">*</span>
-                                        </label>
-                                        <input type="text"
-                                               class="form-control @error('name') is-invalid @enderror"
-                                               id="name"
-                                               name="name"
-                                               value="{{ old('name', $product->name) }}"
-                                               placeholder="Enter product name"
-                                               required>
-                                        @error('name')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
+            <!-- Main Form -->
+            <form action="{{ route('admin.products.update', $product) }}" method="POST" enctype="multipart/form-data" id="productForm">
+                @csrf
+                @method('PUT')
 
-                                    <!-- SKU and Category -->
-                                    <div class="row">
-                                        <div class="col-md-6 mb-3">
-                                            <label for="sku" class="form-label fw-semibold">
-                                                SKU <span class="text-danger">*</span>
-                                            </label>
-                                            <input type="text"
-                                                   class="form-control @error('sku') is-invalid @enderror"
-                                                   id="sku"
-                                                   name="sku"
-                                                   value="{{ old('sku', $product->sku) }}"
-                                                   placeholder="e.g., CAKE-BDAY-001"
-                                                   required>
-                                            @error('sku')
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                            @enderror
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label for="category_id" class="form-label fw-semibold">Category</label>
-                                            <select class="form-select @error('category_id') is-invalid @enderror"
-                                                    id="category_id"
-                                                    name="category_id">
-                                                <option value="">Select Category</option>
-                                                @foreach($categories as $category)
-                                                    <option value="{{ $category->id }}"
-                                                        {{ old('category_id', $product->category_id) == $category->id ? 'selected' : '' }}>
-                                                        {{ $category->name }}
-                                                    </option>
-                                                @endforeach
-                                            </select>
-                                            @error('category_id')
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                            @enderror
-                                        </div>
-                                    </div>
-
-                                    <!-- Short Description -->
-                                    <div class="mb-3">
-                                        <label for="short_description" class="form-label fw-semibold">Short Description</label>
-                                        <textarea class="form-control @error('short_description') is-invalid @enderror"
-                                                  id="short_description"
-                                                  name="short_description"
-                                                  rows="2"
-                                                  placeholder="Brief description (max 500 characters)">{{ old('short_description', $product->short_description) }}</textarea>
-                                        @error('short_description')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-
-                                    <!-- Full Description -->
-                                    <div class="mb-3">
-                                        <label for="description" class="form-label fw-semibold">Full Description</label>
-                                        <textarea class="form-control @error('description') is-invalid @enderror"
-                                                  id="description"
-                                                  name="description"
-                                                  rows="5"
-                                                  placeholder="Detailed product description">{{ old('description', $product->description) }}</textarea>
-                                        @error('description')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                </div>
+                <div class="row g-4">
+                    <!-- Left Column - Main Details -->
+                    <div class="col-xl-8 col-lg-7">
+                        <!-- Basic Information Card -->
+                        <div class="card border-0 shadow-sm mb-4">
+                            <div class="card-header bg-transparent py-3">
+                                <h6 class="mb-0 fw-semibold">
+                                    <i class="fas fa-info-circle me-2 text-primary"></i>Basic Information
+                                </h6>
                             </div>
-
-                            <!-- Sizes Section -->
-                            <div class="card border-0 shadow-sm mb-4">
-                                <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
-                                    <h6 class="mb-0 fw-semibold">
-                                        <i class="fas fa-arrows-alt me-2 text-primary"></i>Sizes with Prices
-                                    </h6>
-                                    <span class="badge bg-info">Required</span>
-                                </div>
-                                <div class="card-body">
-                                    @php
-                                        $sizes = json_decode($product->sizes, true) ?? ['6 inch', '8 inch', '10 inch'];
-                                        $sizePrices = json_decode($product->size_prices, true) ?? [29.99, 39.99, 49.99];
-                                    @endphp
-                                    <div id="sizes-container">
-                                        @foreach($sizes as $index => $size)
-                                        <div class="row mb-2 size-row align-items-center">
-                                            <div class="col-md-5">
-                                                <input type="text" name="sizes[]" class="form-control"
-                                                       placeholder="Size (e.g., 6 inch)"
-                                                       value="{{ old('sizes.' . $index, $size) }}" required>
-                                            </div>
-                                            <div class="col-md-5">
-                                                <div class="input-group">
-                                                    <span class="input-group-text">{{ setting('currency_symbol', '₹') }}</span>
-                                                    <input type="number" name="size_prices[]" class="form-control"
-                                                           placeholder="Price"
-                                                           value="{{ old('size_prices.' . $index, $sizePrices[$index] ?? 29.99) }}"
-                                                           step="0.01" min="0" required>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-2">
-                                                @if($loop->first)
-                                                    <button class="btn btn-outline-danger remove-size" type="button" disabled>
-                                                        <i class="fas fa-minus-circle"></i>
-                                                    </button>
-                                                @else
-                                                    <button class="btn btn-outline-danger remove-size" type="button">
-                                                        <i class="fas fa-minus-circle"></i>
-                                                    </button>
-                                                @endif
-                                            </div>
-                                        </div>
-                                        @endforeach
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-12">
+                                        <label class="form-label fw-semibold">Product Name</label>
+                                        <input type="text" name="name" class="form-control"
+                                               value="{{ old('name', $product->name) }}" required>
                                     </div>
-                                    <button type="button" class="btn btn-sm btn-outline-primary mt-2" id="add-size">
-                                        <i class="fas fa-plus me-2"></i>Add Another Size
-                                    </button>
-                                </div>
-                            </div>
 
-                            <!-- Flavors Section -->
-                            <div class="card border-0 shadow-sm mb-4">
-                                <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
-                                    <h6 class="mb-0 fw-semibold">
-                                        <i class="fas fa-ice-cream me-2 text-primary"></i>Flavors with Prices (Optional)
-                                    </h6>
-                                    <span class="badge bg-secondary">Optional</span>
-                                </div>
-                                <div class="card-body">
-                                    @php
-                                        $flavors = json_decode($product->flavors, true) ?? ['Chocolate', 'Vanilla', 'Strawberry'];
-                                        $flavorPrices = json_decode($product->flavor_prices, true) ?? [0, 0, 2.00];
-                                    @endphp
-                                    <div id="flavors-container">
-                                        @foreach($flavors as $index => $flavor)
-                                        <div class="row mb-2 flavor-row align-items-center">
-                                            <div class="col-md-5">
-                                                <input type="text" name="flavors[]" class="form-control"
-                                                       placeholder="Flavor (e.g., Chocolate)"
-                                                       value="{{ old('flavors.' . $index, $flavor) }}">
-                                            </div>
-                                            <div class="col-md-5">
-                                                <div class="input-group">
-                                                    <span class="input-group-text">{{ setting('currency_symbol', '₹') }}</span>
-                                                    <input type="number" name="flavor_prices[]" class="form-control"
-                                                           placeholder="Extra Price"
-                                                           value="{{ old('flavor_prices.' . $index, $flavorPrices[$index] ?? 0) }}"
-                                                           step="0.01" min="0">
-                                                </div>
-                                            </div>
-                                            <div class="col-md-2">
-                                                @if($loop->first)
-                                                    <button class="btn btn-outline-danger remove-flavor" type="button" disabled>
-                                                        <i class="fas fa-minus-circle"></i>
-                                                    </button>
-                                                @else
-                                                    <button class="btn btn-outline-danger remove-flavor" type="button">
-                                                        <i class="fas fa-minus-circle"></i>
-                                                    </button>
-                                                @endif
-                                            </div>
-                                        </div>
-                                        @endforeach
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">SKU</label>
+                                        <input type="text" name="sku" class="form-control"
+                                               value="{{ old('sku', $product->sku) }}" required>
                                     </div>
-                                    <button type="button" class="btn btn-sm btn-outline-primary mt-2" id="add-flavor">
-                                        <i class="fas fa-plus me-2"></i>Add Another Flavor
-                                    </button>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">Category</label>
+                                        <select name="category_id" class="form-select">
+                                            <option value="">Select Category</option>
+                                            @foreach($categories as $category)
+                                                <option value="{{ $category->id }}"
+                                                    {{ old('category_id', $product->category_id) == $category->id ? 'selected' : '' }}>
+                                                    {{ $category->name }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+
+                                    <div class="col-12">
+                                        <label class="form-label fw-semibold">Short Description</label>
+                                        <textarea name="short_description" class="form-control"
+                                                  rows="2">{{ old('short_description', $product->short_description) }}</textarea>
+                                    </div>
+
+                                    <div class="col-12">
+                                        <label class="form-label fw-semibold">Full Description</label>
+                                        <textarea name="description" class="form-control"
+                                                  rows="4">{{ old('description', $product->description) }}</textarea>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Right Column - Pricing & Settings -->
-                        <div class="col-md-4">
-                            <!-- Pricing Card -->
-                            <div class="card border-0 shadow-sm mb-4">
-                                <div class="card-header bg-transparent">
-                                    <h6 class="mb-0 fw-semibold">Pricing</h6>
-                                </div>
-                                <div class="card-body">
-                                    <div class="mb-3">
-                                        <label for="regular_price" class="form-label fw-semibold">
-                                            Regular Price <span class="text-danger">*</span>
-                                        </label>
-                                        <div class="input-group">
-                                            <span class="input-group-text">{{ setting('currency_symbol', '₹') }}</span>
-                                            <input type="number" step="0.01"
-                                                   class="form-control @error('regular_price') is-invalid @enderror"
-                                                   id="regular_price"
-                                                   name="regular_price"
-                                                   value="{{ old('regular_price', $product->regular_price) }}"
-                                                   required>
+                        <!-- Sizes Section with Working Delete Buttons -->
+                        <div class="card border-0 shadow-sm mb-4">
+                            <div class="card-header bg-transparent py-3 d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0 fw-semibold">
+                                    <i class="fas fa-arrows-alt me-2 text-primary"></i>Sizes with Prices
+                                </h6>
+                                <span class="badge bg-info">Required</span>
+                            </div>
+                            <div class="card-body">
+                                <div id="sizes-container">
+                                    @php
+                                        $sizes = json_decode($product->sizes, true) ?? ['6 inch (6-8 servings)', '8 inch (10-12 servings)', '10 inch (14-16 servings)'];
+                                        $sizePrices = json_decode($product->size_prices, true) ?? [29.99, 39.99, 49.99];
+                                    @endphp
+                                    @foreach($sizes as $index => $size)
+                                    <div class="row g-2 mb-3 size-row align-items-end">
+                                        <div class="col-md-5 col-12">
+                                            <label class="form-label small">Size Name</label>
+                                            <input type="text" name="sizes[]" class="form-control"
+                                                   value="{{ $size }}" placeholder="e.g., 6 inch" required>
                                         </div>
-                                        @error('regular_price')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
+                                        <div class="col-md-4 col-8">
+                                            <label class="form-label small">Price (₹)</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text">₹</span>
+                                                <input type="number" name="size_prices[]" class="form-control"
+                                                       value="{{ $sizePrices[$index] ?? 29.99 }}" step="0.01" required>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3 col-4">
+                                            <label class="form-label small">&nbsp;</label>
+                                            @if($loop->first)
+                                                <button type="button" class="btn btn-outline-secondary w-100" disabled>
+                                                    <i class="fas fa-trash me-1"></i> Delete
+                                                </button>
+                                            @else
+                                                <button type="button" class="btn btn-outline-danger w-100 remove-size">
+                                                    <i class="fas fa-trash me-1"></i> Delete
+                                                </button>
+                                            @endif
+                                        </div>
                                     </div>
+                                    @endforeach
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-primary mt-2" id="add-size">
+                                    <i class="fas fa-plus me-2"></i>Add Size
+                                </button>
+                            </div>
+                        </div>
 
-                                    <div class="mb-3">
-                                        <label for="sale_price" class="form-label fw-semibold">Sale Price</label>
-                                        <div class="input-group">
-                                            <span class="input-group-text">{{ setting('currency_symbol', '₹') }}</span>
-                                            <input type="number" step="0.01"
-                                                   class="form-control @error('sale_price') is-invalid @enderror"
-                                                   id="sale_price"
-                                                   name="sale_price"
-                                                   value="{{ old('sale_price', $product->sale_price) }}">
+                        <!-- Flavors Section with Working Delete Buttons -->
+                        <div class="card border-0 shadow-sm mb-4">
+                            <div class="card-header bg-transparent py-3 d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0 fw-semibold">
+                                    <i class="fas fa-ice-cream me-2 text-primary"></i>Flavors (Optional)
+                                </h6>
+                                <span class="badge bg-secondary">Optional</span>
+                            </div>
+                            <div class="card-body">
+                                <div id="flavors-container">
+                                    @php
+                                        $flavors = json_decode($product->flavors, true) ?? ['Chocolate', 'Double Chocolate', 'Strawberry'];
+                                        $flavorPrices = json_decode($product->flavor_prices, true) ?? [0, 2.00, 1.50];
+                                    @endphp
+                                    @foreach($flavors as $index => $flavor)
+                                    <div class="row g-2 mb-3 flavor-row align-items-end">
+                                        <div class="col-md-5 col-12">
+                                            <label class="form-label small">Flavor Name</label>
+                                            <input type="text" name="flavors[]" class="form-control"
+                                                   value="{{ $flavor }}" placeholder="e.g., Chocolate">
                                         </div>
-                                        @error('sale_price')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
+                                        <div class="col-md-4 col-8">
+                                            <label class="form-label small">Extra Price (₹)</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text">₹</span>
+                                                <input type="number" name="flavor_prices[]" class="form-control"
+                                                       value="{{ $flavorPrices[$index] ?? 0 }}" step="0.01">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3 col-4">
+                                            <label class="form-label small">&nbsp;</label>
+                                            @if($loop->first)
+                                                <button type="button" class="btn btn-outline-secondary w-100" disabled>
+                                                    <i class="fas fa-trash me-1"></i> Delete
+                                                </button>
+                                            @else
+                                                <button type="button" class="btn btn-outline-danger w-100 remove-flavor">
+                                                    <i class="fas fa-trash me-1"></i> Delete
+                                                </button>
+                                            @endif
+                                        </div>
+                                    </div>
+                                    @endforeach
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-primary mt-2" id="add-flavor">
+                                    <i class="fas fa-plus me-2"></i>Add Flavor
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column - Pricing & Settings -->
+                    <div class="col-xl-4 col-lg-5">
+                        <!-- Pricing Card -->
+                        <div class="card border-0 shadow-sm mb-4">
+                            <div class="card-header bg-transparent py-3">
+                                <h6 class="mb-0 fw-semibold">
+                                    <i class="fas fa-tag me-2 text-primary"></i>Pricing
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Regular Price</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">₹</span>
+                                        <input type="number" step="0.01" name="regular_price"
+                                               class="form-control" value="{{ old('regular_price', $product->regular_price) }}" required>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Sale Price</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">₹</span>
+                                        <input type="number" step="0.01" name="sale_price"
+                                               class="form-control" value="{{ old('sale_price', $product->sale_price) }}">
                                     </div>
                                 </div>
                             </div>
+                        </div>
 
-                            <!-- Stock Card -->
-                            <div class="card border-0 shadow-sm mb-4">
-                                <div class="card-header bg-transparent">
-                                    <h6 class="mb-0 fw-semibold">Inventory</h6>
-                                </div>
-                                <div class="card-body">
-                                    <div class="mb-3">
-                                        <label for="stock_quantity" class="form-label fw-semibold">
-                                            Stock Quantity <span class="text-danger">*</span>
-                                        </label>
-                                        <input type="number"
-                                               class="form-control @error('stock_quantity') is-invalid @enderror"
-                                               id="stock_quantity"
-                                               name="stock_quantity"
-                                               value="{{ old('stock_quantity', $product->stock_quantity) }}"
-                                               min="0"
-                                               required>
-                                        @error('stock_quantity')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
+                        <!-- Stock Card -->
+                        <div class="card border-0 shadow-sm mb-4">
+                            <div class="card-header bg-transparent py-3">
+                                <h6 class="mb-0 fw-semibold">
+                                    <i class="fas fa-boxes me-2 text-primary"></i>Inventory
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Stock Quantity</label>
+                                    <input type="number" name="stock_quantity"
+                                           class="form-control" value="{{ old('stock_quantity', $product->stock_quantity) }}" min="0" required>
                                 </div>
                             </div>
+                        </div>
 
-                            <!-- Product Image Card -->
-                            <div class="card border-0 shadow-sm mb-4">
-                                <div class="card-header bg-transparent">
-                                    <h6 class="mb-0 fw-semibold">Product Image</h6>
+                        <!-- Image Card with Working Upload -->
+                        <div class="card border-0 shadow-sm mb-4">
+                            <div class="card-header bg-transparent py-3">
+                                <h6 class="mb-0 fw-semibold">
+                                    <i class="fas fa-image me-2 text-primary"></i>Product Image
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                @if($product->featured_image)
+                                    <div class="text-center mb-3">
+                                        <img src="{{ asset('storage/' . $product->featured_image) }}"
+                                             alt="Current" class="img-fluid rounded border" style="max-height: 150px;">
+                                        <div class="mt-2">
+                                            <small class="text-muted">Current Image</small>
+                                        </div>
+                                    </div>
+                                @endif
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Upload New Image</label>
+                                    <input type="file" name="featured_image" class="form-control" accept="image/*" id="featured_image">
+                                    <small class="text-muted">Leave empty to keep current image. Max: 2MB</small>
                                 </div>
-                                <div class="card-body">
-                                    <!-- Current Image -->
-                                    @if($product->featured_image)
-                                    <div class="mb-3">
-                                        <label class="form-label fw-semibold">Current Image</label>
-                                        <div class="border rounded-3 p-3 text-center bg-light">
-                                            <img src="{{ asset('storage/' . $product->featured_image) }}"
-                                                 alt="{{ $product->name }}"
-                                                 class="img-fluid"
-                                                 style="max-height: 150px;">
-                                        </div>
-                                    </div>
-                                    @endif
-
-                                    <!-- New Image Upload -->
-                                    <div class="mb-3">
-                                        <label for="featured_image" class="form-label fw-semibold">New Image</label>
-                                        <input type="file"
-                                               class="form-control @error('featured_image') is-invalid @enderror"
-                                               id="featured_image"
-                                               name="featured_image"
-                                               accept="image/*">
-                                        @error('featured_image')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                        <small class="text-muted d-block mt-2">
-                                            <i class="fas fa-info-circle me-1"></i>
-                                            Leave empty to keep current image. Allowed: JPEG, PNG, JPG, GIF (Max: 2MB)
-                                        </small>
-                                    </div>
-
-                                    <!-- New Image Preview -->
-                                    <div class="mb-3" id="imagePreview" style="display: none;">
-                                        <label class="form-label fw-semibold">New Image Preview</label>
-                                        <div class="border rounded-3 p-3 text-center bg-light">
-                                            <img src="" alt="Preview" class="img-fluid" style="max-height: 150px;">
-                                        </div>
-                                    </div>
+                                <div class="mt-3 text-center" id="imagePreview" style="display: none;">
+                                    <h6 class="fw-semibold">Preview</h6>
+                                    <img src="" alt="Preview" class="img-fluid rounded border" style="max-height: 150px;">
                                 </div>
                             </div>
+                        </div>
 
-                            <!-- Status Toggles Card -->
-                            <div class="card border-0 shadow-sm mb-4">
-                                <div class="card-header bg-transparent">
-                                    <h6 class="mb-0 fw-semibold">Product Status</h6>
-                                </div>
-                                <div class="card-body">
+                        <!-- Status Toggles Card -->
+                        <div class="card border-0 shadow-sm mb-4">
+                            <div class="card-header bg-transparent py-3">
+                                <h6 class="mb-0 fw-semibold">
+                                    <i class="fas fa-toggle-on me-2 text-primary"></i>Product Status
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
                                     <div class="form-check form-switch mb-3">
                                         <input type="checkbox" class="form-check-input" id="is_active" name="is_active" value="1"
                                             {{ old('is_active', $product->is_active) ? 'checked' : '' }}>
-                                        <label class="form-check-label fw-semibold" for="is_active">
-                                            <i class="fas fa-check-circle text-success me-1"></i>Active
-                                        </label>
+                                        <label class="form-check-label" for="is_active">Active</label>
                                     </div>
 
                                     <div class="form-check form-switch mb-3">
                                         <input type="checkbox" class="form-check-input" id="is_featured" name="is_featured" value="1"
                                             {{ old('is_featured', $product->is_featured) ? 'checked' : '' }}>
-                                        <label class="form-check-label fw-semibold" for="is_featured">
-                                            <i class="fas fa-crown text-warning me-1"></i>Featured Product
-                                        </label>
+                                        <label class="form-check-label" for="is_featured">Featured</label>
                                     </div>
 
                                     <div class="form-check form-switch">
                                         <input type="checkbox" class="form-check-input" id="is_eggless" name="is_eggless" value="1"
                                             {{ old('is_eggless', $product->is_eggless) ? 'checked' : '' }}>
-                                        <label class="form-check-label fw-semibold" for="is_eggless">
-                                            <i class="fas fa-leaf me-1" style="color: #2e7d32;"></i> Eggless Cake
-                                        </label>
+                                        <label class="form-check-label" for="is_eggless">Eggless</label>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    <!-- Form Actions -->
-                    <div class="d-flex justify-content-end gap-2 mt-4">
-                        <a href="{{ route('admin.products.index') }}" class="btn btn-secondary px-4">
-                            <i class="fas fa-times me-2"></i>Cancel
-                        </a>
-                        <button type="submit" class="btn btn-primary px-4">
-                            <i class="fas fa-save me-2"></i>Update Product
-                        </button>
+                <!-- Form Actions -->
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="d-flex flex-column flex-sm-row justify-content-end gap-2">
+                            <a href="{{ route('admin.products.index') }}" class="btn btn-secondary order-2 order-sm-1">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary order-1 order-sm-2">
+                                <i class="fas fa-save me-2"></i>Update Product
+                            </button>
+                        </div>
                     </div>
-                </form>
-            </div>
+                </div>
+            </form>
         </div>
     </div>
 </div>
+@endsection
 
-@push('scripts')
+@section('scripts')
 <script>
-    // ===== SIZES MANAGEMENT =====
-    document.getElementById('add-size')?.addEventListener('click', function() {
-        const container = document.getElementById('sizes-container');
-        const newSizeRow = document.createElement('div');
-        newSizeRow.className = 'row mb-2 size-row align-items-center';
-        newSizeRow.innerHTML = `
-            <div class="col-md-5">
-                <input type="text" name="sizes[]" class="form-control" placeholder="Size (e.g., New Size)" required>
-            </div>
-            <div class="col-md-5">
-                <div class="input-group">
-                    <span class="input-group-text">{{ setting('currency_symbol', '₹') }}</span>
-                    <input type="number" name="size_prices[]" class="form-control" placeholder="Price" step="0.01" min="0" required>
+$(document).ready(function() {
+    // Initialize toastr
+    if (typeof toastr !== 'undefined') {
+        toastr.options = {
+            "closeButton": true,
+            "progressBar": true,
+            "positionClass": "toast-top-right",
+            "timeOut": "3000"
+        };
+    }
+
+    // ===== ADD NEW SIZE =====
+    $('#add-size').click(function(e) {
+        e.preventDefault();
+
+        const newRow = `
+            <div class="row g-2 mb-3 size-row align-items-end">
+                <div class="col-md-5 col-12">
+                    <label class="form-label small">Size Name</label>
+                    <input type="text" name="sizes[]" class="form-control" placeholder="e.g., New Size" required>
+                </div>
+                <div class="col-md-4 col-8">
+                    <label class="form-label small">Price (₹)</label>
+                    <div class="input-group">
+                        <span class="input-group-text">₹</span>
+                        <input type="number" name="size_prices[]" class="form-control" placeholder="Price" step="0.01" required>
+                    </div>
+                </div>
+                <div class="col-md-3 col-4">
+                    <label class="form-label small">&nbsp;</label>
+                    <button type="button" class="btn btn-outline-danger w-100 remove-size">
+                        <i class="fas fa-trash me-1"></i> Delete
+                    </button>
                 </div>
             </div>
-            <div class="col-md-2">
-                <button class="btn btn-outline-danger remove-size" type="button">
-                    <i class="fas fa-minus-circle"></i>
-                </button>
-            </div>
         `;
-        container.appendChild(newSizeRow);
-    });
 
-    // ===== FLAVORS MANAGEMENT =====
-    document.getElementById('add-flavor')?.addEventListener('click', function() {
-        const container = document.getElementById('flavors-container');
-        const newFlavorRow = document.createElement('div');
-        newFlavorRow.className = 'row mb-2 flavor-row align-items-center';
-        newFlavorRow.innerHTML = `
-            <div class="col-md-5">
-                <input type="text" name="flavors[]" class="form-control" placeholder="Flavor (e.g., New Flavor)">
-            </div>
-            <div class="col-md-5">
-                <div class="input-group">
-                    <span class="input-group-text">{{ setting('currency_symbol', '₹') }}</span>
-                    <input type="number" name="flavor_prices[]" class="form-control" placeholder="Extra Price" step="0.01" min="0">
-                </div>
-            </div>
-            <div class="col-md-2">
-                <button class="btn btn-outline-danger remove-flavor" type="button">
-                    <i class="fas fa-minus-circle"></i>
-                </button>
-            </div>
-        `;
-        container.appendChild(newFlavorRow);
-    });
+        $('#sizes-container').append(newRow);
 
-    // ===== REMOVE SIZE =====
-    document.addEventListener('click', function(e) {
-        if (e.target.closest('.remove-size')) {
-            const sizeRow = e.target.closest('.size-row');
-            if (document.querySelectorAll('.size-row').length > 1) {
-                sizeRow.remove();
-            } else {
-                alert('You need at least one size option');
-            }
+        if (typeof toastr !== 'undefined') {
+            toastr.success('New size option added');
         }
     });
 
-    // ===== REMOVE FLAVOR =====
-    document.addEventListener('click', function(e) {
-        if (e.target.closest('.remove-flavor')) {
-            const flavorRow = e.target.closest('.flavor-row');
-            if (document.querySelectorAll('.flavor-row').length > 1) {
-                flavorRow.remove();
+    // ===== ADD NEW FLAVOR =====
+    $('#add-flavor').click(function(e) {
+        e.preventDefault();
+
+        const newRow = `
+            <div class="row g-2 mb-3 flavor-row align-items-end">
+                <div class="col-md-5 col-12">
+                    <label class="form-label small">Flavor Name</label>
+                    <input type="text" name="flavors[]" class="form-control" placeholder="e.g., New Flavor">
+                </div>
+                <div class="col-md-4 col-8">
+                    <label class="form-label small">Extra Price ($)</label>
+                    <div class="input-group">
+                        <span class="input-group-text">₹</span>
+                        <input type="number" name="flavor_prices[]" class="form-control" placeholder="Extra Price" step="0.01">
+                    </div>
+                </div>
+                <div class="col-md-3 col-4">
+                    <label class="form-label small">&nbsp;</label>
+                    <button type="button" class="btn btn-outline-danger w-100 remove-flavor">
+                        <i class="fas fa-trash me-1"></i> Delete
+                    </button>
+                </div>
+            </div>
+        `;
+
+        $('#flavors-container').append(newRow);
+
+        if (typeof toastr !== 'undefined') {
+            toastr.success('New flavor option added');
+        }
+    });
+
+    // ===== DELETE SIZE =====
+    $(document).on('click', '.remove-size', function(e) {
+        e.preventDefault();
+
+        const row = $(this).closest('.size-row');
+
+        if ($('.size-row').length <= 1) {
+            if (typeof toastr !== 'undefined') {
+                toastr.warning('You need at least one size option');
+            } else {
+                alert('You need at least one size option');
+            }
+            return;
+        }
+
+        if (confirm('Are you sure you want to delete this size option?')) {
+            row.fadeOut(300, function() {
+                $(this).remove();
+                if (typeof toastr !== 'undefined') {
+                    toastr.success('Size option removed');
+                }
+            });
+        }
+    });
+
+    // ===== DELETE FLAVOR =====
+    $(document).on('click', '.remove-flavor', function(e) {
+        e.preventDefault();
+
+        const row = $(this).closest('.flavor-row');
+
+        if ($('.flavor-row').length <= 1) {
+            if (typeof toastr !== 'undefined') {
+                toastr.warning('You need at least one flavor option');
             } else {
                 alert('You need at least one flavor option');
             }
+            return;
+        }
+
+        if (confirm('Are you sure you want to delete this flavor option?')) {
+            row.fadeOut(300, function() {
+                $(this).remove();
+                if (typeof toastr !== 'undefined') {
+                    toastr.success('Flavor option removed');
+                }
+            });
         }
     });
 
     // ===== IMAGE PREVIEW =====
-    document.getElementById('featured_image').addEventListener('change', function(e) {
-        const preview = document.getElementById('imagePreview');
-        const previewImg = preview.querySelector('img');
+    $('#featured_image').change(function() {
+        const file = this.files[0];
+        const preview = $('#imagePreview');
+        const previewImg = preview.find('img');
 
-        if (this.files && this.files[0]) {
+        if (file) {
+            // Validate file size (2MB)
+            if (file.size > 2 * 1024 * 1024) {
+                if (typeof toastr !== 'undefined') {
+                    toastr.error('File size must be less than 2MB');
+                } else {
+                    alert('File size must be less than 2MB');
+                }
+                this.value = '';
+                preview.hide();
+                return;
+            }
+
+            // Validate file type
+            const fileType = file.type;
+            if (!fileType.match('image.*')) {
+                if (typeof toastr !== 'undefined') {
+                    toastr.error('Please select an image file');
+                } else {
+                    alert('Please select an image file');
+                }
+                this.value = '';
+                preview.hide();
+                return;
+            }
+
+            // Show preview
             const reader = new FileReader();
             reader.onload = function(e) {
-                previewImg.src = e.target.result;
-                preview.style.display = 'block';
+                previewImg.attr('src', e.target.result);
+                preview.fadeIn();
             }
-            reader.readAsDataURL(this.files[0]);
+            reader.readAsDataURL(file);
         } else {
-            preview.style.display = 'none';
-            previewImg.src = '';
+            preview.fadeOut();
         }
     });
 
-    // ===== VALIDATE SALE PRICE =====
-    document.getElementById('sale_price').addEventListener('input', function() {
-        const regularPrice = parseFloat(document.getElementById('regular_price').value) || 0;
-        const salePrice = parseFloat(this.value) || 0;
+    // ===== FORM VALIDATION BEFORE SUBMIT =====
+    $('#productForm').submit(function(e) {
+        let isValid = true;
+        let errorMessage = '';
 
-        if (salePrice > regularPrice) {
-            this.setCustomValidity('Sale price cannot be greater than regular price');
-        } else {
-            this.setCustomValidity('');
+        // Check if at least one size exists
+        if ($('.size-row').length === 0) {
+            isValid = false;
+            errorMessage = 'Please add at least one size option';
+        }
+
+        // Check if all size names are filled
+        $('input[name="sizes[]"]').each(function() {
+            if ($(this).val().trim() === '') {
+                isValid = false;
+                errorMessage = 'Please fill in all size names';
+                $(this).addClass('is-invalid');
+            } else {
+                $(this).removeClass('is-invalid');
+            }
+        });
+
+        // Check if all size prices are filled
+        $('input[name="size_prices[]"]').each(function() {
+            if ($(this).val().trim() === '') {
+                isValid = false;
+                errorMessage = 'Please fill in all size prices';
+                $(this).addClass('is-invalid');
+            } else {
+                $(this).removeClass('is-invalid');
+            }
+        });
+
+        if (!isValid) {
+            e.preventDefault();
+            if (typeof toastr !== 'undefined') {
+                toastr.error(errorMessage);
+            } else {
+                alert(errorMessage);
+            }
         }
     });
 
-    document.getElementById('regular_price').addEventListener('input', function() {
-        const salePrice = parseFloat(document.getElementById('sale_price').value) || 0;
-        const regularPrice = parseFloat(this.value) || 0;
-
-        if (salePrice > regularPrice) {
-            document.getElementById('sale_price').setCustomValidity('Sale price cannot be greater than regular price');
+    // ===== SHOW FLASH MESSAGES =====
+    @if(session('success'))
+        if (typeof toastr !== 'undefined') {
+            toastr.success('{{ session('success') }}');
         } else {
-            document.getElementById('sale_price').setCustomValidity('');
+            alert('{{ session('success') }}');
         }
-    });
+    @endif
+
+    @if(session('error'))
+        if (typeof toastr !== 'undefined') {
+            toastr.error('{{ session('error') }}');
+        } else {
+            alert('{{ session('error') }}');
+        }
+    @endif
+});
 </script>
-@endpush
 @endsection

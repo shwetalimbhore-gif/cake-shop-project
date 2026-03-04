@@ -150,7 +150,7 @@
                                         </div>
                                         <div class="col-sm-5 col-8">
                                             <div class="input-group">
-                                                <span class="input-group-text">$</span>
+                                                <span class="input-group-text">₹</span>
                                                 <input type="number" name="size_prices[]" class="form-control"
                                                        placeholder="Price" value="29.99" step="0.01" required>
                                             </div>
@@ -169,7 +169,7 @@
                                         </div>
                                         <div class="col-sm-5 col-8">
                                             <div class="input-group">
-                                                <span class="input-group-text">$</span>
+                                                <span class="input-group-text">₹</span>
                                                 <input type="number" name="size_prices[]" class="form-control"
                                                        placeholder="Price" value="39.99" step="0.01" required>
                                             </div>
@@ -188,7 +188,7 @@
                                         </div>
                                         <div class="col-sm-5 col-8">
                                             <div class="input-group">
-                                                <span class="input-group-text">$</span>
+                                                <span class="input-group-text">₹</span>
                                                 <input type="number" name="size_prices[]" class="form-control"
                                                        placeholder="Price" value="49.99" step="0.01" required>
                                             </div>
@@ -224,7 +224,7 @@
                                         </div>
                                         <div class="col-sm-5 col-8">
                                             <div class="input-group">
-                                                <span class="input-group-text">$</span>
+                                                <span class="input-group-text">₹</span>
                                                 <input type="number" name="flavor_prices[]" class="form-control"
                                                        placeholder="Extra Price" value="0" step="0.01">
                                             </div>
@@ -243,7 +243,7 @@
                                         </div>
                                         <div class="col-sm-5 col-8">
                                             <div class="input-group">
-                                                <span class="input-group-text">$</span>
+                                                <span class="input-group-text">₹</span>
                                                 <input type="number" name="flavor_prices[]" class="form-control"
                                                        placeholder="Extra Price" value="0" step="0.01">
                                             </div>
@@ -275,7 +275,7 @@
                                 <div class="mb-3">
                                     <label class="form-label fw-semibold">Regular Price</label>
                                     <div class="input-group">
-                                        <span class="input-group-text">$</span>
+                                        <span class="input-group-text">₹</span>
                                         <input type="number" step="0.01" name="regular_price"
                                                class="form-control" value="{{ old('regular_price') }}" required>
                                     </div>
@@ -283,7 +283,7 @@
                                 <div class="mb-3">
                                     <label class="form-label fw-semibold">Sale Price</label>
                                     <div class="input-group">
-                                        <span class="input-group-text">$</span>
+                                        <span class="input-group-text">₹</span>
                                         <input type="number" step="0.01" name="sale_price"
                                                class="form-control" value="{{ old('sale_price') }}">
                                     </div>
@@ -378,7 +378,7 @@
             </div>
             <div class="col-sm-5 col-8">
                 <div class="input-group">
-                    <span class="input-group-text">$</span>
+                    <span class="input-group-text">₹</span>
                     <input type="number" name="size_prices[]" class="form-control" placeholder="Price" step="0.01" required>
                 </div>
             </div>
@@ -402,7 +402,7 @@
             </div>
             <div class="col-sm-5 col-8">
                 <div class="input-group">
-                    <span class="input-group-text">$</span>
+                    <span class="input-group-text">₹</span>
                     <input type="number" name="flavor_prices[]" class="form-control" placeholder="Extra Price" step="0.01">
                 </div>
             </div>

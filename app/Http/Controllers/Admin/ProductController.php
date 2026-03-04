@@ -58,6 +58,9 @@ class ProductController extends Controller
         return view('admin.products.create', compact('categories'));
     }
 
+    /**
+     * Store a newly created product.
+     */
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -74,33 +77,45 @@ class ProductController extends Controller
             'size_prices' => 'nullable|array',
             'flavors' => 'nullable|array',
             'flavor_prices' => 'nullable|array',
-            'is_active' => 'boolean',
-            'is_featured' => 'boolean',
+            'is_active' => 'sometimes|boolean',
+            'is_featured' => 'sometimes|boolean',
             'is_eggless' => 'sometimes|boolean',
-
         ]);
 
-          // ===== IMPORTANT: Handle checkbox values =====
+        // Handle checkbox values
         $validated['is_active'] = $request->has('is_active') ? true : false;
         $validated['is_featured'] = $request->has('is_featured') ? true : false;
         $validated['is_eggless'] = $request->has('is_eggless') ? true : false;
 
-         // Handle sizes and flavors as JSON
+        // Handle sizes and prices as JSON
         if ($request->has('sizes')) {
-            $validated['sizes'] = json_encode(array_filter($request->sizes));
-            $validated['size_prices'] = json_encode($request->size_prices ?? []);
+            $sizes = array_filter($request->sizes);
+            $validated['sizes'] = json_encode(array_values($sizes));
+
+            if ($request->has('size_prices')) {
+                $sizePrices = array_slice($request->size_prices, 0, count($sizes));
+                $validated['size_prices'] = json_encode($sizePrices);
+            }
         }
 
         if ($request->has('flavors')) {
-            $validated['flavors'] = json_encode(array_filter($request->flavors));
-            $validated['flavor_prices'] = json_encode($request->flavor_prices ?? []);
+            $flavors = array_filter($request->flavors);
+            $validated['flavors'] = json_encode(array_values($flavors));
+
+            if ($request->has('flavor_prices')) {
+                $flavorPrices = array_slice($request->flavor_prices, 0, count($flavors));
+                $validated['flavor_prices'] = json_encode($flavorPrices);
+            }
         }
 
-
+        // Handle featured image upload
         if ($request->hasFile('featured_image')) {
             $path = $request->file('featured_image')->store('products', 'public');
             $validated['featured_image'] = $path;
         }
+
+        // Create slug from name
+        $validated['slug'] = Str::slug($request->name);
 
         Product::create($validated);
 
@@ -114,6 +129,9 @@ class ProductController extends Controller
         return view('admin.products.edit', compact('product', 'categories'));
     }
 
+    /**
+     * Update the specified product.
+     */
     public function update(Request $request, Product $product)
     {
         $validated = $request->validate([
@@ -125,33 +143,52 @@ class ProductController extends Controller
             'stock_quantity' => 'required|integer|min:0',
             'description' => 'nullable|string',
             'short_description' => 'nullable|string|max:500',
+            'featured_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'sizes' => 'nullable|array',
             'size_prices' => 'nullable|array',
             'flavors' => 'nullable|array',
             'flavor_prices' => 'nullable|array',
-            'featured_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'is_active' => 'sometimes|boolean',
             'is_featured' => 'sometimes|boolean',
             'is_eggless' => 'sometimes|boolean',
         ]);
 
-         // ===== IMPORTANT: Handle checkbox values =====
+        // ===== IMPORTANT: Handle checkbox values =====
+        // Checkboxes send no value when unchecked, so we need to set them explicitly
         $validated['is_active'] = $request->has('is_active') ? true : false;
         $validated['is_featured'] = $request->has('is_featured') ? true : false;
         $validated['is_eggless'] = $request->has('is_eggless') ? true : false;
 
-        // Handle sizes and flavors as JSON
+        // Handle sizes and prices as JSON
         if ($request->has('sizes')) {
-            $validated['sizes'] = json_encode(array_filter($request->sizes));
-            $validated['size_prices'] = json_encode($request->size_prices ?? []);
+            // Filter out empty values
+            $sizes = array_filter($request->sizes, function($value) {
+                return !empty($value);
+            });
+            $validated['sizes'] = json_encode(array_values($sizes));
+
+            if ($request->has('size_prices')) {
+                $sizePrices = array_slice($request->size_prices, 0, count($sizes));
+                $validated['size_prices'] = json_encode($sizePrices);
+            }
         }
 
         if ($request->has('flavors')) {
-            $validated['flavors'] = json_encode(array_filter($request->flavors));
-            $validated['flavor_prices'] = json_encode($request->flavor_prices ?? []);
+            // Filter out empty values
+            $flavors = array_filter($request->flavors, function($value) {
+                return !empty($value);
+            });
+            $validated['flavors'] = json_encode(array_values($flavors));
+
+            if ($request->has('flavor_prices')) {
+                $flavorPrices = array_slice($request->flavor_prices, 0, count($flavors));
+                $validated['flavor_prices'] = json_encode($flavorPrices);
+            }
         }
 
+        // Handle featured image upload
         if ($request->hasFile('featured_image')) {
+            // Delete old image
             if ($product->featured_image) {
                 Storage::disk('public')->delete($product->featured_image);
             }
@@ -160,10 +197,16 @@ class ProductController extends Controller
             $validated['featured_image'] = $path;
         }
 
+        // Update slug if name changed
+        if ($product->name !== $request->name) {
+            $validated['slug'] = Str::slug($request->name);
+        }
+
+        // Update the product
         $product->update($validated);
 
         return redirect()->route('admin.products.index')
-            ->with('success', 'Product updated successfully.');
+            ->with('success', 'Product "' . $product->name . '" updated successfully.');
     }
 
     public function destroy(Product $product)
