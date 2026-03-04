@@ -46,7 +46,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::post('orders/{order}/tracking', [OrderController::class, 'updateTracking'])->name('orders.tracking');
         Route::post('orders/{order}/driver-location', [OrderController::class, 'updateDriverLocation'])->name('orders.driver-location');
 
-});
+    });
     Route::prefix('profile')->name('profile.')->group(function () {
         Route::get('/', [ProfileController::class, 'index'])->name('index');
         Route::put('/', [ProfileController::class, 'update'])->name('update');
@@ -69,6 +69,13 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     // Admin route (inside admin group)
     Route::resource('about', AboutUsController::class);
+
+    // Admin route (inside admin group)
+    Route::prefix('about')->name('about.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Admin\AboutUsController::class, 'index'])->name('index');
+        Route::put('/', [App\Http\Controllers\Admin\AboutUsController::class, 'update'])->name('update');
+    });
+
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -96,7 +103,8 @@ Route::get('/contact', [HomeController::class, 'contact'])->name('contact');
 Route::post('/contact', [HomeController::class, 'submitContact'])->name('contact.submit');
 
 // Frontend route
-Route::get('/about', [AboutController::class, 'index'])->name('about');
+Route::get('/about', [App\Http\Controllers\Front\AboutController::class, 'index'])->name('about');
+
 
 // ============= CART ROUTES =============
 // Cart routes

@@ -1,25 +1,27 @@
 @extends('layouts.front')
 
+@php
+    // Fallback values for filter counts if not passed from controller
+    $egglessCount = $egglessCount ?? 0;
+    $withEggCount = $withEggCount ?? 0;
+@endphp
+
 @section('title', 'Our Cake Collection - ' . setting('site_name', 'Cozy Cravings'))
 @section('page-title', 'Our Cake Collection')
 
 @section('content')
 <!-- Modern Breadcrumb with Background -->
-<section class="page-header">
+<div class="breadcrumb-modern">
     <div class="container">
-        <div class="row">
-            <div class="col-12 text-center">
-                <h1 class="page-title">Our Cake Collection</h1>
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb justify-content-center">
-                        <li class="breadcrumb-item"><a href="{{ route('home') }}">Home</a></li>
-                        <li class="breadcrumb-item active" aria-current="page">Cake Collection</li>
-                    </ol>
-                </nav>
-            </div>
-        </div>
+        <h1 class="fw-bold">Our Cake Collection</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb breadcrumb-custom">
+                <li class="breadcrumb-item"><a href="{{ route('home') }}">Home</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Cake Collection</li>
+            </ol>
+        </nav>
     </div>
-</section>
+</div>
 
 <div class="container mb-5">
     <!-- Search Bar Section -->
@@ -45,20 +47,21 @@
                         @endif
 
                         <div class="search-wrapper">
+                            <i class="fas fa-search search-icon"></i>
                             <input type="text"
                                    name="search"
                                    class="form-control search-input"
-                                   placeholder="Search cakes..."
+                                   placeholder="Search cakes by name or flavor..."
                                    value="{{ request('search') }}">
-                            <button type="submit" class="search-btn">
-                                <i class="fas fa-search"></i>
-                            </button>
                             @if(request('search'))
                                 <a href="{{ route('shop', array_merge(request()->except('search', 'page'))) }}"
                                    class="search-clear">
                                     <i class="fas fa-times-circle"></i>
                                 </a>
                             @endif
+                            <button type="submit" class="search-btn">
+                                Search
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -105,6 +108,14 @@
                                         <i class="fas fa-candy-cane me-2" style="color: #a7b5a3;"></i>
                                     @elseif($category->name == 'Custom Cakes')
                                         <i class="fas fa-star me-2" style="color: #d4af37;"></i>
+                                    @elseif($category->name == 'Anniversary Cakes')
+                                        <i class="fas fa-gem me-2" style="color: #b8860b;"></i>
+                                    @elseif($category->name == 'Baby Shower Cakes')
+                                        <i class="fas fa-baby me-2" style="color: #f48fb1;"></i>
+                                    @elseif($category->name == 'Christmas Cakes')
+                                        <i class="fas fa-snowman me-2" style="color: #00acc1;"></i>
+                                    @elseif($category->name == 'Eggless Special')
+                                        <i class="fas fa-leaf me-2" style="color: #2e7d32;"></i>
                                     @endif
                                     {{ $category->name }}
                                 </span>
@@ -114,50 +125,57 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- Eggless Filter Section -->
+                <!-- ===== FIXED: EGGLESS FILTER SECTION WITH CORRECT SYNTAX ===== -->
                 <div class="filter-section">
                     <h6 class="filter-section-title">
                         <i class="fas fa-leaf me-2"></i>Dietary Preferences
                     </h6>
                     <div class="filter-options">
                         <div class="dietary-options">
+                            <!-- Eggless Only Link -->
                             <a href="{{ route('shop', array_merge(request()->except('eggless'), ['eggless' => 'yes'])) }}"
-                               class="dietary-option {{ request('eggless') == 'yes' ? 'active' : '' }}">
+                            class="dietary-option {{ request('eggless') == 'yes' ? 'active' : '' }}">
                                 <div class="dietary-icon">
                                     <i class="fas fa-leaf"></i>
                                 </div>
                                 <div class="dietary-info">
                                     <span class="dietary-name">Eggless Only</span>
+                                    @if(isset($egglessCount))
+                                        <span class="dietary-count">({{ $egglessCount }} cakes)</span>
+                                    @endif
                                 </div>
                                 @if(request('eggless') == 'yes')
                                     <i class="fas fa-check-circle text-success"></i>
                                 @endif
                             </a>
 
+                            <!-- With Egg Link -->
                             <a href="{{ route('shop', array_merge(request()->except('eggless'), ['eggless' => 'no'])) }}"
-                               class="dietary-option {{ request('eggless') == 'no' ? 'active' : '' }}">
+                            class="dietary-option {{ request('eggless') == 'no' ? 'active' : '' }}">
                                 <div class="dietary-icon">
                                     <i class="fas fa-egg"></i>
                                 </div>
                                 <div class="dietary-info">
                                     <span class="dietary-name">With Egg</span>
+                                    @if(isset($withEggCount))
+                                        <span class="dietary-count">({{ $withEggCount }} cakes)</span>
+                                    @endif
                                 </div>
                                 @if(request('eggless') == 'no')
                                     <i class="fas fa-check-circle text-success"></i>
                                 @endif
                             </a>
 
+                            <!-- Clear Filter Link (only shown if eggless filter is active) -->
                             @if(request('eggless'))
                                 <a href="{{ route('shop', array_merge(request()->except('eggless'), ['eggless' => null])) }}"
-                                   class="dietary-clear">
+                                class="dietary-clear">
                                     <i class="fas fa-times me-1"></i>Clear Dietary Filter
                                 </a>
                             @endif
                         </div>
                     </div>
                 </div>
-
                 <!-- Price Range Filter -->
                 <div class="filter-section">
                     <h6 class="filter-section-title">
@@ -180,9 +198,9 @@
 
                             <div class="price-inputs">
                                 <div class="price-input-group">
-                                    <label class="price-label">Min</label>
+                                    <label class="price-label">Min Price</label>
                                     <div class="price-field">
-                                        <span class="price-currency">{{ setting('currency_symbol', '₹') }}</span>
+                                        <span class="price-currency">{{ setting('currency_symbol', '$') }}</span>
                                         <input type="number" name="min_price"
                                                class="price-input"
                                                value="{{ request('min_price') }}"
@@ -194,9 +212,9 @@
                                     <i class="fas fa-minus"></i>
                                 </div>
                                 <div class="price-input-group">
-                                    <label class="price-label">Max</label>
+                                    <label class="price-label">Max Price</label>
                                     <div class="price-field">
-                                        <span class="price-currency">{{ setting('currency_symbol', '₹') }}</span>
+                                        <span class="price-currency">{{ setting('currency_symbol', '$') }}</span>
                                         <input type="number" name="max_price"
                                                class="price-input"
                                                value="{{ request('max_price') }}"
@@ -230,7 +248,6 @@
                         <span class="fw-bold">{{ $products->total() }}</span> cakes
                     @endif
                 </div>
-
                 <!-- Sort Form -->
                 <form method="GET" action="{{ route('shop') }}" id="sortForm" class="sort-options">
                     @if(request('category'))
@@ -239,7 +256,7 @@
                     @if(request('search'))
                         <input type="hidden" name="search" value="{{ request('search') }}">
                     @endif
-                    @if(request('eggless'))
+                    @if(request('eggless'))  <!-- THIS IS IMPORTANT -->
                         <input type="hidden" name="eggless" value="{{ request('eggless') }}">
                     @endif
                     @if(request('min_price'))
@@ -262,7 +279,7 @@
                 </form>
             </div>
 
-            <!-- Active Filters Display -->
+           <!-- Active Filters Display -->
             @if(request('category') || request('eggless') || request('min_price') || request('max_price') || request('search'))
             <div class="active-filters">
                 <span class="active-filters-label">
@@ -303,7 +320,7 @@
 
                     @if(request('min_price'))
                         <span class="filter-tag">
-                            Min: {{ setting('currency_symbol', '₹') }}{{ request('min_price') }}
+                            Min: {{ setting('currency_symbol', '$') }}{{ request('min_price') }}
                             <a href="{{ route('shop', array_merge(request()->except('min_price'), ['min_price' => null])) }}" class="remove-filter">
                                 <i class="fas fa-times"></i>
                             </a>
@@ -312,7 +329,7 @@
 
                     @if(request('max_price'))
                         <span class="filter-tag">
-                            Max: {{ setting('currency_symbol', '₹') }}{{ request('max_price') }}
+                            Max: {{ setting('currency_symbol', '$') }}{{ request('max_price') }}
                             <a href="{{ route('shop', array_merge(request()->except('max_price'), ['max_price' => null])) }}" class="remove-filter">
                                 <i class="fas fa-times"></i>
                             </a>
@@ -359,19 +376,14 @@
                                     </span>
                                 @endif
 
-                                <!-- Stock Badge - NEW -->
-                                @if($product->stock_quantity <= 0)
-                                    <span class="badge-out-of-stock">
-                                        <i class="fas fa-times-circle me-1"></i> Out of Stock
-                                    </span>
-                                @elseif($product->stock_quantity < 5)
+                                @if($product->stock_quantity > 0 && $product->stock_quantity < 5)
                                     <span class="badge-low-stock">
-                                        <i class="fas fa-exclamation-triangle me-1"></i> Only {{ $product->stock_quantity }} left
+                                        <i class="fas fa-exclamation-triangle"></i> Only {{ $product->stock_quantity }} left
                                     </span>
                                 @endif
                             </div>
 
-                            <!-- Quick Actions - Add to Cart button disabled if out of stock -->
+                            <!-- Quick Actions -->
                             <div class="cake-actions">
                                 <a href="{{ route('product.details', $product->slug) }}" class="action-btn view-btn" title="Quick View">
                                     <i class="fas fa-eye"></i>
@@ -417,31 +429,37 @@
                                 @endif
                             </div>
 
-                            <!-- Stock Status Text - NEW -->
-                            @if($product->stock_quantity > 0 && $product->stock_quantity < 5)
-                                <div class="stock-warning">
-                                    <i class="fas fa-exclamation-circle"></i> Hurry! Only {{ $product->stock_quantity }} left
-                                </div>
-                            @endif
-
                             <!-- Price -->
                             <div class="cake-price">
                                 @if($product->sale_price && $product->sale_price < $product->regular_price)
                                     <span class="original-price">
-                                        {{ setting('currency_symbol', '₹') }}{{ number_format($product->regular_price, 2) }}
+                                        {{ setting('currency_symbol', '$') }}{{ number_format($product->regular_price, 2) }}
                                     </span>
                                     <span class="sale-price">
-                                        {{ setting('currency_symbol', '₹') }}{{ number_format($product->sale_price, 2) }}
+                                        {{ setting('currency_symbol', '$') }}{{ number_format($product->sale_price, 2) }}
                                     </span>
                                     <span class="discount-badge">
                                         -{{ round((($product->regular_price - $product->sale_price) / $product->regular_price) * 100) }}%
                                     </span>
                                 @else
                                     <span class="regular-price">
-                                        {{ setting('currency_symbol', '₹') }}{{ number_format($product->regular_price, 2) }}
+                                        {{ setting('currency_symbol', '$') }}{{ number_format($product->regular_price, 2) }}
                                     </span>
                                 @endif
                             </div>
+
+                            <!-- Stock Status -->
+                            @if($product->stock_quantity > 0)
+                                <div class="stock-status">
+                                    <i class="fas fa-check-circle text-success"></i>
+                                    <span>In Stock</span>
+                                </div>
+                            @else
+                                <div class="stock-status out-of-stock">
+                                    <i class="fas fa-times-circle text-danger"></i>
+                                    <span>Out of Stock</span>
+                                </div>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -460,7 +478,7 @@
                             @endif
                         </p>
                         <div class="empty-state-actions">
-                            <a href="{{ route('shop') }}" class="btn-primary-modern btn-modern">
+                            <a href="{{ route('shop') }}" class="btn-modern btn-primary-modern">
                                 <i class="fas fa-redo-alt me-2"></i>Clear All Filters
                             </a>
                         </div>
@@ -469,23 +487,87 @@
                 @endforelse
             </div>
 
-            <!-- Pagination -->
-            <div class="pagination-wrapper">
-                {{ $products->appends(request()->query())->links() }}
+           <!-- Pagination - Modern Design -->
+            <div class="pagination-wrapper mt-5">
+                <div class="d-flex flex-column flex-sm-row justify-content-between align-items-center">
+                    <div class="text-muted small mb-3 mb-sm-0">
+                        Showing
+                        <span class="fw-bold text-terracotta">{{ $products->firstItem() ?? 0 }}</span>
+                        to
+                        <span class="fw-bold text-terracotta">{{ $products->lastItem() ?? 0 }}</span>
+                        of
+                        <span class="fw-bold text-terracotta">{{ $products->total() }}</span>
+                        results
+                    </div>
+
+                    @if ($products->hasPages())
+                        <nav aria-label="Page navigation">
+                            <ul class="pagination">
+                                {{-- Previous Page Link --}}
+                                @if ($products->onFirstPage())
+                                    <li class="page-item disabled">
+                                        <span class="page-link" aria-hidden="true">
+                                            <i class="fas fa-chevron-left"></i>
+                                            <span class="d-none d-sm-inline ms-1">Prev</span>
+                                        </span>
+                                    </li>
+                                @else
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ $products->previousPageUrl() }}" rel="prev">
+                                            <i class="fas fa-chevron-left"></i>
+                                            <span class="d-none d-sm-inline ms-1">Prev</span>
+                                        </a>
+                                    </li>
+                                @endif
+
+                                {{-- Page Numbers --}}
+                                @foreach ($products->getUrlRange(max(1, $products->currentPage() - 2), min($products->lastPage(), $products->currentPage() + 2)) as $page => $url)
+                                    @if ($page == $products->currentPage())
+                                        <li class="page-item active">
+                                            <span class="page-link">{{ $page }}</span>
+                                        </li>
+                                    @else
+                                        <li class="page-item">
+                                            <a class="page-link" href="{{ $url }}">{{ $page }}</a>
+                                        </li>
+                                    @endif
+                                @endforeach
+
+                                {{-- Next Page Link --}}
+                                @if ($products->hasMorePages())
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ $products->nextPageUrl() }}" rel="next">
+                                            <span class="d-none d-sm-inline me-1">Next</span>
+                                            <i class="fas fa-chevron-right"></i>
+                                        </a>
+                                    </li>
+                                @else
+                                    <li class="page-item disabled">
+                                        <span class="page-link" aria-hidden="true">
+                                            <span class="d-none d-sm-inline me-1">Next</span>
+                                            <i class="fas fa-chevron-right"></i>
+                                        </span>
+                                    </li>
+                                @endif
+                            </ul>
+                        </nav>
+                    @endif
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 <style>
-/* ===== PAGE HEADER ===== */
-.page-header {
-    background: linear-gradient(135deg, #fdf8f2 0%, #f7e6e0 100%);
+/* ===== BREADCRUMB ===== */
+.breadcrumb-modern {
+    background: linear-gradient(135deg, var(--cream), var(--sand));
     padding: 50px 0 30px;
     margin-bottom: 40px;
+    border-bottom: 1px solid var(--sand);
 }
 
-.page-title {
+.breadcrumb-modern h1 {
     font-family: 'Prata', serif;
     font-size: 2.5rem;
     color: var(--charcoal);
@@ -510,11 +592,21 @@
     align-items: center;
 }
 
+.search-icon {
+    position: absolute;
+    left: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--taupe);
+    font-size: 1.2rem;
+    z-index: 2;
+}
+
 .search-input {
     height: 50px;
     border: 2px solid transparent;
     border-radius: 50px !important;
-    padding: 0 100px 0 20px;
+    padding: 0 120px 0 50px;
     font-size: 0.95rem;
     transition: all 0.3s;
     width: 100%;
@@ -531,7 +623,7 @@
     right: 5px;
     top: 5px;
     height: 40px;
-    width: 80px;
+    width: 100px;
     background: var(--terracotta);
     color: white;
     border: none;
@@ -539,27 +631,35 @@
     font-weight: 500;
     font-size: 0.9rem;
     transition: all 0.3s;
+    cursor: pointer;
 }
 
 .search-btn:hover {
     background: #b86a4a;
+    transform: translateX(-2px);
 }
 
 .search-clear {
     position: absolute;
-    right: 95px;
+    right: 115px;
     top: 50%;
     transform: translateY(-50%);
     color: var(--taupe);
     font-size: 1rem;
+    transition: all 0.3s;
+}
+
+.search-clear:hover {
+    color: var(--terracotta);
 }
 
 /* ===== FILTERS SIDEBAR ===== */
 .filters-sidebar {
     background: white;
     border-radius: 20px;
-    padding: 20px;
+    padding: 25px;
     box-shadow: var(--shadow-sm);
+    border: 1px solid var(--sand);
 }
 
 .filters-header {
@@ -572,6 +672,7 @@
 }
 
 .filters-title {
+    font-family: 'Prata', serif;
     font-size: 1.2rem;
     margin: 0;
     color: var(--charcoal);
@@ -581,6 +682,12 @@
     color: var(--terracotta);
     text-decoration: none;
     font-size: 0.85rem;
+    transition: all 0.3s;
+}
+
+.clear-all-filters:hover {
+    color: #b86a4a;
+    text-decoration: underline;
 }
 
 .filter-section {
@@ -605,9 +712,9 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 8px 12px;
+    padding: 10px 15px;
     background: var(--cream);
-    border-radius: 8px;
+    border-radius: 12px;
     text-decoration: none;
     color: var(--charcoal);
     transition: all 0.3s;
@@ -616,7 +723,7 @@
 
 .category-item:hover {
     background: var(--sand);
-    transform: translateX(3px);
+    transform: translateX(5px);
 }
 
 .category-item.active {
@@ -624,11 +731,17 @@
     color: white;
 }
 
+.category-item.active .category-count {
+    background: white;
+    color: var(--terracotta);
+}
+
 .category-count {
     background: white;
-    padding: 2px 6px;
-    border-radius: 20px;
-    font-size: 0.75rem;
+    padding: 2px 8px;
+    border-radius: 30px;
+    font-size: 0.7rem;
+    transition: all 0.3s;
 }
 
 /* Dietary Options */
@@ -642,15 +755,16 @@
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 10px 12px;
+    padding: 12px 15px;
     background: var(--cream);
-    border-radius: 8px;
+    border-radius: 12px;
     text-decoration: none;
     transition: all 0.3s;
 }
 
 .dietary-option:hover {
     background: var(--sand);
+    transform: translateX(5px);
 }
 
 .dietary-option.active {
@@ -659,21 +773,27 @@
 }
 
 .dietary-icon {
-    width: 32px;
-    height: 32px;
+    width: 36px;
+    height: 36px;
     background: white;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     color: var(--terracotta);
-    font-size: 1rem;
+    font-size: 1.2rem;
 }
 
 .dietary-name {
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     font-weight: 500;
     color: var(--charcoal);
+}
+
+.dietary-count {
+    font-size: 0.8rem;
+    color: var(--taupe);
+    display: block;
 }
 
 .dietary-clear {
@@ -694,6 +814,10 @@
 }
 
 /* Price Filter */
+.price-filter-form {
+    margin-top: 10px;
+}
+
 .price-inputs {
     display: flex;
     align-items: center;
@@ -728,8 +852,13 @@
     width: 100%;
     padding: 8px 8px 8px 20px;
     border: 1px solid var(--sand);
-    border-radius: 6px;
+    border-radius: 8px;
     font-size: 0.85rem;
+}
+
+.price-input:focus {
+    border-color: var(--terracotta);
+    outline: none;
 }
 
 .price-separator {
@@ -748,22 +877,24 @@
     font-weight: 500;
     font-size: 0.85rem;
     transition: all 0.3s;
+    cursor: pointer;
 }
 
 .apply-price-btn:hover {
     background: #b86a4a;
 }
 
-/* Results Bar */
+/* ===== RESULTS BAR ===== */
 .results-bar {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 20px;
-    padding: 12px 15px;
+    padding: 15px 20px;
     background: white;
-    border-radius: 10px;
+    border-radius: 12px;
     box-shadow: var(--shadow-sm);
+    border: 1px solid var(--sand);
 }
 
 .results-info {
@@ -785,21 +916,27 @@
 }
 
 .sort-select {
-    padding: 6px 20px 6px 10px;
+    padding: 8px 25px 8px 12px;
     border: 1px solid var(--sand);
-    border-radius: 6px;
+    border-radius: 8px;
     background: white;
     color: var(--charcoal);
     font-size: 0.85rem;
     cursor: pointer;
 }
 
-/* Active Filters */
+.sort-select:focus {
+    border-color: var(--terracotta);
+    outline: none;
+}
+
+/* ===== ACTIVE FILTERS ===== */
 .active-filters {
     margin-bottom: 20px;
-    padding: 12px 15px;
+    padding: 15px 20px;
     background: rgba(201, 124, 93, 0.05);
-    border-radius: 8px;
+    border-radius: 12px;
+    border: 1px solid var(--sand);
 }
 
 .active-filters-label {
@@ -819,7 +956,7 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 4px 10px;
+    padding: 5px 12px;
     background: white;
     border-radius: 30px;
     font-size: 0.8rem;
@@ -829,23 +966,29 @@
 .remove-filter {
     color: var(--taupe);
     font-size: 0.7rem;
+    transition: all 0.3s;
 }
 
-/* ===== UPDATED CAKE CARD STYLES WITH STOCK BADGES ===== */
+.remove-filter:hover {
+    color: var(--terracotta);
+}
+
+/* ===== CAKE CARDS ===== */
 .cake-card {
     background: white;
-    border-radius: 16px;
+    border-radius: 20px;
     overflow: hidden;
     box-shadow: var(--shadow-sm);
     transition: all 0.3s;
     height: 100%;
     display: flex;
     flex-direction: column;
+    border: 1px solid var(--sand);
 }
 
 .cake-card:hover {
-    transform: translateY(-5px);
-    box-shadow: var(--shadow-md);
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-lg);
 }
 
 .cake-image-wrapper {
@@ -878,7 +1021,7 @@
 .badge-sale {
     background: #ff4757;
     color: white;
-    padding: 3px 8px;
+    padding: 4px 10px;
     border-radius: 20px;
     font-size: 0.65rem;
     font-weight: 600;
@@ -887,48 +1030,19 @@
 .badge-featured {
     background: var(--gold);
     color: var(--charcoal);
-    padding: 3px 8px;
+    padding: 4px 10px;
     border-radius: 20px;
     font-size: 0.65rem;
     font-weight: 600;
-}
-
-/* NEW: Stock Badges */
-.badge-out-of-stock {
-    background: #dc3545;
-    color: white;
-    padding: 3px 8px;
-    border-radius: 20px;
-    font-size: 0.65rem;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 3px;
 }
 
 .badge-low-stock {
     background: #ffc107;
     color: #333;
-    padding: 3px 8px;
+    padding: 4px 10px;
     border-radius: 20px;
     font-size: 0.65rem;
     font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 3px;
-}
-
-.stock-warning {
-    color: #dc3545;
-    font-size: 0.7rem;
-    margin: 5px 0;
-    display: flex;
-    align-items: center;
-    gap: 3px;
-}
-
-.stock-warning i {
-    font-size: 0.65rem;
 }
 
 .cake-actions {
@@ -963,31 +1077,22 @@
     transition: all 0.3s;
     text-decoration: none;
     font-size: 0.9rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
 .action-btn:hover {
     background: var(--terracotta);
     color: white;
+    transform: scale(1.1);
 }
 
-/* NEW: Disabled button style */
-.action-btn.disabled,
-.action-btn:disabled {
+.action-btn.disabled {
     opacity: 0.5;
     cursor: not-allowed;
-    background: #ccc;
-    color: #666;
-}
-
-.action-btn.disabled:hover,
-.action-btn:disabled:hover {
-    background: #ccc;
-    color: #666;
-    transform: none;
 }
 
 .cake-info {
-    padding: 15px;
+    padding: 20px;
     flex: 1;
 }
 
@@ -1008,6 +1113,11 @@
 .cake-title a {
     color: var(--charcoal);
     text-decoration: none;
+    transition: all 0.3s;
+}
+
+.cake-title a:hover {
+    color: var(--terracotta);
 }
 
 /* Eggless Badge */
@@ -1037,11 +1147,13 @@
     border: 1px solid #ffcc80;
 }
 
+/* Price */
 .cake-price {
     display: flex;
     align-items: center;
     flex-wrap: wrap;
     gap: 8px;
+    margin-bottom: 10px;
 }
 
 .original-price {
@@ -1065,17 +1177,31 @@
 .discount-badge {
     background: #ff4757;
     color: white;
-    padding: 2px 6px;
+    padding: 2px 8px;
     border-radius: 20px;
     font-size: 0.6rem;
 }
 
-/* Empty State */
+/* Stock Status */
+.stock-status {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.8rem;
+    color: var(--charcoal);
+}
+
+.stock-status.out-of-stock {
+    color: #dc3545;
+}
+
+/* ===== EMPTY STATE ===== */
 .empty-state {
     text-align: center;
     padding: 60px 20px;
     background: white;
-    border-radius: 16px;
+    border-radius: 20px;
+    border: 1px solid var(--sand);
 }
 
 .empty-state-icon {
@@ -1093,6 +1219,7 @@
 
 .empty-state-title {
     font-size: 1.5rem;
+    color: var(--charcoal);
     margin-bottom: 10px;
 }
 
@@ -1101,20 +1228,86 @@
     margin-bottom: 20px;
 }
 
-/* Pagination */
+/* ===== PAGINATION STYLES ===== */
 .pagination-wrapper {
     margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid var(--sand);
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-    .page-title {
-        font-size: 2rem;
+.pagination {
+    gap: 5px;
+    margin: 0;
+}
+
+.page-link {
+    border: none;
+    border-radius: 10px !important;
+    padding: 8px 14px;
+    color: var(--charcoal);
+    font-weight: 500;
+    font-size: 0.9rem;
+    transition: all 0.3s;
+    background: white;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+}
+
+.page-link i {
+    font-size: 0.8rem;
+}
+
+.page-link:hover {
+    background: var(--terracotta);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 10px rgba(201, 124, 93, 0.2);
+}
+
+.page-item.active .page-link {
+    background: var(--terracotta);
+    color: white;
+    font-weight: 600;
+    box-shadow: 0 5px 10px rgba(201, 124, 93, 0.2);
+}
+
+.page-item.disabled .page-link {
+    background: #f5f5f5;
+    color: var(--taupe);
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.page-item.disabled .page-link:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+.text-terracotta {
+    color: var(--terracotta);
+}
+
+/* Mobile Responsive */
+@media (max-width: 576px) {
+    .page-link span:not(.sr-only) {
+        display: none;
     }
 
+    .page-link {
+        padding: 8px 12px;
+    }
+
+    .page-link i {
+        margin: 0;
+    }
+}
+/* ===== RESPONSIVE ===== */
+@media (max-width: 992px) {
     .results-bar {
         flex-direction: column;
-        gap: 10px;
+        gap: 15px;
     }
 
     .sort-options {
@@ -1122,11 +1315,29 @@
     }
 
     .sort-select {
-        flex: 1;
+        width: 100%;
+    }
+}
+
+@media (max-width: 768px) {
+    .breadcrumb-modern h1 {
+        font-size: 2rem;
+    }
+
+    .search-input {
+        padding: 0 100px 0 40px;
+    }
+
+    .search-clear {
+        right: 105px;
     }
 
     .cake-image-wrapper {
         height: 180px;
+    }
+
+    .filter-tags {
+        margin-top: 10px;
     }
 }
 </style>
@@ -1150,7 +1361,7 @@
         }, 800);
     });
 
-    // Add to cart AJAX - Updated to handle errors better
+    // Add to cart AJAX
     document.querySelectorAll('.add-to-cart-form').forEach(form => {
         form.addEventListener('submit', function(e) {
             e.preventDefault();
@@ -1178,15 +1389,13 @@
                     }
                 } else {
                     toastr.error(data.message || 'Failed to add to cart');
-                    // Re-enable button on error
                     submitButton.innerHTML = originalHtml;
                     submitButton.disabled = false;
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                toastr.error('Failed to add to cart. Please try again.');
-                // Re-enable button on error
+                toastr.error('Failed to add to cart');
                 submitButton.innerHTML = originalHtml;
                 submitButton.disabled = false;
             });
@@ -1204,7 +1413,6 @@
                         cartCount.textContent = data.count;
                         cartCount.style.display = 'flex';
                     } else {
-                        cartCount.textContent = '0';
                         cartCount.style.display = 'none';
                     }
                 }

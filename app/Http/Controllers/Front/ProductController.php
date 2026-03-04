@@ -1,5 +1,4 @@
 <?php
-// app/Http/Controllers/Front/ProductController.php
 
 namespace App\Http\Controllers\Front;
 
@@ -15,10 +14,9 @@ class ProductController extends Controller
      */
     public function index(Request $request)
     {
-        // Start with active AND in-stock products
+        // Start with active products
         $query = Product::with(['category', 'images'])
-            ->where('is_active', true)
-            ->where('in_stock', true);  // Only show in-stock products
+            ->where('is_active', true);
 
         // Filter by category if provided
         if ($request->filled('category')) {
@@ -30,12 +28,12 @@ class ProductController extends Controller
             $search = $request->search;
             $query->where(function($q) use ($search) {
                 $q->where('name', 'like', '%' . $search . '%')
-                ->orWhere('description', 'like', '%' . $search . '%')
-                ->orWhere('short_description', 'like', '%' . $search . '%');
+                  ->orWhere('description', 'like', '%' . $search . '%')
+                  ->orWhere('short_description', 'like', '%' . $search . '%');
             });
         }
 
-        // Eggless filter
+        // EGGLESS FILTER
         if ($request->filled('eggless')) {
             if ($request->eggless == 'yes') {
                 $query->where('is_eggless', true);
@@ -74,39 +72,27 @@ class ProductController extends Controller
                 break;
         }
 
-        // Pagination
-       $products = $query->paginate(12)->appends(request()->query());
+        // Get paginated products
+        $products = $query->paginate(12)->appends($request->query());
 
-        // Get categories for filter sidebar
+        // ===== IMPORTANT: Get counts for filter sidebar =====
+        $egglessCount = Product::where('is_active', true)
+            ->where('is_eggless', true)
+            ->count();
+
+        $withEggCount = Product::where('is_active', true)
+            ->where('is_eggless', false)
+            ->count();
+
+        // Get categories
         $categories = Category::where('is_active', true)->get();
 
-        return view('front.shop', compact('products', 'categories'));
-    }
-
-    /**
-     * Display single product
-     */
-    public function show($slug)
-    {
-        $product = Product::with(['category', 'images', 'reviews' => function($query) {
-            $query->where('is_approved', true)->latest();
-        }])
-        ->where('slug', $slug)
-        ->where('is_active', true)  // Must be active
-        ->firstOrFail();
-
-        // Increment view count
-        $product->increment('views');
-
-        // Get related products (only in-stock)
-        $relatedProducts = Product::with(['category', 'images'])
-            ->where('category_id', $product->category_id)
-            ->where('id', '!=', $product->id)
-            ->where('is_active', true)
-            ->where('in_stock', true)  // Only show in-stock related products
-            ->limit(4)
-            ->get();
-
-        return view('front.product-details', compact('product', 'relatedProducts'));
+        // Pass all variables to the view
+        return view('front.shop', compact(
+            'products',
+            'categories',
+            'egglessCount',
+            'withEggCount'
+        ));
     }
 }

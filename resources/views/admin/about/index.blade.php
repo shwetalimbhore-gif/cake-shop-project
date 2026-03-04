@@ -175,22 +175,22 @@
                         <div class="card mb-3 value-item">
                             <div class="card-body">
                                 <div class="row">
-                                    <div class="col-md-4 mb-2">
+                                    <div class="col-md-3 mb-2">
                                         <input type="text" name="values[{{ $index }}][title]"
                                                class="form-control" placeholder="Value Title"
                                                value="{{ $value['title'] }}">
                                     </div>
-                                    <div class="col-md-4 mb-2">
+                                    <div class="col-md-3 mb-2">
                                         <input type="text" name="values[{{ $index }}][icon]"
                                                class="form-control" placeholder="Icon (e.g., fa-heart)"
                                                value="{{ $value['icon'] }}">
                                     </div>
-                                    <div class="col-md-3 mb-2">
+                                    <div class="col-md-4 mb-2">
                                         <input type="text" name="values[{{ $index }}][description]"
                                                class="form-control" placeholder="Description"
                                                value="{{ $value['description'] }}">
                                     </div>
-                                    <div class="col-md-1">
+                                    <div class="col-md-2">
                                         <button type="button" class="btn btn-danger remove-value">
                                             <i class="fas fa-times"></i>
                                         </button>
@@ -249,11 +249,9 @@
                                     <div class="col-md-2 mb-2">
                                         <input type="file" name="team_members[{{ $index }}][image]"
                                                class="form-control" accept="image/*">
-                                    </div>
-                                    <div class="col-md-12 mt-2">
                                         @if(isset($member['image']) && !empty($member['image']))
                                             <img src="{{ asset('storage/' . $member['image']) }}"
-                                                 alt="{{ $member['name'] }}" style="max-height: 50px;">
+                                                 alt="{{ $member['name'] }}" style="max-height: 50px;" class="mt-2">
                                         @endif
                                     </div>
                                 </div>
@@ -328,7 +326,7 @@
                         <label class="form-label fw-semibold">Meta Keywords</label>
                         <input type="text" name="meta_keywords" class="form-control"
                                value="{{ old('meta_keywords', $about->meta_keywords) }}"
-                               placeholder="cake, bakery, artisan">
+                               placeholder="cake, bakery, artisan, ...">
                     </div>
                 </div>
             </div>
@@ -345,23 +343,23 @@
 @push('scripts')
 <script>
     // Add Value
-    document.getElementById('add-value').addEventListener('click', function() {
+    document.getElementById('add-value')?.addEventListener('click', function() {
         const container = document.getElementById('values-container');
         const index = container.children.length;
         const html = `
             <div class="card mb-3 value-item">
                 <div class="card-body">
                     <div class="row">
-                        <div class="col-md-4 mb-2">
+                        <div class="col-md-3 mb-2">
                             <input type="text" name="values[${index}][title]" class="form-control" placeholder="Value Title">
                         </div>
-                        <div class="col-md-4 mb-2">
+                        <div class="col-md-3 mb-2">
                             <input type="text" name="values[${index}][icon]" class="form-control" placeholder="Icon (e.g., fa-heart)">
                         </div>
-                        <div class="col-md-3 mb-2">
+                        <div class="col-md-4 mb-2">
                             <input type="text" name="values[${index}][description]" class="form-control" placeholder="Description">
                         </div>
-                        <div class="col-md-1">
+                        <div class="col-md-2">
                             <button type="button" class="btn btn-danger remove-value">
                                 <i class="fas fa-times"></i>
                             </button>
@@ -374,7 +372,7 @@
     });
 
     // Add Team Member
-    document.getElementById('add-team').addEventListener('click', function() {
+    document.getElementById('add-team')?.addEventListener('click', function() {
         const container = document.getElementById('team-container');
         const index = container.children.length;
         const html = `
@@ -401,7 +399,7 @@
     });
 
     // Add Statistic
-    document.getElementById('add-stat').addEventListener('click', function() {
+    document.getElementById('add-stat')?.addEventListener('click', function() {
         const container = document.getElementById('stats-container');
         const index = container.children.length;
         const html = `
@@ -436,6 +434,11 @@
         }
         if (e.target.classList.contains('remove-stat') || e.target.closest('.remove-stat')) {
             e.target.closest('.stat-item').remove();
+        }
+        if (e.target.classList.contains('remove-team') || e.target.closest('.remove-team')) {
+            if (confirm('Remove this team member?')) {
+                e.target.closest('.team-member').remove();
+            }
         }
     });
 </script>
