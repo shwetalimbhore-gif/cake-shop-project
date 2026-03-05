@@ -7,12 +7,22 @@ use Illuminate\Database\Eloquent\Model;
 
 class Payment extends Model
 {
-     protected $fillable = [
+    use HasFactory;
+
+    protected $fillable = [
+        'razorpay_payment_id',
+        'razorpay_order_id',
+        'razorpay_signature',
         'order_id',
-        'payment_method',
-        'transaction_id',
+        'method',
+        'currency',
         'amount',
-        'status'
+        'status',
+        'json_response',
+    ];
+
+    protected $casts = [
+        'amount' => 'decimal:2',
     ];
 
     public function order()

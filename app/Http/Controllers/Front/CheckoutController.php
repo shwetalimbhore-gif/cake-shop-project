@@ -145,7 +145,7 @@ class CheckoutController extends Controller
 
             DB::commit();
 
-            return redirect()->route('checkout.success', $order);
+            return redirect()->route('razorpay.checkout', $order);
 
         } catch (\Exception $e) {
             DB::rollBack();

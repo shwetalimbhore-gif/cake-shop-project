@@ -239,6 +239,7 @@
                                 <button type="submit" class="btn btn-info">
                                     <i class="fas fa-truck me-2"></i>Update Tracking
                                 </button>
+
                             </form>
                         </div>
                     </div>
@@ -250,6 +251,7 @@
                             <i class="fas fa-times me-1"></i>Cancel
                         </a>
                         <button type="submit" class="btn btn-primary">
+                            {{-- <a href="{{ route('', $order) }}" class="btn btn-secondary"></a> --}}
                             <i class="fas fa-save me-1"></i>Update Order
                         </button>
                     </div>
@@ -258,4 +260,6 @@
         </div>
     </div>
 </div>
+
+
 @endsection

@@ -42,7 +42,8 @@ class Order extends Model
         'shipped_at',
         'delivered_at',
         'cancelled_at',
-        'cancellation_reason'
+        'cancellation_reason',
+
     ];
 
     protected $casts = [
