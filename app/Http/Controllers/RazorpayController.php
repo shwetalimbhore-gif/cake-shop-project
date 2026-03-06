@@ -45,6 +45,7 @@ class RazorpayController extends Controller
                 'currency' => 'INR',
                 'notes' => [
                     'order_id' => $order->id,
+                    'order_number' => $order->order_number,
                     'customer_name' => $order->shipping_name,
                     'customer_email' => $order->shipping_email,
                 ]

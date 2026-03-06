@@ -172,6 +172,12 @@ Route::middleware('auth')->group(function () {
     Route::delete('/user/profile', [UserProfileController::class, 'destroy'])->name('user.profile.destroy');
 });
 
+
+// Webhook route (NO CSRF token - Razorpay sends without it)
+Route::post('/api/razorpay/webhook', [RazorpayWebhookController::class, 'handleWebhook'])
+    ->name('razorpay.webhook')
+    ->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class]);
+
 /*
 |--------------------------------------------------------------------------
 | AUTH ROUTES (Breeze)
