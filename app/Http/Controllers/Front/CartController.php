@@ -137,6 +137,79 @@ class CartController extends Controller
             return redirect()->back()->with('error', 'Failed to add product to cart.');
         }
     }
+
+    /**
+     * Buy Now - Add to cart and return success for checkout redirect
+     */
+    public function buyNow(Request $request)
+    {
+        $request->validate([
+            'product_id' => 'required|exists:products,id',
+            'quantity' => 'required|integer|min:1',
+            'size' => 'nullable|string',
+            'flavor' => 'nullable|string',
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+            $product = Product::findOrFail($request->product_id);
+
+            // Check if product is available
+            if (!$product->isAvailable()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This product is out of stock.'
+                ], 400);
+            }
+
+            // Check if requested quantity is available
+            if ($request->quantity > $product->stock_quantity) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Only ' . $product->stock_quantity . ' items available.'
+                ], 400);
+            }
+
+            $cart = Cart::getCart();
+
+            $price = $product->sale_price ?? $product->regular_price;
+
+            $options = [
+                'size' => $request->size,
+                'flavor' => $request->flavor,
+            ];
+
+            // OPTION 1: Clear previous cart for Buy Now (one item only)
+            CartItem::where('cart_id', $cart->id)->delete();
+
+            // Create new cart item
+            CartItem::create([
+                'cart_id' => $cart->id,
+                'product_id' => $product->id,
+                'quantity' => $request->quantity,
+                'unit_price' => $price,
+                'options' => $options,
+            ]);
+
+            // Update cart total
+            $cart->calculateTotal();
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Redirecting to checkout...'
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to process Buy Now. Please try again.'
+            ], 500);
+        }
+    }
     /**
      * Update cart item quantity - FIXED
      */

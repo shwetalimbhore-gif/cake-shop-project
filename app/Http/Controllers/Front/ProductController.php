@@ -95,4 +95,28 @@ class ProductController extends Controller
             'withEggCount'
         ));
     }
+
+    public function show($slug)
+    {
+        $product = Product::with(['category', 'images', 'reviews' => function($query) {
+            $query->where('is_approved', true)->latest();
+        }])
+        ->where('slug', $slug)
+        ->where('is_active', true)
+        ->firstOrFail();
+
+        // Increment view count
+        $product->increment('views');
+
+        // Get related products
+        $relatedProducts = Product::with(['category', 'images'])
+            ->where('category_id', $product->category_id)
+            ->where('id', '!=', $product->id)
+            ->where('is_active', true)
+            ->where('in_stock', true)
+            ->limit(4)
+            ->get();
+
+        return view('front.product-details', compact('product', 'relatedProducts'));
+    }
 }

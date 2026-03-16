@@ -145,6 +145,25 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/', [AboutUsController::class, 'index'])->name('index');
         Route::put('/', [AboutUsController::class, 'update'])->name('update');
     });
+
+    // Reports Routes
+    Route::prefix('reports')->name('reports.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Admin\ReportController::class, 'index'])->name('index');
+        Route::get('/daily-sales', [App\Http\Controllers\Admin\ReportController::class, 'dailySales'])->name('daily-sales');
+        Route::get('/monthly-sales', [App\Http\Controllers\Admin\ReportController::class, 'monthlySales'])->name('monthly-sales');
+        Route::get('/product-sales', [App\Http\Controllers\Admin\ReportController::class, 'productSales'])->name('product-sales');
+        Route::get('/category-sales', [App\Http\Controllers\Admin\ReportController::class, 'categorySales'])->name('category-sales');
+        Route::get('/top-selling', [App\Http\Controllers\Admin\ReportController::class, 'topSelling'])->name('top-selling');
+        Route::get('/low-selling', [App\Http\Controllers\Admin\ReportController::class, 'lowSelling'])->name('low-selling');
+        Route::get('/order-summary', [App\Http\Controllers\Admin\ReportController::class, 'orderSummary'])->name('order-summary');
+        Route::get('/custom-cake-orders', [App\Http\Controllers\Admin\ReportController::class, 'customCakeOrders'])->name('custom-cake-orders');
+        Route::get('/delivery-vs-pickup', [App\Http\Controllers\Admin\ReportController::class, 'deliveryVsPickup'])->name('delivery-vs-pickup');
+        Route::get('/top-customers', [App\Http\Controllers\Admin\ReportController::class, 'topCustomers'])->name('top-customers');
+        Route::get('/customer-frequency', [App\Http\Controllers\Admin\ReportController::class, 'customerFrequency'])->name('customer-frequency');
+        Route::get('/low-stock', [App\Http\Controllers\Admin\ReportController::class, 'lowStock'])->name('low-stock');
+        Route::get('/payment-methods', [App\Http\Controllers\Admin\ReportController::class, 'paymentMethods'])->name('payment-methods');
+    });
+
 });
 
 /*
@@ -159,6 +178,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         }
         return redirect()->route('home');
     })->name('dashboard');
+
+    Route::post('/buy-now', [CartController::class, 'buyNow'])->name('buy.now');
 });
 
 /*
@@ -173,10 +194,10 @@ Route::middleware('auth')->group(function () {
 });
 
 
-// Webhook route (NO CSRF token - Razorpay sends without it)
-Route::post('/api/razorpay/webhook', [RazorpayWebhookController::class, 'handleWebhook'])
-    ->name('razorpay.webhook')
-    ->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class]);
+// // Webhook route (NO CSRF token - Razorpay sends without it)
+// Route::post('/api/razorpay/webhook', [RazorpayWebhookController::class, 'handleWebhook'])
+//     ->name('razorpay.webhook')
+//     ->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class]);
 
 /*
 |--------------------------------------------------------------------------

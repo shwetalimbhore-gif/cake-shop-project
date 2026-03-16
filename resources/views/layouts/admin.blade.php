@@ -851,6 +851,16 @@
                     </a>
                 </li>
 
+                <!-- Reports Link -->
+                <li class="nav-item mb-2">
+                    <a href="{{ route('admin.reports.index') }}"
+                    class="nav-link text-white {{ request()->routeIs('admin.reports.*') ? 'active bg-primary' : '' }}">
+                        <i class="fas fa-chart-bar me-2"></i>
+                        <span>Reports & Analytics</span>
+                        <span class="badge bg-info float-end">New</span>
+                    </a>
+                </li>
+
                 <li class="nav-item">
                     <a href="{{ route('admin.orders.index') }}"
                        class="nav-link {{ request()->routeIs('admin.orders.*') ? 'active' : '' }}">

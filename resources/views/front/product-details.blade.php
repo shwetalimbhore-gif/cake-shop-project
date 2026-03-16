@@ -233,8 +233,17 @@
                         <!-- Add to Cart Button -->
                         <button type="submit" class="btn-add-to-cart" {{ $product->stock_quantity < 1 ? 'disabled' : '' }}>
                             <i class="fas fa-shopping-cart me-2"></i>
-                            Add to Cart
+                            {{ $product->stock_quantity < 1 ? 'Out of Stock' : 'Add to Cart' }}
                         </button>
+
+                        <!-- ===== BUY NOW BUTTON ===== -->
+                        @if($product->stock_quantity > 0)
+                            <button type="button" class="btn-buy-now" id="buyNowBtn">
+                                <i class="fas fa-bolt me-2"></i>
+                                Buy Now
+                            </button>
+                        @endif
+
                     </form>
 
                     <!-- Additional Info - REAL BAKERY STYLE -->
@@ -823,6 +832,48 @@
     cursor: not-allowed;
     box-shadow: none;
     transform: none;
+}
+
+/* ===== BUY NOW BUTTON ===== */
+.btn-buy-now {
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(135deg, #28a745, #218838);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    box-shadow: 0 10px 20px rgba(40, 167, 69, 0.2);
+    margin-top: 15px;
+}
+
+.btn-buy-now:hover {
+    background: linear-gradient(135deg, #218838, #1e7e34);
+    transform: translateY(-2px);
+    box-shadow: 0 15px 30px rgba(40, 167, 69, 0.3);
+}
+
+.btn-buy-now i {
+    font-size: 1.1rem;
+}
+
+.btn-buy-now:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Two buttons layout */
+.btn-add-to-cart {
+    margin-bottom: 10px;
 }
 
 /* ===== ADDITIONAL INFO ===== */

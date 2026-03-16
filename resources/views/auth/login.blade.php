@@ -348,7 +348,7 @@
         width: 100%;
         padding: 14px;
         background: linear-gradient(135deg, var(--terracotta), #b86a4a);
-        color: white;
+        color: rgb(27, 22, 22);
         border: none;
         border-radius: 15px;
         font-weight: 600;
@@ -489,19 +489,49 @@
         text-align: center;
     }
 
-    .feature-icon {
-        width: 70px;
-        height: 70px;
-        background: linear-gradient(135deg, var(--terracotta), #b86a4a);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto 15px;
-        color: white;
-        font-size: 1.8rem;
-        box-shadow: 0 10px 20px rgba(201, 124, 93, 0.3);
-        transition: all 0.3s;
+    .feature-icon{
+        width:70px;
+        height:70px;
+        background:#fff;
+        border-radius:50%;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        box-shadow:0 10px 25px rgba(0,0,0,0.08);
+        margin:auto;
+        margin-bottom:10px;
+    }
+
+    /* Cake */
+    /* .cake-icon{
+        background:#FFE5E0;
+    }
+
+    .cake-icon i{
+        color:#FF6B6B;
+    } */
+
+    /* Eggless */
+    /* .eggless-icon{
+        background:#E6F7EC;
+    }
+
+    .eggless-icon i{
+        color:#2ECC71;
+    } */
+
+    /* Delivery */
+    /* .delivery-icon{
+        background:#E6F0FF;
+    }
+
+    .delivery-icon i{
+        color:#3B82F6;
+    } */
+
+    .feature-icon i{
+        font-size:26px;
+        color:#c97c5d;
     }
 
     .feature-item:hover .feature-icon {
