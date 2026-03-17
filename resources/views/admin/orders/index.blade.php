@@ -1,25 +1,49 @@
 @extends('layouts.admin')
 
 @section('title', 'Orders - Admin Panel')
-@section('page-title', 'Orders')
+@section('page-title', 'Orders Management')
 
 @section('content')
+<!-- Statistics Cards -->
 <div class="row g-4 mb-4">
-    <div class="col-md-3">
-        <div class="card bg-primary text-white border-0 shadow-lg">
+    <div class="col-xl-3 col-md-6">
+        <div class="card bg-primary text-white border-0 shadow-lg h-100">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <h6 class="text-white-50 mb-2">Total Orders</h6>
                         <h2 class="mb-0 fw-bold">{{ number_format($stats['total_orders']) }}</h2>
+                        <div class="mt-2 small">
+                            <span class="text-white-50 me-2">Online: {{ number_format($stats['online_orders']) }}</span>
+                            <span class="text-white-50">Walk-in: {{ number_format($stats['walkin_orders']) }}</span>
+                        </div>
                     </div>
                     <i class="fas fa-shopping-cart fa-3x opacity-50"></i>
                 </div>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card bg-warning text-white border-0 shadow-lg">
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card bg-success text-white border-0 shadow-lg h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-white-50 mb-2">Total Revenue</h6>
+                        <h2 class="mb-0 fw-bold">{{ format_currency($stats['total_revenue']) }}</h2>
+                        <div class="mt-2 small">
+                            <span class="text-white-50 me-2">Online: {{ format_currency($stats['online_revenue']) }}</span>
+                            <span class="text-white-50">Walk-in: {{ format_currency($stats['walkin_revenue']) }}</span>
+                        </div>
+                    </div>
+                    <i class="fas fa-rupee-sign fa-3x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card bg-warning text-white border-0 shadow-lg h-100">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
@@ -31,29 +55,16 @@
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card bg-info text-white border-0 shadow-lg">
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card bg-info text-white border-0 shadow-lg h-100">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <h6 class="text-white-50 mb-2">Processing</h6>
-                        <h2 class="mb-0 fw-bold">{{ number_format($stats['processing_orders']) }}</h2>
+                        <h6 class="text-white-50 mb-2">Today's Revenue</h6>
+                        <h2 class="mb-0 fw-bold">{{ format_currency($stats['today_revenue']) }}</h2>
                     </div>
-                    <i class="fas fa-cog fa-3x opacity-50"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card bg-success text-white border-0 shadow-lg">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="text-white-50 mb-2">Total Revenue</h6>
-                        <h2 class="mb-0 fw-bold">{{ format_currency($stats['total_revenue']) }}</h2>
-                        <small class="text-white-50">Today: {{ format_currency($stats['today_revenue']) }}</small>
-                    </div>
-                    <i class="fas fa-dollar-sign fa-3x opacity-50"></i>
+                    <i class="fas fa-calendar-day fa-3x opacity-50"></i>
                 </div>
             </div>
         </div>
@@ -66,16 +77,29 @@
             <i class="fas fa-shopping-cart text-primary me-2"></i>
             Manage Orders
         </h5>
-        <a href="{{ route('admin.orders.export') }}" class="btn btn-success">
-            <i class="fas fa-download me-2"></i>Export CSV
-        </a>
+        <div>
+            <a href="{{ route('admin.orders.walkin.create') }}" class="btn btn-warning me-2">
+                <i class="fas fa-store me-2"></i>New Walk-in Order
+            </a>
+            <a href="{{ route('admin.orders.export') }}" class="btn btn-success">
+                <i class="fas fa-download me-2"></i>Export CSV
+            </a>
+        </div>
     </div>
     <div class="card-body">
+        <!-- Filters -->
         <form method="GET" action="{{ route('admin.orders.index') }}" class="mb-4">
             <div class="row g-3">
                 <div class="col-md-3">
                     <input type="text" name="search" class="form-control"
                            placeholder="Search order #, customer..." value="{{ request('search') }}">
+                </div>
+                <div class="col-md-2">
+                    <select name="order_type" class="form-select">
+                        <option value="">All Types</option>
+                        <option value="online" {{ request('order_type') == 'online' ? 'selected' : '' }}>Online Orders</option>
+                        <option value="walkin" {{ request('order_type') == 'walkin' ? 'selected' : '' }}>Walk-in Orders</option>
+                    </select>
                 </div>
                 <div class="col-md-2">
                     <select name="status" class="form-select">
@@ -102,10 +126,6 @@
                     <input type="date" name="date_from" class="form-control"
                            placeholder="From" value="{{ request('date_from') }}">
                 </div>
-                <div class="col-md-2">
-                    <input type="date" name="date_to" class="form-control"
-                           placeholder="To" value="{{ request('date_to') }}">
-                </div>
                 <div class="col-md-1">
                     <button type="submit" class="btn btn-primary w-100">
                         <i class="fas fa-filter"></i>
@@ -119,11 +139,13 @@
             </div>
         </form>
 
+        <!-- Orders Table -->
         <div class="table-responsive">
             <table class="table table-hover align-middle">
                 <thead>
                     <tr>
                         <th>Order #</th>
+                        <th>Type</th>
                         <th>Date</th>
                         <th>Customer</th>
                         <th>Total</th>
@@ -142,12 +164,31 @@
                             </a>
                         </td>
                         <td>
+                            @if($order->order_type == 'walkin')
+                                <span class="badge bg-warning">
+                                    <i class="fas fa-store me-1"></i>Walk-in
+                                </span>
+                            @else
+                                <span class="badge bg-info">
+                                    <i class="fas fa-globe me-1"></i>Online
+                                </span>
+                            @endif
+                        </td>
+                        <td>
                             {{ $order->created_at->format('M d, Y') }}<br>
                             <small class="text-muted">{{ $order->created_at->format('h:i A') }}</small>
                         </td>
                         <td>
-                            {{ $order->shipping_name }}<br>
-                            <small class="text-muted">{{ $order->shipping_email }}</small>
+                            @if($order->order_type == 'walkin')
+                                {{ $order->walkin_customer_name }}<br>
+                                <small class="text-muted">{{ $order->walkin_customer_phone }}</small>
+                                @if($order->created_by_admin)
+                                    <br><small class="text-info">by: {{ $order->creator->name ?? 'Admin' }}</small>
+                                @endif
+                            @else
+                                {{ $order->shipping_name }}<br>
+                                <small class="text-muted">{{ $order->shipping_email }}</small>
+                            @endif
                         </td>
                         <td class="fw-bold">{{ format_currency($order->total) }}</td>
                         <td>
@@ -173,6 +214,12 @@
                                    class="btn btn-sm btn-primary" title="Edit">
                                     <i class="fas fa-edit"></i>
                                 </a>
+                                @if($order->order_type == 'walkin')
+                                <a href="{{ route('admin.orders.walkin.receipt', $order) }}"
+                                   class="btn btn-sm btn-warning" title="Print Receipt">
+                                    <i class="fas fa-receipt"></i>
+                                </a>
+                                @endif
                                 <button type="button" class="btn btn-sm btn-danger delete-order"
                                         data-id="{{ $order->id }}"
                                         data-number="{{ $order->order_number }}"
@@ -184,7 +231,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="8" class="text-center py-5">
+                        <td colspan="9" class="text-center py-5">
                             <i class="fas fa-shopping-cart fa-3x text-muted mb-3"></i>
                             <h5 class="text-muted">No Orders Found</h5>
                             <p class="text-muted mb-0">There are no orders to display.</p>
@@ -195,6 +242,7 @@
             </table>
         </div>
 
+        <!-- Pagination -->
         <div class="d-flex justify-content-between align-items-center mt-4">
             <div class="text-muted small">
                 Showing {{ $orders->firstItem() ?? 0 }} to {{ $orders->lastItem() ?? 0 }} of {{ $orders->total() }} orders
@@ -260,6 +308,7 @@
 @section('scripts')
 <script>
 $(document).ready(function() {
+    // Delete order
     $(document).on('click', '.delete-order', function() {
         var id = $(this).data('id');
         var number = $(this).data('number');
@@ -268,10 +317,12 @@ $(document).ready(function() {
         $('#deleteModal').modal('show');
     });
 
-    $('select[name="status"], select[name="payment_status"]').change(function() {
+    // Auto-submit filters on change
+    $('select[name="order_type"], select[name="status"], select[name="payment_status"]').change(function() {
         $(this).closest('form').submit();
     });
 
+    // Auto-submit date inputs after 1 second delay
     var dateTimer;
     $('input[name="date_from"], input[name="date_to"]').change(function() {
         clearTimeout(dateTimer);
@@ -281,6 +332,7 @@ $(document).ready(function() {
         }, 1000);
     });
 
+    // Search with debounce
     var searchTimer;
     $('input[name="search"]').keyup(function(e) {
         clearTimeout(searchTimer);

@@ -9,27 +9,40 @@ use Illuminate\Http\Request;
 
 class OrderController extends Controller
 {
+    /**
+     * Display a listing of orders with filters.
+     */
     public function index(Request $request)
     {
         $query = Order::with('user')->latest();
 
+        // Search filter
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
                 $q->where('order_number', 'like', '%' . $search . '%')
-                  ->orWhere('shipping_name', 'like', '%' . $search . '%')
-                  ->orWhere('shipping_email', 'like', '%' . $search . '%');
+                ->orWhere('shipping_name', 'like', '%' . $search . '%')
+                ->orWhere('shipping_email', 'like', '%' . $search . '%')
+                ->orWhere('walkin_customer_name', 'like', '%' . $search . '%');
             });
         }
 
+        // Order Type filter
+        if ($request->filled('order_type')) {
+            $query->where('order_type', $request->order_type);
+        }
+
+        // Status filter
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
 
+        // Payment status filter
         if ($request->filled('payment_status')) {
             $query->where('payment_status', $request->payment_status);
         }
 
+        // Date range filter
         if ($request->filled('date_from')) {
             $query->whereDate('created_at', '>=', $request->date_from);
         }
@@ -40,12 +53,17 @@ class OrderController extends Controller
 
         $orders = $query->paginate(15)->withQueryString();
 
+        // Get statistics
         $stats = [
             'total_orders' => Order::count(),
+            'online_orders' => Order::where('order_type', 'online')->count(),
+            'walkin_orders' => Order::where('order_type', 'walkin')->count(),
             'pending_orders' => Order::where('status', Order::STATUS_PENDING)->count(),
             'processing_orders' => Order::where('status', Order::STATUS_PROCESSING)->count(),
             'delivered_orders' => Order::where('status', Order::STATUS_DELIVERED)->count(),
             'total_revenue' => Order::where('payment_status', 'paid')->sum('total'),
+            'online_revenue' => Order::where('order_type', 'online')->where('payment_status', 'paid')->sum('total'),
+            'walkin_revenue' => Order::where('order_type', 'walkin')->where('payment_status', 'paid')->sum('total'),
             'today_revenue' => Order::where('payment_status', 'paid')
                 ->whereDate('created_at', today())
                 ->sum('total')

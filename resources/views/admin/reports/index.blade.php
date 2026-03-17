@@ -77,6 +77,11 @@
                         <span><i class="fas fa-truck me-2 text-success"></i>Delivery vs Pickup</span>
                         <i class="fas fa-arrow-right"></i>
                     </a>
+                    <!-- Add this to Reports dropdown or section -->
+                    <a href="{{ route('admin.reports.walkin') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-store me-2 text-success"></i>Walk-in vs Online Report</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
                 </div>
             </div>
         </div>

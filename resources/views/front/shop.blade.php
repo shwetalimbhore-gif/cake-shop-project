@@ -880,47 +880,6 @@
     cursor: pointer;
 }
 
-/* Buy Now Button */
-.buy-now-wrapper {
-    margin-top: 12px;
-    width: 100%;
-}
-
-.buy-now-btn {
-    width: 100%;
-    padding: 10px 15px;
-    background: linear-gradient(135deg, #28a745, #218838);
-    color: white;
-    border: none;
-    border-radius: 30px;
-    font-weight: 600;
-    font-size: 0.9rem;
-    cursor: pointer;
-    transition: all 0.3s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 5px;
-    box-shadow: 0 5px 15px rgba(40, 167, 69, 0.2);
-}
-
-.buy-now-btn:hover {
-    background: linear-gradient(135deg, #218838, #1e7e34);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(40, 167, 69, 0.3);
-}
-
-.buy-now-btn i {
-    font-size: 0.9rem;
-}
-
-/* Optional: Disable button for out of stock */
-.buy-now-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    transform: none;
-}
-
 .apply-price-btn:hover {
     background: #b86a4a;
 }

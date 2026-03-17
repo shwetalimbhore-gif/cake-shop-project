@@ -8,224 +8,166 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\Order;
 use App\Models\OrderItem;
-use Illuminate\Support\Str;
+use App\Models\Review;
+use App\Models\Payment;
+use App\Models\Setting;
+use Illuminate\Support\Facades\DB;
 
 class DatabaseSeeder extends Seeder
 {
-    public function run()
+    // ===== YOU ONLY NEED TO CHANGE THESE NUMBERS =====
+    private $numberOfUsers = 500;
+    private $numberOfCategories = 20;
+    private $numberOfProducts = 200;
+    private $numberOfOrders = 2000;
+    private $numberOfReviews = 3000;
+    // =================================================
+
+    public function run(): void
     {
-        // Call Settings Seeder first
-        $this->call(SettingsSeeder::class);
-        $this->call(ProductCategorySeeder::class);
+        $this->command->info('🚀 Starting database seeding...');
+        DB::statement('SET FOREIGN_KEY_CHECKS=0');
 
-        // Create admin user only if not exists
-        User::firstOrCreate(
-            ['email' => 'admin@cakeshop.com'],
-            [
-                'name' => 'Admin',
-                'password' => bcrypt('password'),
-                'is_admin' => true,
-                'email_verified_at' => now(),
-            ]
-        );
+        $this->truncateTables();
+        $this->seedSettings();
+        $this->seedUsers();
+        $this->seedCategories();
+        $this->seedProducts();
+        $this->seedOrders();
+        $this->seedOrderItems();
+        $this->seedReviews();
+        $this->seedPayments();
 
-        // Create regular user only if not exists
-        User::firstOrCreate(
-            ['email' => 'customer@cakeshop.com'],
-            [
-                'name' => 'Customer',
-                'password' => bcrypt('password'),
-                'is_admin' => false,
-                'email_verified_at' => now(),
-            ]
-        );
+        DB::statement('SET FOREIGN_KEY_CHECKS=1');
+        $this->showSummary();
+    }
 
-        // Create categories only if table is empty
-        if (Category::count() === 0) {
-            $categories = [
-                ['name' => 'Birthday Cakes', 'description' => 'Perfect for birthdays', 'is_active' => true, 'order' => 1],
-                ['name' => 'Wedding Cakes', 'description' => 'Elegant wedding cakes', 'is_active' => true, 'order' => 2],
-                ['name' => 'Cupcakes', 'description' => 'Delicious bite-sized treats', 'is_active' => true, 'order' => 3],
-                ['name' => 'Custom Cakes', 'description' => 'Designed just for you', 'is_active' => true, 'order' => 4],
-            ];
-
-            foreach ($categories as $category) {
-                Category::create($category);
-            }
-            $this->command->info('Categories seeded successfully!');
-        } else {
-            $this->command->info('Categories table already has data. Skipping...');
+    private function truncateTables(): void
+    {
+        $tables = ['payments', 'reviews', 'order_items', 'orders', 'products', 'categories', 'users', 'settings'];
+        foreach ($tables as $table) {
+            DB::table($table)->truncate();
+            $this->command->info("✓ Truncated: {$table}");
         }
+    }
 
-        // Create sample products only if table is empty
-        if (Product::count() === 0) {
-            $products = [
-                [
-                    'name' => 'Chocolate Cake',
-                    'short_description' => 'Rich and moist chocolate cake',
-                    'description' => 'Our signature chocolate cake with creamy chocolate frosting.',
-                    'regular_price' => 29.99,
-                    'sale_price' => 24.99,
-                    'sku' => 'CAKE-BDAY-CHOC-001',
-                    'stock_quantity' => 15,
-                    'category_id' => 1,
-                    'is_active' => true,
-                    'is_featured' => true,
-                    'sizes' => json_encode(['Small (6")', 'Medium (8")', 'Large (10")']),
-                    'flavors' => json_encode(['Chocolate', 'Double Chocolate']),
-                ],
-                [
-                    'name' => 'Vanilla Birthday Cake',
-                    'short_description' => 'Classic vanilla cake',
-                    'description' => 'Light and fluffy vanilla cake with buttercream frosting.',
-                    'regular_price' => 27.99,
-                    'sale_price' => null,
-                    'sku' => 'CAKE-BDAY-VAN-002',
-                    'stock_quantity' => 10,
-                    'category_id' => 1,
-                    'is_active' => true,
-                    'is_featured' => false,
-                    'sizes' => json_encode(['Small (6")', 'Medium (8")', 'Large (10")']),
-                    'flavors' => json_encode(['Vanilla', 'Vanilla Bean']),
-                ],
-                [
-                    'name' => 'Red Velvet Cake',
-                    'short_description' => 'Classic red velvet with cream cheese frosting',
-                    'description' => 'Stunning red velvet cake with rich cream cheese frosting.',
-                    'regular_price' => 32.99,
-                    'sale_price' => 28.99,
-                    'sku' => 'CAKE-BDAY-RED-003',
-                    'stock_quantity' => 8,
-                    'category_id' => 1,
-                    'is_active' => true,
-                    'is_featured' => true,
-                    'sizes' => json_encode(['Medium (8")', 'Large (10")']),
-                    'flavors' => json_encode(['Red Velvet']),
-                ],
-                [
-                    'name' => 'Classic White Wedding Cake',
-                    'short_description' => 'Elegant three-tier wedding cake',
-                    'description' => 'Beautiful three-tier white wedding cake.',
-                    'regular_price' => 299.99,
-                    'sale_price' => 279.99,
-                    'sku' => 'CAKE-WED-CLS-001',
-                    'stock_quantity' => 3,
-                    'category_id' => 2,
-                    'is_active' => true,
-                    'is_featured' => true,
-                    'sizes' => json_encode(['3-Tier (50 servings)', '4-Tier (80 servings)']),
-                    'flavors' => json_encode(['Vanilla', 'Almond']),
-                ],
-                [
-                    'name' => 'Strawberry Cupcakes',
-                    'short_description' => 'Fresh strawberry cupcakes',
-                    'description' => 'Delightful strawberry cupcakes with strawberry buttercream.',
-                    'regular_price' => 18.99,
-                    'sale_price' => 15.99,
-                    'sku' => 'CAKE-CUP-STR-001',
-                    'stock_quantity' => 24,
-                    'category_id' => 3,
-                    'is_active' => true,
-                    'is_featured' => false,
-                    'sizes' => json_encode(['Regular', 'Mini']),
-                    'flavors' => json_encode(['Strawberry', 'Strawberry Cheesecake']),
-                ],
-                [
-                    'name' => 'Custom Design Cake',
-                    'short_description' => 'Fully customizable cake',
-                    'description' => 'Create your own custom cake design.',
-                    'regular_price' => 89.99,
-                    'sale_price' => null,
-                    'sku' => 'CAKE-CUS-DES-001',
-                    'stock_quantity' => 5,
-                    'category_id' => 4,
-                    'is_active' => true,
-                    'is_featured' => true,
-                    'sizes' => json_encode(['6"', '8"', '10"', 'Quarter Sheet', 'Half Sheet']),
-                    'flavors' => json_encode(['Vanilla', 'Chocolate', 'Red Velvet', 'Lemon']),
-                ],
-            ];
+    private function seedSettings(): void
+    {
+        $settings = [
+            ['key' => 'site_name', 'value' => 'Cozy Cravings', 'type' => 'text', 'group' => 'general'],
+            ['key' => 'site_description', 'value' => 'Delicious cakes for every occasion', 'type' => 'textarea', 'group' => 'general'],
+            ['key' => 'contact_email', 'value' => 'info@cozycravings.com', 'type' => 'email', 'group' => 'contact'],
+            ['key' => 'contact_phone', 'value' => '+1 234 567 8900', 'type' => 'phone', 'group' => 'contact'],
+            ['key' => 'delivery_charges', 'value' => '10.00', 'type' => 'number', 'group' => 'delivery'],
+            ['key' => 'free_delivery_threshold', 'value' => '100.00', 'type' => 'number', 'group' => 'delivery'],
+            ['key' => 'tax_rate', 'value' => '10', 'type' => 'number', 'group' => 'general'],
+            ['key' => 'currency_symbol', 'value' => '₹', 'type' => 'text', 'group' => 'general'],
+        ];
 
-            foreach ($products as $product) {
-                Product::create($product);
-            }
-            $this->command->info('Products seeded successfully!');
-        } else {
-            $this->command->info('Products table already has data. Skipping...');
+        foreach ($settings as $setting) {
+            Setting::create($setting);
         }
+        $this->command->info("✓ Settings seeded");
+    }
 
-        // Get customer for orders
-        $customer = User::where('email', 'customer@cakeshop.com')->first();
+    private function seedUsers(): void
+    {
+        $this->command->info("📊 Creating {$this->numberOfUsers} users...");
+        User::factory()->admin()->create();
+        User::factory()->count($this->numberOfUsers - 1)->create();
+        $this->command->info("✓ Users created: " . User::count());
+    }
+
+    private function seedCategories(): void
+    {
+        $this->command->info("📊 Creating {$this->numberOfCategories} categories...");
+        Category::factory()->count($this->numberOfCategories)->create();
+        $this->command->info("✓ Categories created: " . Category::count());
+    }
+
+    private function seedProducts(): void
+    {
+        $this->command->info("📊 Creating {$this->numberOfProducts} products...");
+        Product::factory()->count($this->numberOfProducts)->create();
+        $this->command->info("✓ Products created: " . Product::count());
+    }
+
+    private function seedOrders(): void
+    {
+        $this->command->info("📊 Creating {$this->numberOfOrders} orders...");
+
+        $chunkSize = 200;
+        for ($i = 0; $i < $this->numberOfOrders; $i += $chunkSize) {
+            $count = min($chunkSize, $this->numberOfOrders - $i);
+            Order::factory()->count($count)->create();
+            $this->command->info("  Progress: " . min($i + $chunkSize, $this->numberOfOrders) . "/{$this->numberOfOrders}");
+        }
+        $this->command->info("✓ Orders created: " . Order::count());
+    }
+
+    private function seedOrderItems(): void
+    {
+        $this->command->info("📊 Creating order items...");
+        $orders = Order::all();
         $products = Product::all();
 
-        // Create orders only if table is empty
-        if ($customer && $products->count() > 0 && Order::count() === 0) {
-            $statuses = ['pending', 'processing', 'confirmed', 'shipped', 'delivered', 'cancelled'];
-            $paymentStatuses = ['pending', 'paid', 'failed', 'refunded'];
-
-            for ($i = 1; $i <= 15; $i++) {
-                $status = $statuses[array_rand($statuses)];
-                $paymentStatus = $paymentStatuses[array_rand($paymentStatuses)];
-
-                $subtotal = rand(50, 300);
-                $tax = round($subtotal * 0.1, 2);
-                $shipping = 10.00;
-                $discount = ($i % 3 == 0) ? rand(5, 20) : 0;
-                $total = $subtotal + $tax + $shipping - $discount;
-
-                $order = Order::create([
-                    'order_number' => 'ORD-' . date('Ymd') . '-' . str_pad($i + 100, 4, '0', STR_PAD_LEFT),
-                    'user_id' => $customer->id,
-                    'status' => $status,
-                    'payment_status' => $paymentStatus,
-                    'payment_method' => ['credit_card', 'paypal', 'cash_on_delivery'][array_rand(['credit_card', 'paypal', 'cash_on_delivery'])],
-                    'subtotal' => $subtotal,
-                    'tax' => $tax,
-                    'shipping_cost' => $shipping,
-                    'discount' => $discount,
-                    'total' => $total,
-                    'shipping_name' => $customer->name,
-                    'shipping_email' => $customer->email,
-                    'shipping_phone' => '555-' . rand(100, 999) . '-' . rand(1000, 9999),
-                    'shipping_address' => rand(100, 999) . ' Main Street',
-                    'shipping_city' => 'New York',
-                    'shipping_state' => 'NY',
-                    'shipping_zip' => rand(10000, 99999),
-                    'shipping_country' => 'USA',
-                    'billing_name' => $customer->name,
-                    'billing_email' => $customer->email,
-                    'billing_phone' => '555-' . rand(100, 999) . '-' . rand(1000, 9999),
-                    'billing_address' => rand(100, 999) . ' Main Street',
-                    'billing_city' => 'New York',
-                    'billing_state' => 'NY',
-                    'billing_zip' => rand(10000, 99999),
-                    'billing_country' => 'USA',
-                    'created_at' => now()->subDays(rand(1, 30)),
+        $totalItems = 0;
+        foreach ($orders as $order) {
+            $itemCount = rand(1, 5);
+            for ($i = 0; $i < $itemCount; $i++) {
+                OrderItem::factory()->create([
+                    'order_id' => $order->id,
+                    'product_id' => $products->random()->id,
                 ]);
-
-                $numItems = rand(1, 3);
-                $selectedProducts = $products->random(min($numItems, $products->count()));
-
-                foreach ($selectedProducts as $product) {
-                    $quantity = rand(1, 3);
-                    OrderItem::create([
-                        'order_id' => $order->id,
-                        'product_id' => $product->id,
-                        'product_name' => $product->name,
-                        'sku' => $product->sku,
-                        'quantity' => $quantity,
-                        'price' => $product->regular_price,
-                        'subtotal' => $product->regular_price * $quantity,
-                        'options' => json_encode(['size' => 'Medium', 'flavor' => 'Vanilla']),
-                        'created_at' => $order->created_at,
-                    ]);
-                }
+                $totalItems++;
             }
-            $this->command->info('Orders seeded successfully!');
-        } else {
-            $this->command->info('Orders table already has data. Skipping...');
         }
+        $this->command->info("✓ Order items created: " . $totalItems);
+    }
 
-        $this->command->info('Database seeding completed successfully!');
+    private function seedReviews(): void
+    {
+        $this->command->info("📊 Creating {$this->numberOfReviews} reviews...");
+        $products = Product::all();
+        $users = User::where('is_admin', false)->get();
+
+        for ($i = 0; $i < $this->numberOfReviews; $i += 100) {
+            $count = min(100, $this->numberOfReviews - $i);
+            Review::factory()->count($count)->create([
+                'product_id' => $products->random()->id,
+                'user_id' => $users->random()->id,
+            ]);
+        }
+        $this->command->info("✓ Reviews created: " . Review::count());
+    }
+
+    private function seedPayments(): void
+    {
+        $this->command->info("📊 Creating payments...");
+        $orders = Order::where('payment_status', 'paid')->get();
+
+        foreach ($orders as $order) {
+            Payment::factory()->create(['order_id' => $order->id]);
+        }
+        $this->command->info("✓ Payments created: " . Payment::count());
+    }
+
+    private function showSummary(): void
+    {
+        $this->command->info('');
+        $this->command->info('✅ SEEDING COMPLETE!');
+        $this->command->info('=================================');
+        $this->command->info('Users: ' . User::count() . '/' . $this->numberOfUsers);
+        $this->command->info('Categories: ' . Category::count() . '/' . $this->numberOfCategories);
+        $this->command->info('Products: ' . Product::count() . '/' . $this->numberOfProducts);
+        $this->command->info('Orders: ' . Order::count() . '/' . $this->numberOfOrders);
+        $this->command->info('Reviews: ' . Review::count() . '/' . $this->numberOfReviews);
+        $this->command->info('Payments: ' . Payment::count());
+        $this->command->info('=================================');
+        $this->command->info('💰 Total Revenue: ₹' . number_format(Order::sum('total'), 2));
+        $this->command->info('🛒 Online Orders: ' . Order::where('order_type', 'online')->count());
+        $this->command->info('🏪 Walk-in Orders: ' . Order::where('order_type', 'walkin')->count());
+        $this->command->info('=================================');
+        $this->command->info('🔑 Admin Login: admin@cakeshop.com / password');
     }
 }

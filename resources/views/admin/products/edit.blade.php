@@ -375,7 +375,7 @@ $(document).ready(function() {
                     <input type="text" name="flavors[]" class="form-control" placeholder="e.g., New Flavor">
                 </div>
                 <div class="col-md-4 col-8">
-                    <label class="form-label small">Extra Price ($)</label>
+                    <label class="form-label small">Extra Price (₹)</label>
                     <div class="input-group">
                         <span class="input-group-text">₹</span>
                         <input type="number" name="flavor_prices[]" class="form-control" placeholder="Extra Price" step="0.01">

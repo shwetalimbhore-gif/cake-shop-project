@@ -43,6 +43,7 @@ Route::prefix('cart')->name('cart.')->group(function () {
     Route::get('/count', [CartController::class, 'getCount'])->name('count');
 });
 
+
 /*
 |--------------------------------------------------------------------------
 | TRACKING ROUTES
@@ -124,6 +125,14 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::post('/{order}/tracking', [OrderController::class, 'updateTracking'])->name('tracking');
     });
 
+    // Walk-in Order Routes
+    Route::prefix('orders')->name('orders.')->group(function () {
+        Route::get('/walkin/create', [App\Http\Controllers\Admin\WalkinOrderController::class, 'create'])->name('walkin.create');
+        Route::post('/walkin/store', [App\Http\Controllers\Admin\WalkinOrderController::class, 'store'])->name('walkin.store');
+        Route::get('/walkin/receipt/{order}', [App\Http\Controllers\Admin\WalkinOrderController::class, 'receipt'])->name('walkin.receipt');
+        Route::get('/walkin/product/{product}', [App\Http\Controllers\Admin\WalkinOrderController::class, 'getProductDetails'])->name('walkin.product');
+    });
+
     // Admin Profile
     Route::prefix('profile')->name('profile.')->group(function () {
         Route::get('/', [ProfileController::class, 'index'])->name('index');
@@ -162,6 +171,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/customer-frequency', [App\Http\Controllers\Admin\ReportController::class, 'customerFrequency'])->name('customer-frequency');
         Route::get('/low-stock', [App\Http\Controllers\Admin\ReportController::class, 'lowStock'])->name('low-stock');
         Route::get('/payment-methods', [App\Http\Controllers\Admin\ReportController::class, 'paymentMethods'])->name('payment-methods');
+        Route::get('/walkin', [App\Http\Controllers\Admin\WalkinOrderController::class, 'report'])->name('walkin');
+
     });
 
 });

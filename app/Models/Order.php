@@ -43,6 +43,11 @@ class Order extends Model
         'delivered_at',
         'cancelled_at',
         'cancellation_reason',
+        'order_type',
+        'walkin_customer_name',
+        'walkin_customer_phone',
+        'walkin_notes',
+        'created_by_admin',
 
     ];
 
@@ -73,6 +78,41 @@ class Order extends Model
     public function items()
     {
         return $this->hasMany(OrderItem::class);
+    }
+
+    // Add this relationship for walk-in orders
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by_admin');
+    }
+
+    // Add these helper methods
+    public function isWalkin()
+    {
+        return $this->order_type === 'walkin';
+    }
+
+    public function isOnline()
+    {
+        return $this->order_type === 'online';
+    }
+
+    public function getOrderTypeBadgeAttribute()
+    {
+        if ($this->isWalkin()) {
+            return '<span class="badge bg-warning"><i class="fas fa-store me-1"></i>Walk-in</span>';
+        }
+        return '<span class="badge bg-info"><i class="fas fa-globe me-1"></i>Online</span>';
+    }
+
+    public function getOrderTypeIconAttribute()
+    {
+        return $this->isWalkin() ? 'fa-store' : 'fa-globe';
+    }
+
+    public function getOrderTypeColorAttribute()
+    {
+        return $this->isWalkin() ? 'warning' : 'info';
     }
 
     public function getStatusBadgeAttribute()

@@ -8,11 +8,13 @@ use App\Models\Category;
 use App\Models\Order;
 use App\Models\User;
 use Illuminate\Http\Request;
+use LaravelDaily\LaravelCharts\Classes\LaravelChart;
 
 class DashboardController extends Controller
 {
     public function index()
     {
+        // Stats Cards Data
         $totalProducts = Product::count();
         $totalCategories = Category::count();
         $totalOrders = Order::count();
@@ -42,6 +44,43 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
+        // Charts Configuration
+        $productsByCategory = [
+            'chart_title' => 'Products by Category',
+            'report_type' => 'group_by_string',
+            'model' => 'App\Models\Product',
+            'group_by_field' => 'category',
+            'chart_type' => 'bar',
+            'chart_color' => '54, 162, 235',
+            'aggregate_function' => 'count',
+            'filter_field' => 'created_at',
+            'filter_days' => 30,
+        ];
+        $chart1 = new LaravelChart($productsByCategory);
+
+        $cakeProducts = [
+            'chart_title' => 'Cake vs Regular Products',
+            'report_type' => 'group_by_string',
+            'model' => 'App\Models\Product',
+            'group_by_field' => 'is_cake',
+            'chart_type' => 'pie',
+            'aggregate_function' => 'count',
+        ];
+        $chart2 = new LaravelChart($cakeProducts);
+
+        $productsOverTime = [
+            'chart_title' => 'Products Created Over Time',
+            'report_type' => 'group_by_date',
+            'model' => 'App\Models\Product',
+            'group_by_field' => 'created_at',
+            'group_by_period' => 'day',
+            'chart_type' => 'line',
+            'chart_color' => '75, 192, 192',
+            'filter_field' => 'created_at',
+            'filter_days' => 30,
+        ];
+        $chart3 = new LaravelChart($productsOverTime);
+
         return view('admin.dashboard', compact(
             'totalProducts',
             'totalCategories',
@@ -55,7 +94,10 @@ class DashboardController extends Controller
             'todayRevenue',
             'monthRevenue',
             'recentOrders',
-            'lowStockProducts'
+            'lowStockProducts',
+            'chart1',
+            'chart2',
+            'chart3'
         ));
     }
 }
