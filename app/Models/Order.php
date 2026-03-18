@@ -80,13 +80,13 @@ class Order extends Model
         return $this->hasMany(OrderItem::class);
     }
 
-    // Add this relationship for walk-in orders
+    //  relationship for walk-in orders
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by_admin');
     }
 
-    // Add these helper methods
+    // helper methods
     public function isWalkin()
     {
         return $this->order_type === 'walkin';

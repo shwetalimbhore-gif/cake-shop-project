@@ -16,7 +16,8 @@ use App\Http\Controllers\Front\CartController;
 use App\Http\Controllers\Front\TrackingController;
 use App\Http\Controllers\Front\AboutController;
 use App\Http\Controllers\RazorpayController;
-
+use App\Http\Controllers\Admin\WalkinOrderController;
+use App\Http\Controllers\Admin\ReportController;
 /*
 |--------------------------------------------------------------------------
 | PUBLIC FRONTEND ROUTES
@@ -127,10 +128,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     // Walk-in Order Routes
     Route::prefix('orders')->name('orders.')->group(function () {
-        Route::get('/walkin/create', [App\Http\Controllers\Admin\WalkinOrderController::class, 'create'])->name('walkin.create');
-        Route::post('/walkin/store', [App\Http\Controllers\Admin\WalkinOrderController::class, 'store'])->name('walkin.store');
-        Route::get('/walkin/receipt/{order}', [App\Http\Controllers\Admin\WalkinOrderController::class, 'receipt'])->name('walkin.receipt');
-        Route::get('/walkin/product/{product}', [App\Http\Controllers\Admin\WalkinOrderController::class, 'getProductDetails'])->name('walkin.product');
+        Route::get('/walkin/create', [WalkinOrderController::class, 'create'])->name('walkin.create');
+        Route::post('/walkin/store', [WalkinOrderController::class, 'store'])->name('walkin.store');
+        Route::get('/walkin/receipt/{order}', [WalkinOrderController::class, 'receipt'])->name('walkin.receipt');
+        Route::get('/walkin/product/{product}', [WalkinOrderController::class, 'getProductDetails'])->name('walkin.product');
     });
 
     // Admin Profile
@@ -157,23 +158,35 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     // Reports Routes
     Route::prefix('reports')->name('reports.')->group(function () {
-        Route::get('/', [App\Http\Controllers\Admin\ReportController::class, 'index'])->name('index');
-        Route::get('/daily-sales', [App\Http\Controllers\Admin\ReportController::class, 'dailySales'])->name('daily-sales');
-        Route::get('/monthly-sales', [App\Http\Controllers\Admin\ReportController::class, 'monthlySales'])->name('monthly-sales');
-        Route::get('/product-sales', [App\Http\Controllers\Admin\ReportController::class, 'productSales'])->name('product-sales');
-        Route::get('/category-sales', [App\Http\Controllers\Admin\ReportController::class, 'categorySales'])->name('category-sales');
-        Route::get('/top-selling', [App\Http\Controllers\Admin\ReportController::class, 'topSelling'])->name('top-selling');
-        Route::get('/low-selling', [App\Http\Controllers\Admin\ReportController::class, 'lowSelling'])->name('low-selling');
-        Route::get('/order-summary', [App\Http\Controllers\Admin\ReportController::class, 'orderSummary'])->name('order-summary');
-        Route::get('/custom-cake-orders', [App\Http\Controllers\Admin\ReportController::class, 'customCakeOrders'])->name('custom-cake-orders');
-        Route::get('/delivery-vs-pickup', [App\Http\Controllers\Admin\ReportController::class, 'deliveryVsPickup'])->name('delivery-vs-pickup');
-        Route::get('/top-customers', [App\Http\Controllers\Admin\ReportController::class, 'topCustomers'])->name('top-customers');
-        Route::get('/customer-frequency', [App\Http\Controllers\Admin\ReportController::class, 'customerFrequency'])->name('customer-frequency');
-        Route::get('/low-stock', [App\Http\Controllers\Admin\ReportController::class, 'lowStock'])->name('low-stock');
-        Route::get('/payment-methods', [App\Http\Controllers\Admin\ReportController::class, 'paymentMethods'])->name('payment-methods');
-        Route::get('/walkin', [App\Http\Controllers\Admin\WalkinOrderController::class, 'report'])->name('walkin');
+        Route::get('/', [ReportController::class, 'index'])->name('index');
+        Route::get('/daily-sales', [ReportController::class, 'dailySales'])->name('daily-sales');
+        Route::get('/monthly-sales', [ReportController::class, 'monthlySales'])->name('monthly-sales');
+        Route::get('/product-sales', [ReportController::class, 'productSales'])->name('product-sales');
+        Route::get('/category-sales', [ReportController::class, 'categorySales'])->name('category-sales');
+        Route::get('/top-selling', [ReportController::class, 'topSelling'])->name('top-selling');
+        Route::get('/low-selling', [ReportController::class, 'lowSelling'])->name('low-selling');
+        Route::get('/order-summary', [ReportController::class, 'orderSummary'])->name('order-summary');
+        Route::get('/custom-cake-orders', [ReportController::class, 'customCakeOrders'])->name('custom-cake-orders');
+        Route::get('/delivery-vs-pickup', [ReportController::class, 'deliveryVsPickup'])->name('delivery-vs-pickup');
+        Route::get('/top-customers', [ReportController::class, 'topCustomers'])->name('top-customers');
+        Route::get('/customer-frequency', [ReportController::class, 'customerFrequency'])->name('customer-frequency');
+        Route::get('/low-stock', [ReportController::class, 'lowStock'])->name('low-stock');
+        Route::get('/payment-methods', [ReportController::class, 'paymentMethods'])->name('payment-methods');
+        Route::get('/walkin', [WalkinOrderController::class, 'report'])->name('walkin');
 
     });
+
+    // Export Routes
+Route::prefix('reports')->name('reports.')->group(function () {
+    Route::get('/export/daily-sales/{format}', [ReportController::class, 'exportDailySales'])->name('export.daily-sales');
+    Route::get('/export/monthly-sales/{format}', [ReportController::class, 'exportMonthlySales'])->name('export.monthly-sales');
+    Route::get('/export/product-sales/{format}', [ReportController::class, 'exportProductSales'])->name('export.product-sales');
+    Route::get('/export/top-selling/{format}', [ReportController::class, 'exportTopSelling'])->name('export.top-selling');
+    Route::get('/export/low-stock/{format}', [ReportController::class, 'exportLowStock'])->name('export.low-stock');
+    Route::get('/export/walkin-vs-online/{format}', [ReportController::class, 'exportWalkinVsOnline'])->name('export.walkin-vs-online');
+    Route::get('/export/order-summary/{format}', [ReportController::class, 'exportOrderSummary'])->name('export.order-summary');
+    Route::get('/export/top-customers/{format}', [ReportController::class, 'exportTopCustomers'])->name('export.top-customers');
+});
 
 });
 

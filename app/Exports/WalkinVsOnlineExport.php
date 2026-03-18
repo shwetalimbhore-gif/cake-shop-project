@@ -56,7 +56,7 @@ class WalkinVsOnlineExport implements FromCollection, WithHeadings, WithMapping
             ucfirst($order->order_type),
             $order->order_type == 'walkin' ? $order->walkin_customer_name : $order->shipping_name,
             $order->items->count(),
-            '$' . number_format($order->total, 2),
+            '₹' . number_format($order->total, 2),
             ucfirst($order->status),
             ucfirst($order->payment_status),
         ];

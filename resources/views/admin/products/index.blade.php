@@ -114,11 +114,11 @@
                             <td>{{ $product->category->name ?? 'Uncategorized' }}</td>
                             <td>
                                 @if($product->sale_price && $product->sale_price < $product->regular_price)
-                                    <span class="text-decoration-line-through text-muted">${{ number_format($product->regular_price, 2) }}</span>
+                                    <span class="text-decoration-line-through text-muted">₹{{ number_format($product->regular_price, 2) }}</span>
                                     <br>
-                                    <span class="text-danger fw-bold">${{ number_format($product->sale_price, 2) }}</span>
+                                    <span class="text-danger fw-bold">₹{{ number_format($product->sale_price, 2) }}</span>
                                 @else
-                                    ${{ number_format($product->regular_price, 2) }}
+                                    ₹{{ number_format($product->regular_price, 2) }}
                                 @endif
                             </td>
                             <td>

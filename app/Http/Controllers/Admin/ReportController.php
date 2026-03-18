@@ -14,6 +14,15 @@ use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Illuminate\Http\Response;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\DailySalesExport;
+use App\Exports\MonthlySalesExport;
+use App\Exports\ProductSalesExport;
+use App\Exports\TopSellingExport;
+use App\Exports\LowStockExport;
+use App\Exports\WalkinVsOnlineExport;
+use App\Exports\OrderSummaryExport;
+use App\Exports\TopCustomersExport;
 
 class ReportController extends Controller
 {
@@ -446,498 +455,242 @@ class ReportController extends Controller
     }
 
     /**
-     * Export Daily Sales Report
+     * Export Daily Sales
      */
-    public function exportDailySales(Request $request, $format = 'csv')
+    public function exportDailySales($format, Request $request)
     {
         $date = $request->get('date', now()->format('Y-m-d'));
 
-        $sales = Order::whereDate('created_at', $date)
-            ->select(
-                DB::raw('COUNT(*) as total_orders'),
-                DB::raw('SUM(total) as total_revenue'),
-                DB::raw('SUM(CASE WHEN payment_status = "paid" THEN total ELSE 0 END) as paid_revenue'),
-                DB::raw('SUM(CASE WHEN payment_status = "pending" THEN total ELSE 0 END) as pending_revenue')
-            )
-            ->first();
-
-        $paymentMethods = Order::whereDate('created_at', $date)
-            ->select('payment_method', DB::raw('COUNT(*) as count'), DB::raw('SUM(total) as total'))
-            ->groupBy('payment_method')
-            ->get();
-
-        $hourlySales = Order::whereDate('created_at', $date)
-            ->select(DB::raw('HOUR(created_at) as hour'), DB::raw('COUNT(*) as orders'), DB::raw('SUM(total) as revenue'))
-            ->groupBy(DB::raw('HOUR(created_at)'))
-            ->orderBy('hour')
-            ->get();
-
-        $data = [
-            'date' => $date,
-            'formatted_date' => Carbon::parse($date)->format('F d, Y'),
-            'sales' => $sales,
-            'paymentMethods' => $paymentMethods,
-            'hourlySales' => $hourlySales,
-            'generated_at' => now()->format('Y-m-d H:i:s')
-        ];
-
         if ($format == 'pdf') {
-            return $this->exportDailySalesPDF($data);
-        }
-
-        return $this->exportDailySalesCSV($data);
-    }
-
-    /**
-     * Export Daily Sales as CSV
-     */
-    private function exportDailySalesCSV($data)
-    {
-        $filename = 'daily-sales-' . $data['date'] . '.csv';
-        $handle = fopen('php://memory', 'r+');
-
-        // Add headers
-        fputcsv($handle, ['Daily Sales Report - ' . $data['formatted_date']]);
-        fputcsv($handle, ['Generated at: ' . $data['generated_at']]);
-        fputcsv($handle, []); // Empty line
-
-        // Summary
-        fputcsv($handle, ['SUMMARY']);
-        fputcsv($handle, ['Total Orders', 'Total Revenue', 'Paid Revenue', 'Pending Revenue', 'Average Order']);
-        fputcsv($handle, [
-            $data['sales']->total_orders ?? 0,
-            $data['sales']->total_revenue ?? 0,
-            $data['sales']->paid_revenue ?? 0,
-            $data['sales']->pending_revenue ?? 0,
-            $data['sales']->total_orders > 0 ? round($data['sales']->total_revenue / $data['sales']->total_orders, 2) : 0
-        ]);
-        fputcsv($handle, []); // Empty line
-
-        // Payment Methods
-        fputcsv($handle, ['PAYMENT METHODS']);
-        fputcsv($handle, ['Method', 'Orders', 'Revenue']);
-        foreach ($data['paymentMethods'] as $method) {
-            fputcsv($handle, [
-                $method->payment_method ?? 'cash_on_delivery',
-                $method->count,
-                $method->total
+            $sales = Order::whereDate('created_at', $date)->get();
+            $pdf = Pdf::loadView('admin.reports.exports.daily-sales-pdf', [
+                'sales' => $sales,
+                'date' => $date
             ]);
-        }
-        fputcsv($handle, []); // Empty line
-
-        // Hourly Breakdown
-        fputcsv($handle, ['HOURLY BREAKDOWN']);
-        fputcsv($handle, ['Hour', 'Orders', 'Revenue']);
-
-        $hourlyArray = [];
-        for($i = 0; $i < 24; $i++) {
-            $hourlyArray[$i] = ['orders' => 0, 'revenue' => 0];
-        }
-        foreach ($data['hourlySales'] as $sale) {
-            $hourlyArray[$sale->hour] = [
-                'orders' => $sale->orders,
-                'revenue' => $sale->revenue
-            ];
+            return $pdf->download('daily-sales-' . $date . '.pdf');
         }
 
-        foreach ($hourlyArray as $hour => $stats) {
-            if ($stats['orders'] > 0 || $stats['revenue'] > 0) {
-                fputcsv($handle, [
-                    sprintf('%02d:00 - %02d:00', $hour, $hour+1),
-                    $stats['orders'],
-                    $stats['revenue']
-                ]);
-            }
-        }
-
-        rewind($handle);
-        $content = stream_get_contents($handle);
-        fclose($handle);
-
-        return Response::make($content, 200, [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
-        ]);
+        return Excel::download(
+            new DailySalesExport($date),
+            'daily-sales-' . $date . '.xlsx'
+        );
     }
 
     /**
-     * Export Daily Sales as PDF
+     * Export Monthly Sales
      */
-    private function exportDailySalesPDF($data)
-    {
-        $pdf = Pdf::loadView('admin.reports.exports.daily-sales-pdf', $data);
-        return $pdf->download('daily-sales-' . $data['date'] . '.pdf');
-    }
-
-    /**
-     * Export Monthly Sales Report
-     */
-    public function exportMonthlySales(Request $request, $format = 'csv')
+    public function exportMonthlySales($format, Request $request)
     {
         $year = $request->get('year', now()->year);
         $month = $request->get('month', now()->month);
 
-        $startDate = Carbon::create($year, $month, 1)->startOfMonth();
-        $endDate = Carbon::create($year, $month, 1)->endOfMonth();
-
-        $sales = Order::whereBetween('created_at', [$startDate, $endDate])
-            ->select(
-                DB::raw('COUNT(*) as total_orders'),
-                DB::raw('SUM(total) as total_revenue'),
-                DB::raw('AVG(total) as average_order_value'),
-                DB::raw('COUNT(DISTINCT user_id) as unique_customers')
-            )
-            ->first();
-
-        $dailyBreakdown = Order::whereBetween('created_at', [$startDate, $endDate])
-            ->select(DB::raw('DATE(created_at) as date'), DB::raw('COUNT(*) as orders'), DB::raw('SUM(total) as revenue'))
-            ->groupBy(DB::raw('DATE(created_at)'))
-            ->orderBy('date')
-            ->get();
-
-        $statusBreakdown = Order::whereBetween('created_at', [$startDate, $endDate])
-            ->select('status', DB::raw('COUNT(*) as count'), DB::raw('SUM(total) as total'))
-            ->groupBy('status')
-            ->get();
-
-        $growthData = $this->calculateGrowth($year, $month);
-
-        $data = [
-            'year' => $year,
-            'month' => $month,
-            'month_name' => Carbon::create($year, $month, 1)->format('F Y'),
-            'sales' => $sales,
-            'dailyBreakdown' => $dailyBreakdown,
-            'statusBreakdown' => $statusBreakdown,
-            'growthData' => $growthData,
-            'generated_at' => now()->format('Y-m-d H:i:s')
-        ];
-
         if ($format == 'pdf') {
-            return $this->exportMonthlySalesPDF($data);
+            $startDate = Carbon::create($year, $month, 1)->startOfMonth();
+            $endDate = Carbon::create($year, $month, 1)->endOfMonth();
+            $sales = Order::whereBetween('created_at', [$startDate, $endDate])->get();
+
+            $pdf = Pdf::loadView('admin.reports.exports.monthly-sales-pdf', [
+                'sales' => $sales,
+                'year' => $year,
+                'month' => $month
+            ]);
+            return $pdf->download('monthly-sales-' . $year . '-' . $month . '.pdf');
         }
 
-        return $this->exportMonthlySalesCSV($data);
+        return Excel::download(
+            new MonthlySalesExport($year, $month),
+            'monthly-sales-' . $year . '-' . $month . '.xlsx'
+        );
     }
 
     /**
-     * Export Monthly Sales as CSV
+     * Export Product Sales
      */
-    private function exportMonthlySalesCSV($data)
-    {
-        $filename = 'monthly-sales-' . $data['year'] . '-' . $data['month'] . '.csv';
-        $handle = fopen('php://memory', 'r+');
-
-        fputcsv($handle, ['Monthly Sales Report - ' . $data['month_name']]);
-        fputcsv($handle, ['Generated at: ' . $data['generated_at']]);
-        fputcsv($handle, []);
-
-        // Summary
-        fputcsv($handle, ['SUMMARY']);
-        fputcsv($handle, ['Total Orders', 'Total Revenue', 'Avg Order Value', 'Unique Customers']);
-        fputcsv($handle, [
-            $data['sales']->total_orders ?? 0,
-            $data['sales']->total_revenue ?? 0,
-            $data['sales']->average_order_value ?? 0,
-            $data['sales']->unique_customers ?? 0
-        ]);
-        fputcsv($handle, []);
-
-        // Growth
-        fputcsv($handle, ['GROWTH VS PREVIOUS MONTH']);
-        fputcsv($handle, ['Metric', 'Current', 'Previous', 'Growth %']);
-        fputcsv($handle, [
-            'Revenue',
-            $data['growthData']['current_revenue'],
-            $data['growthData']['previous_revenue'],
-            $data['growthData']['revenue_growth'] . '%'
-        ]);
-        fputcsv($handle, [
-            'Orders',
-            $data['growthData']['current_orders'],
-            $data['growthData']['previous_orders'],
-            $data['growthData']['orders_growth'] . '%'
-        ]);
-        fputcsv($handle, []);
-
-        // Status Breakdown
-        fputcsv($handle, ['ORDER STATUS BREAKDOWN']);
-        fputcsv($handle, ['Status', 'Count', 'Total']);
-        foreach ($data['statusBreakdown'] as $status) {
-            fputcsv($handle, [$status->status, $status->count, $status->total]);
-        }
-        fputcsv($handle, []);
-
-        // Daily Breakdown
-        fputcsv($handle, ['DAILY BREAKDOWN']);
-        fputcsv($handle, ['Date', 'Orders', 'Revenue', 'Trend']);
-        foreach ($data['dailyBreakdown'] as $day) {
-            fputcsv($handle, [$day->date, $day->orders, $day->revenue, '']);
-        }
-
-        rewind($handle);
-        $content = stream_get_contents($handle);
-        fclose($handle);
-
-        return Response::make($content, 200, [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
-        ]);
-    }
-
-    /**
-     * Export Monthly Sales as PDF
-     */
-    private function exportMonthlySalesPDF($data)
-    {
-        $pdf = Pdf::loadView('admin.reports.exports.monthly-sales-pdf', $data);
-        return $pdf->download('monthly-sales-' . $data['year'] . '-' . $data['month'] . '.pdf');
-    }
-
-    /**
-     * Export Product Sales Report
-     */
-    public function exportProductSales(Request $request, $format = 'csv')
+    public function exportProductSales($format, Request $request)
     {
         $startDate = $request->get('start_date', now()->startOfMonth()->format('Y-m-d'));
         $endDate = $request->get('end_date', now()->format('Y-m-d'));
 
-        $products = OrderItem::select(
-                'product_id',
-                'product_name',
-                DB::raw('SUM(quantity) as total_quantity'),
-                DB::raw('SUM(subtotal) as total_revenue'),
-                DB::raw('COUNT(DISTINCT order_id) as order_count')
-            )
-            ->whereBetween('created_at', [$startDate, $endDate])
-            ->groupBy('product_id', 'product_name')
-            ->orderByDesc('total_revenue')
-            ->get();
+        if ($format == 'pdf') {
+            $products = OrderItem::whereBetween('created_at', [$startDate, $endDate])
+                ->select('product_name', DB::raw('SUM(quantity) as total_quantity'), DB::raw('SUM(subtotal) as total_revenue'))
+                ->groupBy('product_name')
+                ->orderByDesc('total_revenue')
+                ->get();
 
-        $summary = OrderItem::whereBetween('created_at', [$startDate, $endDate])
-            ->select(
-                DB::raw('SUM(quantity) as total_items_sold'),
-                DB::raw('SUM(subtotal) as total_revenue'),
-                DB::raw('COUNT(DISTINCT product_id) as unique_products')
-            )
-            ->first();
+            $pdf = Pdf::loadView('admin.reports.exports.product-sales-pdf', [
+                'products' => $products,
+                'startDate' => $startDate,
+                'endDate' => $endDate
+            ]);
+            return $pdf->download('product-sales-' . $startDate . '-to-' . $endDate . '.pdf');
+        }
 
-        $data = [
-            'start_date' => $startDate,
-            'end_date' => $endDate,
-            'formatted_start' => Carbon::parse($startDate)->format('M d, Y'),
-            'formatted_end' => Carbon::parse($endDate)->format('M d, Y'),
-            'products' => $products,
-            'summary' => $summary,
-            'generated_at' => now()->format('Y-m-d H:i:s')
-        ];
+        return Excel::download(
+            new ProductSalesExport($startDate, $endDate),
+            'product-sales-' . $startDate . '-to-' . $endDate . '.xlsx'
+        );
+    }
+
+    /**
+     * Export Top Selling
+     */
+    public function exportTopSelling($format, Request $request)
+    {
+        $period = $request->get('period', 'month');
 
         if ($format == 'pdf') {
-            return $this->exportProductSalesPDF($data);
-        }
+            $query = OrderItem::select('product_name', DB::raw('SUM(quantity) as total_quantity'), DB::raw('SUM(subtotal) as total_revenue'))
+                ->groupBy('product_name')
+                ->orderByDesc('total_revenue')
+                ->limit(50);
 
-        return $this->exportProductSalesCSV($data);
-    }
+            switch($period) {
+                case 'week':
+                    $query->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()]);
+                    break;
+                case 'month':
+                    $query->whereMonth('created_at', now()->month);
+                    break;
+                case 'year':
+                    $query->whereYear('created_at', now()->year);
+                    break;
+            }
 
-    /**
-     * Export Product Sales as CSV
-     */
-    private function exportProductSalesCSV($data)
-    {
-        $filename = 'product-sales-' . $data['start_date'] . '-to-' . $data['end_date'] . '.csv';
-        $handle = fopen('php://memory', 'r+');
+            $products = $query->get();
 
-        fputcsv($handle, ['Product Sales Report - ' . $data['formatted_start'] . ' to ' . $data['formatted_end']]);
-        fputcsv($handle, ['Generated at: ' . $data['generated_at']]);
-        fputcsv($handle, []);
-
-        // Summary
-        fputcsv($handle, ['SUMMARY']);
-        fputcsv($handle, ['Total Items Sold', 'Total Revenue', 'Unique Products']);
-        fputcsv($handle, [
-            $data['summary']->total_items_sold ?? 0,
-            $data['summary']->total_revenue ?? 0,
-            $data['summary']->unique_products ?? 0
-        ]);
-        fputcsv($handle, []);
-
-        // Product List
-        fputcsv($handle, ['PRODUCT SALES DETAILS']);
-        fputcsv($handle, ['Product', 'Quantity Sold', 'Revenue', 'Order Count', 'Avg Price', '% of Sales']);
-
-        foreach ($data['products'] as $product) {
-            $avgPrice = $product->total_quantity > 0 ? $product->total_revenue / $product->total_quantity : 0;
-            $percentage = $data['summary']->total_revenue > 0 ? ($product->total_revenue / $data['summary']->total_revenue) * 100 : 0;
-
-            fputcsv($handle, [
-                $product->product_name,
-                $product->total_quantity,
-                $product->total_revenue,
-                $product->order_count,
-                round($avgPrice, 2),
-                round($percentage, 2) . '%'
+            $pdf = Pdf::loadView('admin.reports.exports.top-selling-pdf', [
+                'products' => $products,
+                'period' => $period
             ]);
+            return $pdf->download('top-selling-' . $period . '.pdf');
         }
 
-        rewind($handle);
-        $content = stream_get_contents($handle);
-        fclose($handle);
-
-        return Response::make($content, 200, [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
-        ]);
+        return Excel::download(
+            new TopSellingExport($period),
+            'top-selling-' . $period . '.xlsx'
+        );
     }
 
     /**
-     * Export Product Sales as PDF
+     * Export Low Stock
      */
-    private function exportProductSalesPDF($data)
-    {
-        $pdf = Pdf::loadView('admin.reports.exports.product-sales-pdf', $data);
-        return $pdf->download('product-sales-' . $data['start_date'] . '-to-' . $data['end_date'] . '.pdf');
-    }
-
-    /**
-     * Export Low Stock Report
-     */
-    public function exportLowStock(Request $request, $format = 'csv')
+    public function exportLowStock($format, Request $request)
     {
         $threshold = $request->get('threshold', 10);
 
-        $products = Product::where('stock_quantity', '<=', $threshold)
-            ->where('stock_quantity', '>', 0)
-            ->orderBy('stock_quantity')
-            ->get();
-
-        $outOfStock = Product::where('stock_quantity', '<=', 0)->count();
-
-        $data = [
-            'threshold' => $threshold,
-            'products' => $products,
-            'outOfStock' => $outOfStock,
-            'generated_at' => now()->format('Y-m-d H:i:s')
-        ];
-
         if ($format == 'pdf') {
-            $pdf = Pdf::loadView('admin.reports.exports.low-stock-pdf', $data);
+            $products = Product::where('stock_quantity', '<=', $threshold)
+                ->where('stock_quantity', '>', 0)
+                ->with('category')
+                ->orderBy('stock_quantity')
+                ->get();
+
+            $pdf = Pdf::loadView('admin.reports.exports.low-stock-pdf', [
+                'products' => $products,
+                'threshold' => $threshold
+            ]);
             return $pdf->download('low-stock-report.pdf');
         }
 
-        return $this->exportLowStockCSV($data);
+        return Excel::download(
+            new LowStockExport($threshold),
+            'low-stock-report.xlsx'
+        );
     }
 
     /**
-     * Export Low Stock as CSV
+     * Export Walk-in vs Online
      */
-    private function exportLowStockCSV($data)
+    public function exportWalkinVsOnline($format, Request $request)
     {
-        $filename = 'low-stock-report.csv';
-        $handle = fopen('php://memory', 'r+');
+        $startDate = $request->get('start_date', now()->startOfMonth()->format('Y-m-d'));
+        $endDate = $request->get('end_date', now()->format('Y-m-d'));
 
-        fputcsv($handle, ['LOW STOCK REPORT']);
-        fputcsv($handle, ['Threshold: ≤ ' . $data['threshold'] . ' units']);
-        fputcsv($handle, ['Out of Stock: ' . $data['outOfStock']]);
-        fputcsv($handle, ['Generated at: ' . $data['generated_at']]);
-        fputcsv($handle, []);
+        if ($format == 'pdf') {
+            $orders = Order::whereBetween('created_at', [$startDate, $endDate])
+                ->with('items')
+                ->orderBy('order_type')
+                ->orderBy('created_at', 'desc')
+                ->get();
 
-        fputcsv($handle, ['PRODUCTS BELOW THRESHOLD']);
-        fputcsv($handle, ['Product', 'SKU', 'Category', 'Current Stock', 'Status', 'Last Updated']);
-
-        foreach ($data['products'] as $product) {
-            $status = $product->stock_quantity <= 0 ? 'Out of Stock' : ($product->stock_quantity <= 5 ? 'Critical' : 'Low');
-
-            fputcsv($handle, [
-                $product->name,
-                $product->sku,
-                $product->category->name ?? 'Uncategorized',
-                $product->stock_quantity,
-                $status,
-                $product->updated_at->format('Y-m-d H:i')
+            $pdf = Pdf::loadView('admin.reports.exports.walkin-vs-online-pdf', [
+                'orders' => $orders,
+                'startDate' => $startDate,
+                'endDate' => $endDate
             ]);
+            return $pdf->download('walkin-vs-online.pdf');
         }
 
-        rewind($handle);
-        $content = stream_get_contents($handle);
-        fclose($handle);
-
-        return Response::make($content, 200, [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
-        ]);
+        return Excel::download(
+            new WalkinVsOnlineExport($startDate, $endDate),
+            'walkin-vs-online.xlsx'
+        );
     }
 
     /**
-     * Export Top Customers Report
+     * Export Order Summary
      */
-    public function exportTopCustomers(Request $request, $format = 'csv')
+    public function exportOrderSummary($format, Request $request)
+    {
+        $startDate = $request->get('start_date', now()->startOfMonth()->format('Y-m-d'));
+        $endDate = $request->get('end_date', now()->format('Y-m-d'));
+
+        if ($format == 'pdf') {
+            $orders = Order::whereBetween('created_at', [$startDate, $endDate])
+                ->with('items')
+                ->orderBy('status')
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            $pdf = Pdf::loadView('admin.reports.exports.order-summary-pdf', [
+                'orders' => $orders,
+                'startDate' => $startDate,
+                'endDate' => $endDate
+            ]);
+            return $pdf->download('order-summary.pdf');
+        }
+
+        return Excel::download(
+            new OrderSummaryExport($startDate, $endDate),
+            'order-summary.xlsx'
+        );
+    }
+
+    /**
+     * Export Top Customers
+     */
+    public function exportTopCustomers($format, Request $request)
     {
         $startDate = $request->get('start_date', now()->startOfYear()->format('Y-m-d'));
         $endDate = $request->get('end_date', now()->format('Y-m-d'));
 
-        $customers = User::where('is_admin', false)
-            ->withCount(['orders' => function($query) use ($startDate, $endDate) {
-                $query->whereBetween('created_at', [$startDate, $endDate]);
-            }])
-            ->withSum(['orders as total_spent' => function($query) use ($startDate, $endDate) {
-                $query->whereBetween('created_at', [$startDate, $endDate]);
-            }], 'total')
-            ->orderByDesc('total_spent')
-            ->limit(50)
-            ->get();
-
-        $data = [
-            'start_date' => $startDate,
-            'end_date' => $endDate,
-            'formatted_start' => Carbon::parse($startDate)->format('M d, Y'),
-            'formatted_end' => Carbon::parse($endDate)->format('M d, Y'),
-            'customers' => $customers,
-            'generated_at' => now()->format('Y-m-d H:i:s')
-        ];
-
         if ($format == 'pdf') {
-            $pdf = Pdf::loadView('admin.reports.exports.top-customers-pdf', $data);
+            $customers = User::where('is_admin', false)
+                ->withCount(['orders' => function($query) use ($startDate, $endDate) {
+                    $query->whereBetween('created_at', [$startDate, $endDate]);
+                }])
+                ->withSum(['orders as total_spent' => function($query) use ($startDate, $endDate) {
+                    $query->whereBetween('created_at', [$startDate, $endDate]);
+                }], 'total')
+                ->having('orders_count', '>', 0)
+                ->orderByDesc('total_spent')
+                ->limit(100)
+                ->get();
+
+            $pdf = Pdf::loadView('admin.reports.exports.top-customers-pdf', [
+                'customers' => $customers,
+                'startDate' => $startDate,
+                'endDate' => $endDate
+            ]);
             return $pdf->download('top-customers.pdf');
         }
 
-        return $this->exportTopCustomersCSV($data);
+        return Excel::download(
+            new TopCustomersExport($startDate, $endDate),
+            'top-customers.xlsx'
+        );
+
     }
 
-    /**
-     * Export Top Customers as CSV
-     */
-    private function exportTopCustomersCSV($data)
-    {
-        $filename = 'top-customers.csv';
-        $handle = fopen('php://memory', 'r+');
-
-        fputcsv($handle, ['TOP CUSTOMERS REPORT']);
-        fputcsv($handle, ['Period: ' . $data['formatted_start'] . ' to ' . $data['formatted_end']]);
-        fputcsv($handle, ['Generated at: ' . $data['generated_at']]);
-        fputcsv($handle, []);
-
-        fputcsv($handle, ['Customer', 'Email', 'Orders Count', 'Total Spent', 'Average per Order', 'Joined']);
-
-        foreach ($data['customers'] as $customer) {
-            $avgOrder = $customer->orders_count > 0 ? $customer->total_spent / $customer->orders_count : 0;
-
-            fputcsv($handle, [
-                $customer->name,
-                $customer->email,
-                $customer->orders_count,
-                $customer->total_spent ?? 0,
-                round($avgOrder, 2),
-                $customer->created_at->format('Y-m-d')
-            ]);
-        }
-
-        rewind($handle);
-        $content = stream_get_contents($handle);
-        fclose($handle);
-
-        return Response::make($content, 200, [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
-        ]);
-    }
 }

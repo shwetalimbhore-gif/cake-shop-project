@@ -21,6 +21,23 @@
                     <i class="fas fa-filter me-2"></i>Apply Filter
                 </button>
             </div>
+            <div class="btn-group">
+                <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown">
+                    <i class="fas fa-download me-2"></i>Export
+                </button>
+                <ul class="dropdown-menu">
+                    <li>
+                        <a class="dropdown-item" href="{{ route('admin.reports.export.walkin-vs-online', ['format' => 'excel', 'start_date' => $startDate, 'end_date' => $endDate]) }}">
+                            <i class="fas fa-file-excel me-2 text-success"></i>Export as Excel
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="{{ route('admin.reports.export.walkin-vs-online', ['format' => 'pdf', 'start_date' => $startDate, 'end_date' => $endDate]) }}">
+                            <i class="fas fa-file-pdf me-2 text-danger"></i>Export as PDF
+                        </a>
+                    </li>
+                </ul>
+            </div>
         </form>
     </div>
 </div>
