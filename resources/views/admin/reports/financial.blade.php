@@ -1,0 +1,464 @@
+{{-- resources/views/admin/reports/financial.blade.php --}}
+@extends('layouts.admin')
+
+@section('title', 'Financial Reports - Admin Panel')
+@section('page-title', 'Financial Reports')
+
+@section('content')
+<div class="container-fluid">
+    <!-- Date Range Filter -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title">Filter Reports</h5>
+            <div class="card-tools">
+                <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                    <i class="fas fa-minus"></i>
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            <form method="GET" action="{{ route('admin.reports.financial') }}" id="filterForm">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>Start Date</label>
+                            <input type="date" name="start_date" class="form-control" value="{{ $startDate->format('Y-m-d') }}">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>End Date</label>
+                            <input type="date" name="end_date" class="form-control" value="{{ $endDate->format('Y-m-d') }}">
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-right">
+                        <button type="submit" class="btn btn-primary mt-4">
+                            <i class="fas fa-filter"></i> Apply Filters
+                        </button>
+                        <a href="{{ route('admin.reports.financial') }}" class="btn btn-secondary mt-4">
+                            <i class="fas fa-redo"></i> Reset
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Financial Summary Cards -->
+    <div class="row">
+        <div class="col-lg-3 col-6">
+            <div class="small-box bg-success">
+                <div class="inner">
+                    <h3>${{ number_format($totalRevenue, 2) }}</h3>
+                    <p>Total Revenue</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-dollar-sign"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-6">
+            <div class="small-box bg-danger">
+                <div class="inner">
+                    <h3>${{ number_format($totalCost, 2) }}</h3>
+                    <p>Total Cost</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-coins"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-6">
+            <div class="small-box bg-warning">
+                <div class="inner">
+                    <h3>${{ number_format($totalProfit, 2) }}</h3>
+                    <p>Total Profit</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-chart-pie"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-6">
+            <div class="small-box bg-info">
+                <div class="inner">
+                    <h3>{{ number_format($profitMargin, 1) }}%</h3>
+                    <p>Profit Margin</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-percent"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profit Chart -->
+    <div class="row" id="profit">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Revenue vs Cost Analysis</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="profitChart" style="min-height: 400px;"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profit by Product -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Profit by Product</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-bordered table-striped">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Quantity Sold</th>
+                                <th>Revenue</th>
+                                <th>Cost</th>
+                                <th>Profit</th>
+                                <th>Margin</th>
+                                <th>Performance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($profitData as $item)
+                            <tr>
+                                <td>{{ $item->name }}</td>
+                                <td>{{ $item->quantity_sold }}</td>
+                                <td>${{ number_format($item->revenue, 2) }}</td>
+                                <td>${{ number_format($item->total_cost, 2) }}</td>
+                                <td class="{{ $item->profit >= 0 ? 'text-success' : 'text-danger' }}">
+                                    ${{ number_format($item->profit, 2) }}
+                                </td>
+                                <td>
+                                    @php
+                                        $marginColor = $item->margin >= 30 ? 'success' : ($item->margin >= 15 ? 'warning' : 'danger');
+                                    @endphp
+                                    <span class="badge badge-{{ $marginColor }}">{{ number_format($item->margin, 1) }}%</span>
+                                </td>
+                                <td>
+                                    @if($item->margin >= 30)
+                                        <i class="fas fa-arrow-up text-success"></i> High
+                                    @elseif($item->margin >= 15)
+                                        <i class="fas fa-arrow-right text-warning"></i> Medium
+                                    @else
+                                        <i class="fas fa-arrow-down text-danger"></i> Low
+                                    @endif
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Discount Impact & Payment Methods -->
+    <div class="row">
+        <div class="col-lg-6" id="discounts">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Discount Impact</h5>
+                </div>
+                <div class="card-body">
+                    <div class="info-box bg-warning">
+                        <span class="info-box-icon"><i class="fas fa-tags"></i></span>
+                        <div class="info-box-content">
+                            <span class="info-box-text">Orders with Discount</span>
+                            <span class="info-box-number">{{ $discountImpact->orders_with_discount }}</span>
+                        </div>
+                    </div>
+                    <div class="info-box bg-info">
+                        <span class="info-box-icon"><i class="fas fa-money-bill"></i></span>
+                        <div class="info-box-content">
+                            <span class="info-box-text">Total Discount Given</span>
+                            <span class="info-box-number">${{ number_format($discountImpact->total_discount_given, 2) }}</span>
+                        </div>
+                    </div>
+                    <div class="info-box bg-success">
+                        <span class="info-box-icon"><i class="fas fa-chart-line"></i></span>
+                        <div class="info-box-content">
+                            <span class="info-box-text">Avg Discount per Order</span>
+                            <span class="info-box-number">${{ number_format($discountImpact->avg_discount, 2) }}</span>
+                        </div>
+                    </div>
+
+                    <h6 class="mt-4">Revenue Comparison</h6>
+                    <div class="progress-group">
+                        <span class="progress-text">With Discount</span>
+                        <span class="float-right">${{ number_format($discountImpact->revenue_with_discount, 2) }}</span>
+                        <div class="progress sm">
+                            @php
+                                $totalRevenue = $discountImpact->revenue_with_discount + ($discountImpact->revenue_without_discount ?? 0);
+                                $withDiscountPercent = $totalRevenue > 0 ? ($discountImpact->revenue_with_discount / $totalRevenue) * 100 : 0;
+                            @endphp
+                            <div class="progress-bar progress-bar-success" style="width: {{ $withDiscountPercent }}%"></div>
+                        </div>
+                    </div>
+                    <div class="progress-group">
+                        <span class="progress-text">Without Discount</span>
+                        <span class="float-right">${{ number_format($discountImpact->revenue_without_discount ?? 0, 2) }}</span>
+                        <div class="progress sm">
+                            <div class="progress-bar progress-bar-primary" style="width: {{ 100 - $withDiscountPercent }}%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6" id="payments">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Payment Methods</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="paymentChart" style="min-height: 250px;"></canvas>
+                    <table class="table table-sm mt-3">
+                        @foreach($paymentMethods as $method)
+                        <tr>
+                            <td>
+                                @switch($method->payment_method)
+                                    @case('cash')
+                                        <i class="fas fa-money-bill-wave text-success"></i>
+                                        @break
+                                    @case('card')
+                                        <i class="fas fa-credit-card text-primary"></i>
+                                        @break
+                                    @case('upi')
+                                        <i class="fas fa-mobile-alt text-info"></i>
+                                        @break
+                                    @default
+                                        <i class="fas fa-circle text-secondary"></i>
+                                @endswitch
+                                {{ ucfirst($method->payment_method) }}
+                            </td>
+                            <td>{{ $method->count }} orders</td>
+                            <td>${{ number_format($method->total, 2) }}</td>
+                            <td>
+                                @php
+                                    $totalPayments = $paymentMethods->sum('total');
+                                    $percent = $totalPayments > 0 ? ($method->total / $totalPayments) * 100 : 0;
+                                @endphp
+                                {{ number_format($percent, 1) }}%
+                            </td>
+                        </tr>
+                        @endforeach
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Seasonal Revenue -->
+    <div class="row" id="seasonal">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Seasonal Revenue Trends</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="seasonalChart" style="min-height: 300px;"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@endsection
+
+@section('scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+$(document).ready(function() {
+    // Profit Chart
+    var ctx1 = document.getElementById('profitChart').getContext('2d');
+    var profitChart = new Chart(ctx1, {
+        type: 'bar',
+        data: {
+            labels: {!! json_encode($profitData->pluck('name')) !!},
+            datasets: [
+                {
+                    label: 'Revenue',
+                    data: {!! json_encode($profitData->pluck('revenue')) !!},
+                    backgroundColor: 'rgba(40,167,69,0.8)',
+                    borderColor: 'rgba(40,167,69,1)',
+                    borderWidth: 1
+                },
+                {
+                    label: 'Cost',
+                    data: {!! json_encode($profitData->pluck('total_cost')) !!},
+                    backgroundColor: 'rgba(220,53,69,0.8)',
+                    borderColor: 'rgba(220,53,69,1)',
+                    borderWidth: 1
+                },
+                {
+                    label: 'Profit',
+                    data: {!! json_encode($profitData->pluck('profit')) !!},
+                    backgroundColor: 'rgba(255,193,7,0.8)',
+                    borderColor: 'rgba(255,193,7,1)',
+                    borderWidth: 1,
+                    type: 'line',
+                    yAxisID: 'y1'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    position: 'left',
+                    ticks: {
+                        callback: function(value) {
+                            return '$' + value;
+                        }
+                    }
+                },
+                y1: {
+                    beginAtZero: true,
+                    position: 'right',
+                    grid: {
+                        drawOnChartArea: false
+                    },
+                    ticks: {
+                        callback: function(value) {
+                            return '$' + value;
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Payment Methods Chart
+    var ctx2 = document.getElementById('paymentChart').getContext('2d');
+    var paymentChart = new Chart(ctx2, {
+        type: 'doughnut',
+        data: {
+            labels: {!! json_encode($paymentMethods->pluck('payment_method')->map(function($m) { return ucfirst($m); })) !!},
+            datasets: [{
+                data: {!! json_encode($paymentMethods->pluck('total')) !!},
+                backgroundColor: [
+                    'rgba(40,167,69,0.8)',
+                    'rgba(23,162,184,0.8)',
+                    'rgba(255,193,7,0.8)',
+                    'rgba(108,117,125,0.8)'
+                ],
+                borderColor: [
+                    'rgba(40,167,69,1)',
+                    'rgba(23,162,184,1)',
+                    'rgba(255,193,7,1)',
+                    'rgba(108,117,125,1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.label || '';
+                            let value = context.raw || 0;
+                            let total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            let percentage = Math.round((value / total) * 100);
+                            return label + ': $' + value.toFixed(2) + ' (' + percentage + '%)';
+                        }
+                    }
+                },
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+
+    // Seasonal Chart
+    var ctx3 = document.getElementById('seasonalChart').getContext('2d');
+    var seasonalChart = new Chart(ctx3, {
+        type: 'line',
+        data: {
+            labels: {!! json_encode($seasonalRevenue->keys()->map(function($date) {
+                return \Carbon\Carbon::parse($date)->format('M d');
+            })) !!},
+            datasets: [{
+                label: 'Daily Revenue',
+                data: {!! json_encode($seasonalRevenue->map(function($day) {
+                    return $day->sum('revenue');
+                })) !!},
+                borderColor: 'rgba(153,102,255,1)',
+                backgroundColor: 'rgba(153,102,255,0.1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '$' + value;
+                        }
+                    }
+                }
+            },
+            plugins: {
+                annotation: {
+                    annotations: {
+                        valentines: {
+                            type: 'line',
+                            xMin: 'Feb 14',
+                            xMax: 'Feb 14',
+                            borderColor: 'red',
+                            borderWidth: 2,
+                            label: {
+                                content: 'Valentine\'s Day',
+                                enabled: true,
+                                position: 'top'
+                            }
+                        },
+                        diwali: {
+                            type: 'line',
+                            xMin: 'Nov 12',
+                            xMax: 'Nov 12',
+                            borderColor: 'orange',
+                            borderWidth: 2,
+                            label: {
+                                content: 'Diwali',
+                                enabled: true,
+                                position: 'top'
+                            }
+                        },
+                        christmas: {
+                            type: 'line',
+                            xMin: 'Dec 25',
+                            xMax: 'Dec 25',
+                            borderColor: 'green',
+                            borderWidth: 2,
+                            label: {
+                                content: 'Christmas',
+                                enabled: true,
+                                position: 'top'
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+@endsection
