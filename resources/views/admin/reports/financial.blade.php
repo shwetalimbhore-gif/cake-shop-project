@@ -38,6 +38,16 @@
                         <a href="{{ route('admin.reports.financial') }}" class="btn btn-secondary mt-4">
                             <i class="fas fa-redo"></i> Reset
                         </a>
+                        <div class="btn-group mt-4">
+                            <button type="button" class="btn btn-success dropdown-toggle" data-toggle="dropdown">
+                                <i class="fas fa-download"></i> Export
+                            </button>
+                            <div class="dropdown-menu">
+                                <a class="dropdown-item" href="#" onclick="exportReport('csv')">CSV</a>
+                                <a class="dropdown-item" href="#" onclick="exportReport('excel')">Excel</a>
+                                <a class="dropdown-item" href="#" onclick="exportReport('pdf')">PDF</a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </form>
@@ -123,7 +133,6 @@
                                 <th>Cost</th>
                                 <th>Profit</th>
                                 <th>Margin</th>
-                                <th>Performance</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -141,15 +150,6 @@
                                         $marginColor = $item->margin >= 30 ? 'success' : ($item->margin >= 15 ? 'warning' : 'danger');
                                     @endphp
                                     <span class="badge badge-{{ $marginColor }}">{{ number_format($item->margin, 1) }}%</span>
-                                </td>
-                                <td>
-                                    @if($item->margin >= 30)
-                                        <i class="fas fa-arrow-up text-success"></i> High
-                                    @elseif($item->margin >= 15)
-                                        <i class="fas fa-arrow-right text-warning"></i> Medium
-                                    @else
-                                        <i class="fas fa-arrow-down text-danger"></i> Low
-                                    @endif
                                 </td>
                             </tr>
                             @endforeach
@@ -189,26 +189,6 @@
                             <span class="info-box-number">${{ number_format($discountImpact->avg_discount, 2) }}</span>
                         </div>
                     </div>
-
-                    <h6 class="mt-4">Revenue Comparison</h6>
-                    <div class="progress-group">
-                        <span class="progress-text">With Discount</span>
-                        <span class="float-right">${{ number_format($discountImpact->revenue_with_discount, 2) }}</span>
-                        <div class="progress sm">
-                            @php
-                                $totalRevenue = $discountImpact->revenue_with_discount + ($discountImpact->revenue_without_discount ?? 0);
-                                $withDiscountPercent = $totalRevenue > 0 ? ($discountImpact->revenue_with_discount / $totalRevenue) * 100 : 0;
-                            @endphp
-                            <div class="progress-bar progress-bar-success" style="width: {{ $withDiscountPercent }}%"></div>
-                        </div>
-                    </div>
-                    <div class="progress-group">
-                        <span class="progress-text">Without Discount</span>
-                        <span class="float-right">${{ number_format($discountImpact->revenue_without_discount ?? 0, 2) }}</span>
-                        <div class="progress sm">
-                            <div class="progress-bar progress-bar-primary" style="width: {{ 100 - $withDiscountPercent }}%"></div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
@@ -241,13 +221,6 @@
                             </td>
                             <td>{{ $method->count }} orders</td>
                             <td>${{ number_format($method->total, 2) }}</td>
-                            <td>
-                                @php
-                                    $totalPayments = $paymentMethods->sum('total');
-                                    $percent = $totalPayments > 0 ? ($method->total / $totalPayments) * 100 : 0;
-                                @endphp
-                                {{ number_format($percent, 1) }}%
-                            </td>
                         </tr>
                         @endforeach
                     </table>
@@ -276,9 +249,10 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 $(document).ready(function() {
+    @if($profitData->count() > 0)
     // Profit Chart
     var ctx1 = document.getElementById('profitChart').getContext('2d');
-    var profitChart = new Chart(ctx1, {
+    new Chart(ctx1, {
         type: 'bar',
         data: {
             labels: {!! json_encode($profitData->pluck('name')) !!},
@@ -296,15 +270,6 @@ $(document).ready(function() {
                     backgroundColor: 'rgba(220,53,69,0.8)',
                     borderColor: 'rgba(220,53,69,1)',
                     borderWidth: 1
-                },
-                {
-                    label: 'Profit',
-                    data: {!! json_encode($profitData->pluck('profit')) !!},
-                    backgroundColor: 'rgba(255,193,7,0.8)',
-                    borderColor: 'rgba(255,193,7,1)',
-                    borderWidth: 1,
-                    type: 'line',
-                    yAxisID: 'y1'
                 }
             ]
         },
@@ -314,19 +279,6 @@ $(document).ready(function() {
             scales: {
                 y: {
                     beginAtZero: true,
-                    position: 'left',
-                    ticks: {
-                        callback: function(value) {
-                            return '$' + value;
-                        }
-                    }
-                },
-                y1: {
-                    beginAtZero: true,
-                    position: 'right',
-                    grid: {
-                        drawOnChartArea: false
-                    },
                     ticks: {
                         callback: function(value) {
                             return '$' + value;
@@ -336,10 +288,12 @@ $(document).ready(function() {
             }
         }
     });
+    @endif
 
+    @if($paymentMethods->count() > 0)
     // Payment Methods Chart
     var ctx2 = document.getElementById('paymentChart').getContext('2d');
-    var paymentChart = new Chart(ctx2, {
+    new Chart(ctx2, {
         type: 'doughnut',
         data: {
             labels: {!! json_encode($paymentMethods->pluck('payment_method')->map(function($m) { return ucfirst($m); })) !!},
@@ -364,27 +318,18 @@ $(document).ready(function() {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            let label = context.label || '';
-                            let value = context.raw || 0;
-                            let total = context.dataset.data.reduce((a, b) => a + b, 0);
-                            let percentage = Math.round((value / total) * 100);
-                            return label + ': $' + value.toFixed(2) + ' (' + percentage + '%)';
-                        }
-                    }
-                },
                 legend: {
                     position: 'bottom'
                 }
             }
         }
     });
+    @endif
 
+    @if($seasonalRevenue->count() > 0)
     // Seasonal Chart
     var ctx3 = document.getElementById('seasonalChart').getContext('2d');
-    var seasonalChart = new Chart(ctx3, {
+    new Chart(ctx3, {
         type: 'line',
         data: {
             labels: {!! json_encode($seasonalRevenue->keys()->map(function($date) {
@@ -414,51 +359,23 @@ $(document).ready(function() {
                         }
                     }
                 }
-            },
-            plugins: {
-                annotation: {
-                    annotations: {
-                        valentines: {
-                            type: 'line',
-                            xMin: 'Feb 14',
-                            xMax: 'Feb 14',
-                            borderColor: 'red',
-                            borderWidth: 2,
-                            label: {
-                                content: 'Valentine\'s Day',
-                                enabled: true,
-                                position: 'top'
-                            }
-                        },
-                        diwali: {
-                            type: 'line',
-                            xMin: 'Nov 12',
-                            xMax: 'Nov 12',
-                            borderColor: 'orange',
-                            borderWidth: 2,
-                            label: {
-                                content: 'Diwali',
-                                enabled: true,
-                                position: 'top'
-                            }
-                        },
-                        christmas: {
-                            type: 'line',
-                            xMin: 'Dec 25',
-                            xMax: 'Dec 25',
-                            borderColor: 'green',
-                            borderWidth: 2,
-                            label: {
-                                content: 'Christmas',
-                                enabled: true,
-                                position: 'top'
-                            }
-                        }
-                    }
-                }
             }
         }
     });
+    @endif
 });
+
+function exportReport(format) {
+    var form = $('#filterForm');
+    var action = '{{ route("admin.reports.export", ["type" => "financial", "report" => "financial"]) }}';
+
+    form.append('<input type="hidden" name="format" value="' + format + '">');
+    form.attr('action', action);
+    form.submit();
+
+    setTimeout(function() {
+        $('input[name="format"]').remove();
+    }, 100);
+}
 </script>
 @endsection

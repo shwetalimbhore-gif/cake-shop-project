@@ -16,6 +16,7 @@ use App\Http\Controllers\Front\CartController;
 use App\Http\Controllers\Front\TrackingController;
 use App\Http\Controllers\Front\AboutController;
 use App\Http\Controllers\RazorpayController;
+use App\Http\Controllers\Admin\ReportController;
 
 /*
 |--------------------------------------------------------------------------
@@ -157,13 +158,30 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     // Report Routes
     Route::prefix('reports')->name('reports.')->group(function () {
-        Route::get('/', [App\Http\Controllers\Admin\ReportController::class, 'index'])->name('index');
-        Route::get('/sales', [App\Http\Controllers\Admin\ReportController::class, 'sales'])->name('sales');
-        Route::get('/orders', [App\Http\Controllers\Admin\ReportController::class, 'orders'])->name('orders');
-        Route::get('/customers', [App\Http\Controllers\Admin\ReportController::class, 'customers'])->name('customers');
-        Route::get('/inventory', [App\Http\Controllers\Admin\ReportController::class, 'inventory'])->name('inventory');
-        Route::get('/financial', [App\Http\Controllers\Admin\ReportController::class, 'financial'])->name('financial');
-        Route::get('/export/{type}/{report}', [App\Http\Controllers\Admin\ReportController::class, 'export'])->name('export');
+        Route::get('/', [ReportController::class, 'index'])->name('index');
+
+        // Sales Reports
+        Route::get('/daily-sales', [ReportController::class, 'dailySales'])->name('daily-sales');
+        Route::get('/monthly-overview', [ReportController::class, 'monthlyOverview'])->name('monthly-overview');
+        Route::get('/product-wise', [ReportController::class, 'productWise'])->name('product-wise');
+        Route::get('/top-cakes', [ReportController::class, 'topCakes'])->name('top-cakes');
+        Route::get('/flavor-trends', [ReportController::class, 'flavorTrends'])->name('flavor-trends');
+        Route::get('/category-wise', [ReportController::class, 'categoryWise'])->name('category-wise');
+
+        // Orders & Operations
+        Route::get('/orders', [ReportController::class, 'orders'])->name('orders');
+
+        // Customer Reports
+        Route::get('/customers', [ReportController::class, 'customers'])->name('customers');
+
+        // Inventory Reports
+        Route::get('/inventory', [ReportController::class, 'inventory'])->name('inventory');
+
+        // Financial Reports
+        Route::get('/financial', [ReportController::class, 'financial'])->name('financial');
+
+        // Export Routes
+        Route::get('/export/{type}', [ReportController::class, 'exportReport'])->name('export');
     });
 
 });

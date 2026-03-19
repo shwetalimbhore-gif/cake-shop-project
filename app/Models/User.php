@@ -36,4 +36,20 @@ class User extends Authenticatable
         'is_admin' => 'boolean',
         'settings' => 'array',
     ];
+
+     /**
+     * Get the orders for the user.
+     */
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
+    }
+
+     /**
+     * Check if user is admin
+     */
+    public function isAdmin()
+    {
+        return $this->is_admin;
+    }
 }

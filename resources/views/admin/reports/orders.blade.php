@@ -38,6 +38,16 @@
                         <a href="{{ route('admin.reports.orders') }}" class="btn btn-secondary mt-4">
                             <i class="fas fa-redo"></i> Reset
                         </a>
+                        <div class="btn-group mt-4">
+                            <button type="button" class="btn btn-success dropdown-toggle" data-toggle="dropdown">
+                                <i class="fas fa-download"></i> Export
+                            </button>
+                            <div class="dropdown-menu">
+                                <a class="dropdown-item" href="#" onclick="exportReport('csv')">CSV</a>
+                                <a class="dropdown-item" href="#" onclick="exportReport('excel')">Excel</a>
+                                <a class="dropdown-item" href="#" onclick="exportReport('pdf')">PDF</a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </form>
@@ -228,7 +238,7 @@
                             @forelse($customCakes as $order)
                             <tr>
                                 <td>#{{ $order->id }}</td>
-                                <td>{{ $order->user->name ?? 'Guest' }}</td>
+                                <td>{{ $order->user->name ?? ($order->walkin_customer_name ?? 'Guest') }}</td>
                                 <td>{{ $order->created_at->format('M d, Y') }}</td>
                                 <td>{{ $order->cake_design ?? 'Standard' }}</td>
                                 <td>
@@ -241,7 +251,7 @@
                                     @endif
                                 </td>
                                 <td>{{ ucfirst($order->occasion) ?? 'N/A' }}</td>
-                                <td>${{ number_format($order->total_amount, 2) }}</td>
+                                <td>${{ number_format($order->total, 2) }}</td>
                                 <td>
                                     @if($order->status == 'completed')
                                         <span class="badge badge-success">Completed</span>
@@ -279,7 +289,7 @@
 $(document).ready(function() {
     // Delivery vs Pickup Chart
     var ctx1 = document.getElementById('deliveryPickupChart').getContext('2d');
-    var deliveryPickupChart = new Chart(ctx1, {
+    new Chart(ctx1, {
         type: 'doughnut',
         data: {
             labels: ['Delivery', 'Pickup'],
@@ -303,7 +313,7 @@ $(document).ready(function() {
 
     // Pre-order vs Walk-in Chart
     var ctx2 = document.getElementById('preorderChart').getContext('2d');
-    var preorderChart = new Chart(ctx2, {
+    new Chart(ctx2, {
         type: 'doughnut',
         data: {
             labels: ['Pre-order', 'Walk-in'],
@@ -325,5 +335,18 @@ $(document).ready(function() {
         }
     });
 });
+
+function exportReport(format) {
+    var form = $('#filterForm');
+    var action = '{{ route("admin.reports.export", ["type" => "orders", "report" => "orders"]) }}';
+
+    form.append('<input type="hidden" name="format" value="' + format + '">');
+    form.attr('action', action);
+    form.submit();
+
+    setTimeout(function() {
+        $('input[name="format"]').remove();
+    }, 100);
+}
 </script>
 @endsection
