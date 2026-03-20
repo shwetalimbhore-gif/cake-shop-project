@@ -32,27 +32,22 @@
                         <a href="{{ route('admin.reports.customers') }}" class="btn btn-secondary mt-4">
                             <i class="fas fa-redo"></i> Reset
                         </a>
+                        <div class="btn-group mt-4">
+                            <button type="button" class="btn btn-success dropdown-toggle" data-toggle="dropdown">
+                                <i class="fas fa-download"></i> Export
+                            </button>
+                            <div class="dropdown-menu">
+                                <a class="dropdown-item" href="#" onclick="exportReport('excel')">Excel</a>
+                                <a class="dropdown-item" href="#" onclick="exportReport('pdf')">PDF</a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Export Buttons -->
-    <div class="row mb-3">
-        <div class="col-12 text-right">
-            <div class="btn-group">
-                <button type="button" class="btn btn-success" onclick="exportReport('excel')">
-                    <i class="fas fa-file-excel"></i> Export to Excel
-                </button>
-                <button type="button" class="btn btn-danger" onclick="exportReport('pdf')">
-                    <i class="fas fa-file-pdf"></i> Export to PDF
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Customer Summary Cards -->
+    <!-- Customer Summary Cards - WITHOUT Icons -->
     <div class="row">
         <div class="col-lg-4 col-6">
             <div class="small-box bg-info">
@@ -60,6 +55,7 @@
                     <h3>{{ $topCustomers->count() }}</h3>
                     <p>Top Customers</p>
                 </div>
+                <!-- Remove the icon div -->
             </div>
         </div>
         <div class="col-lg-4 col-6">
@@ -68,6 +64,7 @@
                     <h3>{{ $newCustomers }}</h3>
                     <p>New Customers</p>
                 </div>
+                <!-- Remove the icon div -->
             </div>
         </div>
         <div class="col-lg-4 col-6">
@@ -76,6 +73,7 @@
                     <h3>{{ $returningCustomers }}</h3>
                     <p>Returning Customers</p>
                 </div>
+                <!-- Remove the icon div -->
             </div>
         </div>
     </div>
@@ -88,7 +86,7 @@
                     <h5 class="card-title">New vs Returning Customers</h5>
                 </div>
                 <div class="card-body">
-                    <canvas id="customerTypeChart" style="height: 300px;"></canvas>
+                    <canvas id="customerTypeChart" style="min-height: 300px;"></canvas>
                 </div>
             </div>
         </div>
@@ -98,7 +96,7 @@
                     <h5 class="card-title">Order Frequency Distribution</h5>
                 </div>
                 <div class="card-body">
-                    <canvas id="frequencyChart" style="height: 300px;"></canvas>
+                    <canvas id="frequencyChart" style="min-height: 300px;"></canvas>
                 </div>
             </div>
         </div>
@@ -123,8 +121,7 @@
                                     <th>Total Spent</th>
                                     <th>Avg Order Value</th>
                                     <th>Last Order</th>
-                                </tr>
-                            </thead>
+                                </thead>
                             <tbody>
                                 @foreach($topCustomers as $index => $customer)
                                 <tr>
@@ -267,7 +264,9 @@ $(document).ready(function() {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: { position: 'bottom' }
+                legend: {
+                    position: 'bottom'
+                }
             }
         }
     });
@@ -295,7 +294,9 @@ $(document).ready(function() {
             scales: {
                 y: {
                     beginAtZero: true,
-                    ticks: { stepSize: 1 }
+                    ticks: {
+                        stepSize: 1
+                    }
                 }
             }
         }

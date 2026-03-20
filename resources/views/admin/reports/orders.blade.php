@@ -13,21 +13,21 @@
         <div class="card-body">
             <form method="GET" action="{{ route('admin.reports.orders') }}" id="filterForm">
                 <div class="row">
-                    <div class="col-md-4">
+                    <div class="col-md-5">
                         <div class="form-group">
                             <label>Start Date</label>
                             <input type="date" name="start_date" class="form-control" value="{{ $startDate->format('Y-m-d') }}">
                         </div>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-5">
                         <div class="form-group">
                             <label>End Date</label>
                             <input type="date" name="end_date" class="form-control" value="{{ $endDate->format('Y-m-d') }}">
                         </div>
                     </div>
-                    <div class="col-md-4 text-right">
+                    <div class="col-md-2">
                         <button type="submit" class="btn btn-primary mt-4">
-                            <i class="fas fa-filter"></i> Apply Filters
+                            <i class="fas fa-filter"></i> Apply
                         </button>
                         <a href="{{ route('admin.reports.orders') }}" class="btn btn-secondary mt-4">
                             <i class="fas fa-redo"></i> Reset
@@ -38,167 +38,166 @@
         </div>
     </div>
 
-    <!-- Export Buttons -->
-    <div class="row mb-3">
-        <div class="col-12 text-right">
-            <div class="btn-group">
-                <button type="button" class="btn btn-success" onclick="exportReport('excel')">
-                    <i class="fas fa-file-excel"></i> Export to Excel
-                </button>
-                <button type="button" class="btn btn-danger" onclick="exportReport('pdf')">
-                    <i class="fas fa-file-pdf"></i> Export to PDF
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Order Summary Cards -->
+    <!-- Summary Cards with All Statuses -->
     <div class="row">
         <div class="col-lg-2 col-6">
             <div class="small-box bg-info">
                 <div class="inner">
-                    <h3>{{ $orderSummary['total'] }}</h3>
+                    <h3>{{ $orderSummary['total'] ?? 0 }}</h3>
                     <p>Total Orders</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-shopping-cart"></i>
                 </div>
             </div>
         </div>
         <div class="col-lg-2 col-6">
-            <div class="small-box bg-success">
+            <div class="small-box" style="background-color: #28a745;">
                 <div class="inner">
-                    <h3>{{ $orderSummary['completed'] }}</h3>
+                    <h3>{{ $orderSummary['completed'] ?? 0 }}</h3>
                     <p>Completed</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-2 col-6">
+            <div class="small-box" style="background-color: #17a2b8;">
+                <div class="inner">
+                    <h3>{{ $orderSummary['confirmed'] ?? 0 }}</h3>
+                    <p>Confirmed</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-check-double"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-2 col-6">
+            <div class="small-box" style="background-color: #20c997;">
+                <div class="inner">
+                    <h3>{{ $orderSummary['delivered'] ?? 0 }}</h3>
+                    <p>Delivered</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-truck"></i>
                 </div>
             </div>
         </div>
         <div class="col-lg-2 col-6">
             <div class="small-box bg-warning">
                 <div class="inner">
-                    <h3>{{ $orderSummary['pending'] }}</h3>
+                    <h3>{{ $orderSummary['pending'] ?? 0 }}</h3>
                     <p>Pending</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-clock"></i>
                 </div>
             </div>
         </div>
         <div class="col-lg-2 col-6">
             <div class="small-box bg-danger">
                 <div class="inner">
-                    <h3>{{ $orderSummary['cancelled'] }}</h3>
+                    <h3>{{ $orderSummary['cancelled'] ?? 0 }}</h3>
                     <p>Cancelled</p>
                 </div>
-            </div>
-        </div>
-        <div class="col-lg-2 col-6">
-            <div class="small-box bg-primary">
-                <div class="inner">
-                    <h3>{{ $orderSummary['processing'] }}</h3>
-                    <p>Processing</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-2 col-6">
-            <div class="small-box bg-secondary">
-                <div class="inner">
-                    <h3>{{ $customCakesStats['total'] }}</h3>
-                    <p>Custom Cakes</p>
+                <div class="icon">
+                    <i class="fas fa-times-circle"></i>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Order Type Distribution -->
+    <!-- Status Breakdown Chart -->
     <div class="row">
-        <div class="col-lg-6">
+        <div class="col-md-6">
             <div class="card">
                 <div class="card-header">
-                    <h5 class="card-title">Delivery vs Pickup</h5>
+                    <h5 class="card-title">Order Status Distribution</h5>
                 </div>
                 <div class="card-body">
-                    <canvas id="deliveryPickupChart" style="height: 300px;"></canvas>
-                    <div class="row mt-4 text-center">
-                        <div class="col-6">
-                            <h4>{{ $deliveryVsPickup['delivery'] }}</h4>
-                            <p class="text-muted">Delivery Orders</p>
-                        </div>
-                        <div class="col-6">
-                            <h4>{{ $deliveryVsPickup['pickup'] }}</h4>
-                            <p class="text-muted">Pickup Orders</p>
-                        </div>
-                    </div>
+                    <canvas id="statusChart" style="height: 300px;"></canvas>
                 </div>
             </div>
         </div>
-        <div class="col-lg-6">
+        <div class="col-md-6">
             <div class="card">
                 <div class="card-header">
-                    <h5 class="card-title">Pre-order vs Walk-in</h5>
+                    <h5 class="card-title">Status Details</h5>
                 </div>
                 <div class="card-body">
-                    <canvas id="preorderChart" style="height: 300px;"></canvas>
-                    <div class="row mt-4 text-center">
-                        <div class="col-6">
-                            <h4>{{ $preorderVsWalkin['pre_order'] }}</h4>
-                            <p class="text-muted">Pre-orders</p>
-                        </div>
-                        <div class="col-6">
-                            <h4>{{ $preorderVsWalkin['walk_in'] }}</h4>
-                            <p class="text-muted">Walk-in</p>
-                        </div>
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Status</th>
+                                    <th>Count</th>
+                                    <th>Percentage</th>
+                                    <th>Revenue</th>
+                                </thead>
+                            <tbody>
+                                @foreach($statusBreakdown as $status)
+                                @php
+                                    $percentage = ($orderSummary['total'] > 0) ? ($status->count / $orderSummary['total']) * 100 : 0;
+
+                                    // Set color based on status
+                                    $badgeClass = '';
+                                    $bgColor = '';
+                                    if($status->status == 'completed') {
+                                        $badgeClass = 'success';
+                                        $bgColor = '#28a745';
+                                    } elseif($status->status == 'confirmed') {
+                                        $badgeClass = 'info';
+                                        $bgColor = '#17a2b8';
+                                    } elseif($status->status == 'delivered') {
+                                        $badgeClass = 'teal';
+                                        $bgColor = '#20c997';
+                                    } elseif($status->status == 'pending') {
+                                        $badgeClass = 'warning';
+                                        $bgColor = '#ffc107';
+                                    } elseif($status->status == 'processing') {
+                                        $badgeClass = 'primary';
+                                        $bgColor = '#007bff';
+                                    } elseif($status->status == 'cancelled') {
+                                        $badgeClass = 'danger';
+                                        $bgColor = '#dc3545';
+                                    } else {
+                                        $badgeClass = 'secondary';
+                                        $bgColor = '#6c757d';
+                                    }
+                                @endphp
+
+                                <tr>
+                                    <td>
+                                        <span class="badge badge-{{ $badgeClass }}" style="background-color: {{ $bgColor }};">
+                                            {{ ucfirst($status->status) }}
+                                        </span>
+                                    </td>
+                                    <td>{{ $status->count }}</td>
+                                    <td>
+                                        <div class="progress" style="height: 20px;">
+                                            <div class="progress-bar" style="width: {{ $percentage }}%; background-color: {{ $bgColor }};">
+                                                {{ number_format($percentage, 1) }}%
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>${{ number_format($status->revenue, 2) }}</td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Occasion-based Orders -->
-    <div class="row">
+    <!-- Recent Orders Table with Status Badges -->
+    <div class="row mt-4">
         <div class="col-12">
             <div class="card">
                 <div class="card-header">
-                    <h5 class="card-title">Occasion-based Orders</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        @foreach($occasionOrders as $occasion)
-                        <div class="col-md-3">
-                            <div class="info-box">
-                                <span class="info-box-icon bg-info">
-                                    @switch($occasion->occasion)
-                                        @case('birthday')
-                                            <i class="fas fa-birthday-cake"></i>
-                                            @break
-                                        @case('wedding')
-                                            <i class="fas fa-heart"></i>
-                                            @break
-                                        @case('anniversary')
-                                            <i class="fas fa-ring"></i>
-                                            @break
-                                        @default
-                                            <i class="fas fa-calendar"></i>
-                                    @endswitch
-                                </span>
-                                <div class="info-box-content">
-                                    <span class="info-box-text">{{ ucfirst($occasion->occasion) }}</span>
-                                    <span class="info-box-number">{{ $occasion->total }} orders</span>
-                                    <span class="info-box-text">${{ number_format($occasion->revenue, 2) }}</span>
-                                </div>
-                            </div>
-                        </div>
-                        @endforeach
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Custom Cake Orders -->
-    <div class="row" id="custom">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title">Custom Cake Orders</h5>
-                    <div class="card-tools">
-                        <span class="badge badge-primary">Avg: ${{ number_format($customCakesStats['avg_price'], 2) }}</span>
-                        <span class="badge badge-info">With Message: {{ $customCakesStats['with_message'] }}</span>
-                    </div>
+                    <h5 class="card-title">Recent Orders</h5>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -206,57 +205,60 @@
                             <thead>
                                 <tr>
                                     <th>Order #</th>
-                                    <th>Customer</th>
                                     <th>Date</th>
-                                    <th>Cake Design</th>
-                                    <th>Message</th>
-                                    <th>Occasion</th>
+                                    <th>Customer</th>
                                     <th>Amount</th>
                                     <th>Status</th>
+                                    <th>Type</th>
+                                    <th>Payment</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse($customCakes as $order)
+                                @forelse($recentOrders as $order)
                                 <tr>
                                     <td>#{{ $order->id }}</td>
+                                    <td>{{ $order->created_at->format('M d, H:i') }}</td>
                                     <td>{{ $order->user->name ?? ($order->walkin_customer_name ?? 'Guest') }}</td>
-                                    <td>{{ $order->created_at->format('M d, Y') }}</td>
-                                    <td>{{ $order->cake_design ?? 'Standard' }}</td>
-                                    <td>
-                                        @if($order->custom_message)
-                                            <span class="badge badge-success" title="{{ $order->custom_message }}">
-                                                <i class="fas fa-comment"></i> Yes
-                                            </span>
-                                        @else
-                                            <span class="badge badge-secondary">No</span>
-                                        @endif
-                                    </td>
-                                    <td>{{ ucfirst($order->occasion) ?? 'N/A' }}</td>
                                     <td>${{ number_format($order->total, 2) }}</td>
                                     <td>
                                         @if($order->status == 'completed')
-                                            <span class="badge badge-success">Completed</span>
+                                            <span class="badge" style="background-color: #28a745;">Completed</span>
+                                        @elseif($order->status == 'confirmed')
+                                            <span class="badge" style="background-color: #17a2b8;">Confirmed</span>
+                                        @elseif($order->status == 'delivered')
+                                            <span class="badge" style="background-color: #20c997;">Delivered</span>
                                         @elseif($order->status == 'pending')
-                                            <span class="badge badge-warning">Pending</span>
+                                            <span class="badge" style="background-color: #ffc107; color: #000;">Pending</span>
+                                        @elseif($order->status == 'processing')
+                                            <span class="badge" style="background-color: #007bff;">Processing</span>
                                         @elseif($order->status == 'cancelled')
-                                            <span class="badge badge-danger">Cancelled</span>
+                                            <span class="badge" style="background-color: #dc3545;">Cancelled</span>
                                         @else
-                                            <span class="badge badge-info">{{ ucfirst($order->status) }}</span>
+                                            <span class="badge badge-secondary">{{ ucfirst($order->status) }}</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        @if($order->is_custom_cake)
+                                            <span class="badge badge-primary">Custom</span>
+                                        @else
+                                            <span class="badge badge-secondary">Standard</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        @if($order->payment_method)
+                                            <span class="badge badge-info">{{ ucfirst($order->payment_method) }}</span>
+                                        @else
+                                            <span class="badge badge-secondary">N/A</span>
                                         @endif
                                     </td>
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="8" class="text-center">No custom cake orders found</td>
+                                    <td colspan="7" class="text-center text-muted">No orders found for the selected period</td>
                                 </tr>
                                 @endforelse
                             </tbody>
                         </table>
-                    </div>
-
-                    <!-- Pagination -->
-                    <div class="mt-4">
-                        {{ $customCakes->appends(request()->query())->links() }}
                     </div>
                 </div>
             </div>
@@ -269,46 +271,62 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 $(document).ready(function() {
-    // Delivery vs Pickup Chart
-    var ctx1 = document.getElementById('deliveryPickupChart').getContext('2d');
-    new Chart(ctx1, {
-        type: 'doughnut',
-        data: {
-            labels: ['Delivery', 'Pickup'],
-            datasets: [{
-                data: [{{ $deliveryVsPickup['delivery'] }}, {{ $deliveryVsPickup['pickup'] }}],
-                backgroundColor: ['rgba(60,141,188,0.8)', 'rgba(40,167,69,0.8)'],
-                borderColor: ['rgba(60,141,188,1)', 'rgba(40,167,69,1)'],
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { position: 'bottom' }
-            }
-        }
-    });
+    // Status Chart with All Statuses
+    var ctx = document.getElementById('statusChart').getContext('2d');
 
-    // Pre-order vs Walk-in Chart
-    var ctx2 = document.getElementById('preorderChart').getContext('2d');
-    new Chart(ctx2, {
+    // Prepare data for chart
+    var statusLabels = [];
+    var statusCounts = [];
+    var statusColors = [];
+
+    @foreach($statusBreakdown as $status)
+        statusLabels.push('{{ ucfirst($status->status) }}');
+        statusCounts.push({{ $status->count }});
+
+        @if($status->status == 'completed')
+            statusColors.push('#28a745');
+        @elseif($status->status == 'confirmed')
+            statusColors.push('#17a2b8');
+        @elseif($status->status == 'delivered')
+            statusColors.push('#20c997');
+        @elseif($status->status == 'pending')
+            statusColors.push('#ffc107');
+        @elseif($status->status == 'processing')
+            statusColors.push('#007bff');
+        @elseif($status->status == 'cancelled')
+            statusColors.push('#dc3545');
+        @else
+            statusColors.push('#6c757d');
+        @endif
+    @endforeach
+
+    new Chart(ctx, {
         type: 'doughnut',
         data: {
-            labels: ['Pre-order', 'Walk-in'],
+            labels: statusLabels,
             datasets: [{
-                data: [{{ $preorderVsWalkin['pre_order'] }}, {{ $preorderVsWalkin['walk_in'] }}],
-                backgroundColor: ['rgba(255,193,7,0.8)', 'rgba(23,162,184,0.8)'],
-                borderColor: ['rgba(255,193,7,1)', 'rgba(23,162,184,1)'],
-                borderWidth: 1
+                data: statusCounts,
+                backgroundColor: statusColors
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: { position: 'bottom' }
+                legend: {
+                    position: 'bottom'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.label || '';
+                            let value = context.raw || 0;
+                            let total = {{ $orderSummary['total'] ?? 0 }};
+                            let percentage = ((value / total) * 100).toFixed(1);
+                            return label + ': ' + value + ' orders (' + percentage + '%)';
+                        }
+                    }
+                }
             }
         }
     });
@@ -326,7 +344,8 @@ function exportReport(format) {
     var exportUrl = '{{ route("admin.reports.export", "orders") }}' +
                     '?start_date=' + startDate +
                     '&end_date=' + endDate +
-                    '&format=' + format;
+                    '&format=' + format +
+                    '&type=summary';
     window.location.href = exportUrl;
 }
 </script>

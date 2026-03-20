@@ -23,6 +23,25 @@ use App\Exports\FinancialReportExport;
 
 class ReportController extends Controller
 {
+    // Add this method inside your ReportController class
+    private function validateDateRange($request, $defaultStart = null, $defaultEnd = null)
+    {
+        $request->validate([
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
+        ]);
+
+        $startDate = $request->start_date
+            ? Carbon::parse($request->start_date)
+            : ($defaultStart ?? Carbon::now()->startOfMonth());
+
+        $endDate = $request->end_date
+            ? Carbon::parse($request->end_date)
+            : ($defaultEnd ?? Carbon::now()->endOfDay());
+
+        return [$startDate, $endDate];
+    }
+
     /**
      * Display the main reports dashboard
      */
@@ -280,53 +299,402 @@ class ReportController extends Controller
     }
 
     /**
-     * Orders Report
+     * Orders Main Dashboard with Status Breakdown
      */
     public function orders(Request $request)
     {
         [$startDate, $endDate] = ReportHelpers::validateDateRange($request);
 
+        // Get all possible order statuses from database
+        $allStatuses = Order::select('status')->distinct()->pluck('status')->toArray();
+
+        // Get order status breakdown from database
+        $statusBreakdown = Order::whereBetween('created_at', [$startDate, $endDate])
+            ->select('status', DB::raw('COUNT(*) as count'), DB::raw('SUM(total) as revenue'))
+            ->groupBy('status')
+            ->get();
+
+        // Calculate order summary with all statuses
         $orderSummary = [
             'total' => Order::whereBetween('created_at', [$startDate, $endDate])->count(),
             'completed' => Order::whereBetween('created_at', [$startDate, $endDate])->where('status', 'completed')->count(),
+            'confirmed' => Order::whereBetween('created_at', [$startDate, $endDate])->where('status', 'confirmed')->count(),
+            'delivered' => Order::whereBetween('created_at', [$startDate, $endDate])->where('status', 'delivered')->count(),
             'pending' => Order::whereBetween('created_at', [$startDate, $endDate])->where('status', 'pending')->count(),
-            'cancelled' => Order::whereBetween('created_at', [$startDate, $endDate])->where('status', 'cancelled')->count(),
             'processing' => Order::whereBetween('created_at', [$startDate, $endDate])->where('status', 'processing')->count(),
+            'cancelled' => Order::whereBetween('created_at', [$startDate, $endDate])->where('status', 'cancelled')->count(),
+            'total_revenue' => Order::whereBetween('created_at', [$startDate, $endDate])->sum('total'),
+            'avg_order_value' => Order::whereBetween('created_at', [$startDate, $endDate])->avg('total') ?? 0,
+            'custom' => Order::whereBetween('created_at', [$startDate, $endDate])->where('is_custom_cake', true)->count(),
         ];
 
-        $customCakes = Order::whereBetween('created_at', [$startDate, $endDate])
-            ->where('is_custom_cake', true)
-            ->with('user')
+        // Get recent orders with status
+        $recentOrders = Order::with('user')
+            ->whereBetween('created_at', [$startDate, $endDate])
             ->latest()
-            ->paginate(20);
-
-        $customCakesStats = [
-            'total' => $customCakes->total(),
-            'avg_price' => Order::whereBetween('created_at', [$startDate, $endDate])->where('is_custom_cake', true)->avg('total') ?? 0,
-            'with_message' => Order::whereBetween('created_at', [$startDate, $endDate])->where('is_custom_cake', true)->whereNotNull('custom_message')->count(),
-        ];
-
-        $preorderVsWalkin = [
-            'pre_order' => Order::whereBetween('created_at', [$startDate, $endDate])->whereNotNull('pre_order_date')->count(),
-            'walk_in' => Order::whereBetween('created_at', [$startDate, $endDate])->whereNull('pre_order_date')->count(),
-        ];
-
-        $deliveryVsPickup = [
-            'delivery' => Order::whereBetween('created_at', [$startDate, $endDate])->where('order_type', 'delivery')->count(),
-            'pickup' => Order::whereBetween('created_at', [$startDate, $endDate])->where('order_type', 'pickup')->count(),
-        ];
-
-        $occasionOrders = Order::whereBetween('created_at', [$startDate, $endDate])
-            ->whereNotNull('occasion')
-            ->select('occasion', DB::raw('COUNT(*) as total'), DB::raw('SUM(total) as revenue'))
-            ->groupBy('occasion')
-            ->orderBy('total', 'desc')
+            ->limit(10)
             ->get();
 
         return view('admin.reports.orders', compact(
-            'orderSummary', 'customCakes', 'customCakesStats', 'preorderVsWalkin',
-            'deliveryVsPickup', 'occasionOrders', 'startDate', 'endDate'
+            'orderSummary',
+            'recentOrders',
+            'statusBreakdown',
+            'allStatuses',
+            'startDate',
+            'endDate'
         ));
+    }
+
+   /**
+     * Order Summary Report with Detailed Status Analysis
+     */
+    public function orderSummary(Request $request)
+    {
+        [$startDate, $endDate] = ReportHelpers::validateDateRange($request);
+
+        // First, get the order summary
+        $orderData = [
+            'total' => Order::whereBetween('created_at', [$startDate, $endDate])->count(),
+            'total_revenue' => Order::whereBetween('created_at', [$startDate, $endDate])->sum('total'),
+            'avg_order_value' => Order::whereBetween('created_at', [$startDate, $endDate])->avg('total') ?? 0,
+            'completed' => Order::whereBetween('created_at', [$startDate, $endDate])->where('status', 'completed')->count(),
+            'confirmed' => Order::whereBetween('created_at', [$startDate, $endDate])->where('status', 'confirmed')->count(),
+            'delivered' => Order::whereBetween('created_at', [$startDate, $endDate])->where('status', 'delivered')->count(),
+            'pending' => Order::whereBetween('created_at', [$startDate, $endDate])->where('status', 'pending')->count(),
+            'processing' => Order::whereBetween('created_at', [$startDate, $endDate])->where('status', 'processing')->count(),
+            'cancelled' => Order::whereBetween('created_at', [$startDate, $endDate])->where('status', 'cancelled')->count(),
+        ];
+
+        // Order status breakdown
+        $statusBreakdown = Order::whereBetween('created_at', [$startDate, $endDate])
+            ->select('status', DB::raw('COUNT(*) as count'), DB::raw('SUM(total) as revenue'))
+            ->groupBy('status')
+            ->orderBy('count', 'desc')
+            ->get();
+
+        // Hourly order distribution with status
+        $hourlyDistribution = Order::whereBetween('created_at', [$startDate, $endDate])
+            ->select(
+                DB::raw('HOUR(created_at) as hour'),
+                DB::raw('COUNT(*) as count'),
+                DB::raw('SUM(CASE WHEN status = "completed" THEN 1 ELSE 0 END) as completed_count'),
+                DB::raw('SUM(CASE WHEN status = "confirmed" THEN 1 ELSE 0 END) as confirmed_count'),
+                DB::raw('SUM(CASE WHEN status = "delivered" THEN 1 ELSE 0 END) as delivered_count'),
+                DB::raw('SUM(CASE WHEN status = "pending" THEN 1 ELSE 0 END) as pending_count'),
+                DB::raw('SUM(CASE WHEN status = "processing" THEN 1 ELSE 0 END) as processing_count'),
+                DB::raw('SUM(CASE WHEN status = "cancelled" THEN 1 ELSE 0 END) as cancelled_count')
+            )
+            ->groupBy('hour')
+            ->orderBy('hour')
+            ->get();
+
+        // Weekly trend with status breakdown
+        $weeklyTrend = Order::whereBetween('created_at', [$startDate, $endDate])
+            ->select(
+                DB::raw('DAYNAME(created_at) as day'),
+                DB::raw('COUNT(*) as count'),
+                DB::raw('SUM(total) as revenue'),
+                DB::raw('SUM(CASE WHEN status = "completed" THEN 1 ELSE 0 END) as completed_count'),
+                DB::raw('SUM(CASE WHEN status = "confirmed" THEN 1 ELSE 0 END) as confirmed_count'),
+                DB::raw('SUM(CASE WHEN status = "delivered" THEN 1 ELSE 0 END) as delivered_count'),
+                DB::raw('SUM(CASE WHEN status = "pending" THEN 1 ELSE 0 END) as pending_count'),
+                DB::raw('SUM(CASE WHEN status = "processing" THEN 1 ELSE 0 END) as processing_count'),
+                DB::raw('SUM(CASE WHEN status = "cancelled" THEN 1 ELSE 0 END) as cancelled_count')
+            )
+            ->groupBy('day')
+            ->orderByRaw('FIELD(day, "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")')
+            ->get();
+
+        // Calculate summary statistics
+        $summary = [
+            'total_orders' => $orderData['total'],
+            'total_revenue' => $orderData['total_revenue'],
+            'avg_order' => $orderData['avg_order_value'],
+            'completed_orders' => $orderData['completed'],
+            'confirmed_orders' => $orderData['confirmed'],
+            'delivered_orders' => $orderData['delivered'],
+            'pending_orders' => $orderData['pending'],
+            'processing_orders' => $orderData['processing'],
+            'cancelled_orders' => $orderData['cancelled'],
+            'peak_hour' => $hourlyDistribution->sortByDesc('count')->first()->hour ?? 12,
+            'peak_day' => $weeklyTrend->sortByDesc('count')->first()->day ?? 'Saturday',
+            'completion_rate' => $orderData['total'] > 0
+                ? (($orderData['completed'] + $orderData['delivered']) / $orderData['total']) * 100
+                : 0,
+            'cancellation_rate' => $orderData['total'] > 0
+                ? ($orderData['cancelled'] / $orderData['total']) * 100
+                : 0,
+        ];
+
+        return view('admin.reports.orders-summary', compact(
+            'statusBreakdown',
+            'hourlyDistribution',
+            'weeklyTrend',
+            'summary',
+            'startDate',
+            'endDate'
+        ));
+    }
+    /**
+     * Custom Cake Orders Report
+     */
+    public function customCakes(Request $request)
+    {
+        [$startDate, $endDate] = ReportHelpers::validateDateRange($request);
+
+        // Custom cakes query
+        $customCakes = Order::whereBetween('created_at', [$startDate, $endDate])
+            ->where('is_custom_cake', true)
+            ->with('user')
+            ->orderBy('created_at', 'desc')
+            ->paginate(20);
+
+        // Statistics
+        $stats = [
+            'total' => Order::whereBetween('created_at', [$startDate, $endDate])->where('is_custom_cake', true)->count(),
+            'revenue' => Order::whereBetween('created_at', [$startDate, $endDate])->where('is_custom_cake', true)->sum('total'),
+            'avg_price' => Order::whereBetween('created_at', [$startDate, $endDate])->where('is_custom_cake', true)->avg('total') ?? 0,
+            'with_message' => Order::whereBetween('created_at', [$startDate, $endDate])->where('is_custom_cake', true)->whereNotNull('custom_message')->count(),
+            'with_design' => Order::whereBetween('created_at', [$startDate, $endDate])->where('is_custom_cake', true)->whereNotNull('cake_design')->count(),
+        ];
+
+        // Popular designs
+        $popularDesigns = Order::whereBetween('created_at', [$startDate, $endDate])
+            ->where('is_custom_cake', true)
+            ->whereNotNull('cake_design')
+            ->select('cake_design', DB::raw('COUNT(*) as count'))
+            ->groupBy('cake_design')
+            ->orderBy('count', 'desc')
+            ->limit(5)
+            ->get();
+
+        // Monthly trend
+        $monthlyTrend = Order::whereBetween('created_at', [$startDate, $endDate])
+            ->where('is_custom_cake', true)
+            ->select(
+                DB::raw('YEAR(created_at) as year'),
+                DB::raw('MONTH(created_at) as month'),
+                DB::raw('COUNT(*) as count'),
+                DB::raw('SUM(total) as revenue')
+            )
+            ->groupBy('year', 'month')
+            ->orderBy('year', 'desc')
+            ->orderBy('month', 'desc')
+            ->get();
+
+        return view('admin.reports.orders-custom', compact(
+            'customCakes', 'stats', 'popularDesigns', 'monthlyTrend', 'startDate', 'endDate'
+        ));
+    }
+
+    /**
+     * Delivery vs Pickup Report
+     */
+    public function deliveryVsPickup(Request $request)
+    {
+        [$startDate, $endDate] = ReportHelpers::validateDateRange($request);
+
+        // Overall comparison
+        $comparison = [
+            'delivery' => [
+                'count' => Order::whereBetween('created_at', [$startDate, $endDate])->where('order_type', 'delivery')->count(),
+                'revenue' => Order::whereBetween('created_at', [$startDate, $endDate])->where('order_type', 'delivery')->sum('total'),
+            ],
+            'pickup' => [
+                'count' => Order::whereBetween('created_at', [$startDate, $endDate])->where('order_type', 'pickup')->count(),
+                'revenue' => Order::whereBetween('created_at', [$startDate, $endDate])->where('order_type', 'pickup')->sum('total'),
+            ],
+        ];
+
+        // Daily trend
+        $dailyTrend = Order::whereBetween('created_at', [$startDate, $endDate])
+            ->select(
+                DB::raw('DATE(created_at) as date'),
+                DB::raw('SUM(CASE WHEN order_type = "delivery" THEN 1 ELSE 0 END) as delivery_count'),
+                DB::raw('SUM(CASE WHEN order_type = "pickup" THEN 1 ELSE 0 END) as pickup_count'),
+                DB::raw('SUM(CASE WHEN order_type = "delivery" THEN total ELSE 0 END) as delivery_revenue'),
+                DB::raw('SUM(CASE WHEN order_type = "pickup" THEN total ELSE 0 END) as pickup_revenue')
+            )
+            ->groupBy('date')
+            ->orderBy('date')
+            ->get();
+
+        // Hourly distribution for each type
+        $hourlyDelivery = Order::whereBetween('created_at', [$startDate, $endDate])
+            ->where('order_type', 'delivery')
+            ->select(DB::raw('HOUR(created_at) as hour'), DB::raw('COUNT(*) as count'))
+            ->groupBy('hour')
+            ->orderBy('hour')
+            ->get();
+
+        $hourlyPickup = Order::whereBetween('created_at', [$startDate, $endDate])
+            ->where('order_type', 'pickup')
+            ->select(DB::raw('HOUR(created_at) as hour'), DB::raw('COUNT(*) as count'))
+            ->groupBy('hour')
+            ->orderBy('hour')
+            ->get();
+
+        // Day of week preference
+        $dayPreference = Order::whereBetween('created_at', [$startDate, $endDate])
+            ->select(
+                DB::raw('DAYNAME(created_at) as day'),
+                DB::raw('SUM(CASE WHEN order_type = "delivery" THEN 1 ELSE 0 END) as delivery_count'),
+                DB::raw('SUM(CASE WHEN order_type = "pickup" THEN 1 ELSE 0 END) as pickup_count')
+            )
+            ->groupBy('day')
+            ->orderByRaw('FIELD(day, "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")')
+            ->get();
+
+        return view('admin.reports.orders-delivery-pickup', compact(
+            'comparison', 'dailyTrend', 'hourlyDelivery', 'hourlyPickup', 'dayPreference', 'startDate', 'endDate'
+        ));
+    }
+
+    /**
+     * Occasion-based Orders Report
+     */
+    public function occasionBased(Request $request)
+    {
+        [$startDate, $endDate] = ReportHelpers::validateDateRange($request);
+
+        // Occasion breakdown
+        $occasionBreakdown = Order::whereBetween('created_at', [$startDate, $endDate])
+            ->whereNotNull('occasion')
+            ->select('occasion', DB::raw('COUNT(*) as count'), DB::raw('SUM(total) as revenue'))
+            ->groupBy('occasion')
+            ->orderBy('count', 'desc')
+            ->get();
+
+        // Monthly occasion trends
+        $monthlyOccasion = Order::whereBetween('created_at', [$startDate, $endDate])
+            ->whereNotNull('occasion')
+            ->select(
+                'occasion',
+                DB::raw('YEAR(created_at) as year'),
+                DB::raw('MONTH(created_at) as month'),
+                DB::raw('COUNT(*) as count')
+            )
+            ->groupBy('occasion', 'year', 'month')
+            ->orderBy('year', 'desc')
+            ->orderBy('month', 'desc')
+            ->get();
+
+        // Top occasions by revenue
+        $topOccasions = $occasionBreakdown->take(5);
+
+        // Occasion vs regular orders comparison
+        $comparison = [
+            'occasion_orders' => Order::whereBetween('created_at', [$startDate, $endDate])->whereNotNull('occasion')->count(),
+            'regular_orders' => Order::whereBetween('created_at', [$startDate, $endDate])->whereNull('occasion')->count(),
+            'occasion_revenue' => Order::whereBetween('created_at', [$startDate, $endDate])->whereNotNull('occasion')->sum('total'),
+            'regular_revenue' => Order::whereBetween('created_at', [$startDate, $endDate])->whereNull('occasion')->sum('total'),
+        ];
+
+        return view('admin.reports.orders-occasion', compact(
+            'occasionBreakdown', 'monthlyOccasion', 'topOccasions', 'comparison', 'startDate', 'endDate'
+        ));
+    }
+
+    /**
+     * Pre-order vs Walk-in Report
+     */
+    public function preorderVsWalkin(Request $request)
+    {
+        [$startDate, $endDate] = ReportHelpers::validateDateRange($request);
+
+        // Overall comparison
+        $comparison = [
+            'preorder' => [
+                'count' => Order::whereBetween('created_at', [$startDate, $endDate])->whereNotNull('pre_order_date')->count(),
+                'revenue' => Order::whereBetween('created_at', [$startDate, $endDate])->whereNotNull('pre_order_date')->sum('total'),
+            ],
+            'walkin' => [
+                'count' => Order::whereBetween('created_at', [$startDate, $endDate])->whereNull('pre_order_date')->count(),
+                'revenue' => Order::whereBetween('created_at', [$startDate, $endDate])->whereNull('pre_order_date')->sum('total'),
+            ],
+        ];
+
+        // Pre-order lead time analysis
+        $leadTime = Order::whereNotNull('pre_order_date')
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->select(
+                DB::raw('AVG(DATEDIFF(created_at, pre_order_date)) as avg_lead_days'),
+                DB::raw('MIN(DATEDIFF(created_at, pre_order_date)) as min_lead_days'),
+                DB::raw('MAX(DATEDIFF(created_at, pre_order_date)) as max_lead_days')
+            )
+            ->first();
+
+        // Pre-order by day of week
+        $preorderByDay = Order::whereNotNull('pre_order_date')
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->select(DB::raw('DAYNAME(created_at) as day'), DB::raw('COUNT(*) as count'))
+            ->groupBy('day')
+            ->orderByRaw('FIELD(day, "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")')
+            ->get();
+
+        // Monthly trend
+        $monthlyTrend = Order::whereBetween('created_at', [$startDate, $endDate])
+            ->select(
+                DB::raw('YEAR(created_at) as year'),
+                DB::raw('MONTH(created_at) as month'),
+                DB::raw('SUM(CASE WHEN pre_order_date IS NOT NULL THEN 1 ELSE 0 END) as preorder_count'),
+                DB::raw('SUM(CASE WHEN pre_order_date IS NULL THEN 1 ELSE 0 END) as walkin_count')
+            )
+            ->groupBy('year', 'month')
+            ->orderBy('year', 'desc')
+            ->orderBy('month', 'desc')
+            ->get();
+
+        return view('admin.reports.orders-preorder', compact(
+            'comparison', 'leadTime', 'preorderByDay', 'monthlyTrend', 'startDate', 'endDate'
+        ));
+    }
+
+    /**
+     * Get Orders Export Data
+     */
+    private function getOrdersExportData($startDate, $endDate, $type = 'summary')
+    {
+        switch ($type) {
+            case 'summary':
+                return Order::with('user')
+                    ->whereBetween('created_at', [$startDate, $endDate])
+                    ->get()
+                    ->map(function($order) {
+                        return [
+                            'Order ID' => $order->id,
+                            'Date' => $order->created_at->format('Y-m-d H:i'),
+                            'Customer' => $order->user->name ?? ($order->walkin_customer_name ?? 'Guest'),
+                            'Total' => $order->total,
+                            'Status' => ucfirst($order->status),
+                            'Order Type' => ucfirst($order->order_type ?? 'N/A'),
+                            'Is Custom' => $order->is_custom_cake ? 'Yes' : 'No',
+                            'Occasion' => ucfirst($order->occasion ?? 'N/A'),
+                            'Payment Method' => ucfirst($order->payment_method ?? 'N/A'),
+                        ];
+                    })->toArray();
+
+            case 'custom-cakes':
+                return Order::whereBetween('created_at', [$startDate, $endDate])
+                    ->where('is_custom_cake', true)
+                    ->with('user')
+                    ->get()
+                    ->map(function($order) {
+                        return [
+                            'Order ID' => $order->id,
+                            'Date' => $order->created_at->format('Y-m-d'),
+                            'Customer' => $order->user->name ?? ($order->walkin_customer_name ?? 'Guest'),
+                            'Cake Design' => $order->cake_design ?? 'Standard',
+                            'Message' => $order->custom_message ? 'Yes' : 'No',
+                            'Occasion' => ucfirst($order->occasion ?? 'N/A'),
+                            'Total' => $order->total,
+                            'Status' => ucfirst($order->status),
+                        ];
+                    })->toArray();
+
+            default:
+                return [];
+        }
     }
 
     /**
@@ -484,7 +852,7 @@ class ReportController extends Controller
     }
 
     /**
-     * Export Report
+     * Update the exportReport method to handle orders type
      */
     public function exportReport(Request $request, $type)
     {
@@ -496,17 +864,34 @@ class ReportController extends Controller
 
         $startDate = Carbon::parse($request->start_date);
         $endDate = Carbon::parse($request->end_date);
+        $exportType = $request->get('type', 'summary');
 
-        // Get export data based on type
-        $exportData = $this->getExportData($type, $startDate, $endDate, $request);
-        $filename = $this->getExportFilename($type, $startDate, $endDate);
-        $view = "admin.reports.exports.{$type}";
-        $title = $this->getReportTitle($type);
+        // Get data based on report type
+        switch ($type) {
+            case 'daily-sales':
+                $data = $this->getDailySalesExport($startDate, $endDate);
+                $filename = "daily_sales_{$startDate->format('Y-m-d')}_to_{$endDate->format('Y-m-d')}";
+                $view = 'admin.reports.exports.daily-sales';
+                $title = 'Daily Sales Report';
+                break;
+
+            case 'orders':
+                $data = $this->getOrdersExportData($startDate, $endDate, $exportType);
+                $filename = "orders_report_{$startDate->format('Y-m-d')}_to_{$endDate->format('Y-m-d')}";
+                $view = 'admin.reports.exports.orders';
+                $title = 'Orders Report';
+                break;
+
+            // ... other cases ...
+
+            default:
+                abort(404);
+        }
 
         if ($request->format === 'excel') {
-            return ReportExportService::toExcel($exportData, $filename, $title);
+            return ReportExportService::toExcel($data, $filename, $title);
         } else {
-            return ReportExportService::toPdf($exportData, $filename, $view, $title);
+            return ReportExportService::toPdf($data, $filename, $view, $title);
         }
     }
 

@@ -1,3 +1,4 @@
+{{-- resources/views/auth/register.blade.php --}}
 <x-guest-layout>
     <form method="POST" action="{{ route('register') }}">
         @csrf
