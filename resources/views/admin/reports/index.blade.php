@@ -1,4 +1,3 @@
-{{-- resources/views/admin/reports/index.blade.php --}}
 @extends('layouts.admin')
 
 @section('title', 'Reports Dashboard - Admin Panel')
@@ -106,11 +105,10 @@
                 </div>
                 <div class="card-body">
                     <ul class="list-group list-group-flush">
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <li class="list-group-item">
                             <a href="{{ route('admin.reports.daily-sales') }}" class="text-decoration-none">
                                 <i class="fas fa-calendar-day mr-2"></i> Daily Sales
                             </a>
-                            <span class="badge bg-primary rounded-pill">New</span>
                         </li>
                         <li class="list-group-item">
                             <a href="{{ route('admin.reports.monthly-overview') }}" class="text-decoration-none">

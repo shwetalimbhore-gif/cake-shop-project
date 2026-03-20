@@ -28,7 +28,7 @@
                     <div class="col-md-3">
                         <div class="form-group">
                             <label>Number of Items</label>
-                            <select name="limit" class="form-control">
+                            <select name="limit" class="form-control" onchange="this.form.submit()">
                                 <option value="10" {{ $limit == 10 ? 'selected' : '' }}>Top 10</option>
                                 <option value="20" {{ $limit == 20 ? 'selected' : '' }}>Top 20</option>
                                 <option value="50" {{ $limit == 50 ? 'selected' : '' }}>Top 50</option>
@@ -107,7 +107,7 @@
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table table-bordered table-striped" id="topCakesTable">
+                        <table class="table table-bordered table-striped">
                             <thead class="bg-primary text-white">
                                 <tr>
                                     <th>Rank</th>
@@ -123,6 +123,7 @@
                                 @foreach($topCakes as $index => $cake)
                                 @php
                                     $contribution = ($cake->total_revenue / $summary['total_revenue']) * 100;
+                                    $rankClass = $index == 0 ? 'warning' : ($index == 1 ? 'secondary' : ($index == 2 ? 'danger' : ''));
                                 @endphp
                                 <tr>
                                     <td>
@@ -131,13 +132,13 @@
                                         @elseif($index == 1)
                                             <span class="badge badge-secondary">#2</span>
                                         @elseif($index == 2)
-                                            <span class="badge badge-bronze">#3</span>
+                                            <span class="badge badge-danger">#3</span>
                                         @else
                                             #{{ $index + 1 }}
                                         @endif
                                     </td>
                                     <td>{{ $cake->name }}</td>
-                                    <td>{{ ucfirst($cake->flavor) ?? 'N/A' }}</td>
+                                    <td><span class="badge badge-info">{{ ucfirst($cake->flavor) ?? 'N/A' }}</span></td>
                                     <td>{{ $cake->total_quantity }}</td>
                                     <td>{{ $cake->times_ordered }}</td>
                                     <td class="text-success">${{ number_format($cake->total_revenue, 2) }}</td>
@@ -175,6 +176,12 @@ function exportReport(format) {
     var startDate = $('input[name="start_date"]').val();
     var endDate = $('input[name="end_date"]').val();
     var limit = $('select[name="limit"]').val();
+
+    if (!startDate || !endDate) {
+        alert('Please select both start and end dates');
+        return;
+    }
+
     var exportUrl = '{{ route("admin.reports.export", "top-cakes") }}' +
                     '?start_date=' + startDate +
                     '&end_date=' + endDate +

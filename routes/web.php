@@ -182,6 +182,14 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
         // Export Routes
         Route::get('/export/{type}', [ReportController::class, 'exportReport'])->name('export');
+
+
+        Route::get('/orders', [App\Http\Controllers\Admin\ReportController::class, 'orders'])->name('orders');
+        Route::get('/orders/summary', [App\Http\Controllers\Admin\ReportController::class, 'orderSummary'])->name('orders.summary');
+        Route::get('/orders/custom-cakes', [App\Http\Controllers\Admin\ReportController::class, 'customCakes'])->name('orders.custom-cakes');
+        Route::get('/orders/delivery-vs-pickup', [App\Http\Controllers\Admin\ReportController::class, 'deliveryVsPickup'])->name('orders.delivery-pickup');
+        Route::get('/orders/occasion-based', [App\Http\Controllers\Admin\ReportController::class, 'occasionBased'])->name('orders.occasion-based');
+        Route::get('/orders/preorder-vs-walkin', [App\Http\Controllers\Admin\ReportController::class, 'preorderVsWalkin'])->name('orders.preorder-walkin');
     });
 
 });

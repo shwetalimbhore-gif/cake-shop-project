@@ -1,4 +1,3 @@
-{{-- resources/views/admin/reports/orders.blade.php --}}
 @extends('layouts.admin')
 
 @section('title', 'Orders Reports - Admin Panel')
@@ -10,11 +9,6 @@
     <div class="card">
         <div class="card-header">
             <h5 class="card-title">Filter Reports</h5>
-            <div class="card-tools">
-                <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                    <i class="fas fa-minus"></i>
-                </button>
-            </div>
         </div>
         <div class="card-body">
             <form method="GET" action="{{ route('admin.reports.orders') }}" id="filterForm">
@@ -38,19 +32,23 @@
                         <a href="{{ route('admin.reports.orders') }}" class="btn btn-secondary mt-4">
                             <i class="fas fa-redo"></i> Reset
                         </a>
-                        <div class="btn-group mt-4">
-                            <button type="button" class="btn btn-success dropdown-toggle" data-toggle="dropdown">
-                                <i class="fas fa-download"></i> Export
-                            </button>
-                            <div class="dropdown-menu">
-                                <a class="dropdown-item" href="#" onclick="exportReport('csv')">CSV</a>
-                                <a class="dropdown-item" href="#" onclick="exportReport('excel')">Excel</a>
-                                <a class="dropdown-item" href="#" onclick="exportReport('pdf')">PDF</a>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Export Buttons -->
+    <div class="row mb-3">
+        <div class="col-12 text-right">
+            <div class="btn-group">
+                <button type="button" class="btn btn-success" onclick="exportReport('excel')">
+                    <i class="fas fa-file-excel"></i> Export to Excel
+                </button>
+                <button type="button" class="btn btn-danger" onclick="exportReport('pdf')">
+                    <i class="fas fa-file-pdf"></i> Export to PDF
+                </button>
+            </div>
         </div>
     </div>
 
@@ -62,9 +60,6 @@
                     <h3>{{ $orderSummary['total'] }}</h3>
                     <p>Total Orders</p>
                 </div>
-                <div class="icon">
-                    <i class="fas fa-shopping-cart"></i>
-                </div>
             </div>
         </div>
         <div class="col-lg-2 col-6">
@@ -72,9 +67,6 @@
                 <div class="inner">
                     <h3>{{ $orderSummary['completed'] }}</h3>
                     <p>Completed</p>
-                </div>
-                <div class="icon">
-                    <i class="fas fa-check-circle"></i>
                 </div>
             </div>
         </div>
@@ -84,9 +76,6 @@
                     <h3>{{ $orderSummary['pending'] }}</h3>
                     <p>Pending</p>
                 </div>
-                <div class="icon">
-                    <i class="fas fa-clock"></i>
-                </div>
             </div>
         </div>
         <div class="col-lg-2 col-6">
@@ -94,9 +83,6 @@
                 <div class="inner">
                     <h3>{{ $orderSummary['cancelled'] }}</h3>
                     <p>Cancelled</p>
-                </div>
-                <div class="icon">
-                    <i class="fas fa-times-circle"></i>
                 </div>
             </div>
         </div>
@@ -106,9 +92,6 @@
                     <h3>{{ $orderSummary['processing'] }}</h3>
                     <p>Processing</p>
                 </div>
-                <div class="icon">
-                    <i class="fas fa-spinner"></i>
-                </div>
             </div>
         </div>
         <div class="col-lg-2 col-6">
@@ -116,9 +99,6 @@
                 <div class="inner">
                     <h3>{{ $customCakesStats['total'] }}</h3>
                     <p>Custom Cakes</p>
-                </div>
-                <div class="icon">
-                    <i class="fas fa-birthday-cake"></i>
                 </div>
             </div>
         </div>
@@ -132,7 +112,7 @@
                     <h5 class="card-title">Delivery vs Pickup</h5>
                 </div>
                 <div class="card-body">
-                    <canvas id="deliveryPickupChart" style="min-height: 300px;"></canvas>
+                    <canvas id="deliveryPickupChart" style="height: 300px;"></canvas>
                     <div class="row mt-4 text-center">
                         <div class="col-6">
                             <h4>{{ $deliveryVsPickup['delivery'] }}</h4>
@@ -152,7 +132,7 @@
                     <h5 class="card-title">Pre-order vs Walk-in</h5>
                 </div>
                 <div class="card-body">
-                    <canvas id="preorderChart" style="min-height: 300px;"></canvas>
+                    <canvas id="preorderChart" style="height: 300px;"></canvas>
                     <div class="row mt-4 text-center">
                         <div class="col-6">
                             <h4>{{ $preorderVsWalkin['pre_order'] }}</h4>
@@ -221,56 +201,58 @@
                     </div>
                 </div>
                 <div class="card-body">
-                    <table class="table table-bordered table-striped">
-                        <thead>
-                            <tr>
-                                <th>Order #</th>
-                                <th>Customer</th>
-                                <th>Date</th>
-                                <th>Cake Design</th>
-                                <th>Message</th>
-                                <th>Occasion</th>
-                                <th>Amount</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($customCakes as $order)
-                            <tr>
-                                <td>#{{ $order->id }}</td>
-                                <td>{{ $order->user->name ?? ($order->walkin_customer_name ?? 'Guest') }}</td>
-                                <td>{{ $order->created_at->format('M d, Y') }}</td>
-                                <td>{{ $order->cake_design ?? 'Standard' }}</td>
-                                <td>
-                                    @if($order->custom_message)
-                                        <span class="badge badge-success" title="{{ $order->custom_message }}">
-                                            <i class="fas fa-comment"></i> Yes
-                                        </span>
-                                    @else
-                                        <span class="badge badge-secondary">No</span>
-                                    @endif
-                                </td>
-                                <td>{{ ucfirst($order->occasion) ?? 'N/A' }}</td>
-                                <td>${{ number_format($order->total, 2) }}</td>
-                                <td>
-                                    @if($order->status == 'completed')
-                                        <span class="badge badge-success">Completed</span>
-                                    @elseif($order->status == 'pending')
-                                        <span class="badge badge-warning">Pending</span>
-                                    @elseif($order->status == 'cancelled')
-                                        <span class="badge badge-danger">Cancelled</span>
-                                    @else
-                                        <span class="badge badge-info">{{ ucfirst($order->status) }}</span>
-                                    @endif
-                                </td>
-                            </tr>
-                            @empty
-                            <tr>
-                                <td colspan="8" class="text-center">No custom cake orders found</td>
-                            </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Order #</th>
+                                    <th>Customer</th>
+                                    <th>Date</th>
+                                    <th>Cake Design</th>
+                                    <th>Message</th>
+                                    <th>Occasion</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($customCakes as $order)
+                                <tr>
+                                    <td>#{{ $order->id }}</td>
+                                    <td>{{ $order->user->name ?? ($order->walkin_customer_name ?? 'Guest') }}</td>
+                                    <td>{{ $order->created_at->format('M d, Y') }}</td>
+                                    <td>{{ $order->cake_design ?? 'Standard' }}</td>
+                                    <td>
+                                        @if($order->custom_message)
+                                            <span class="badge badge-success" title="{{ $order->custom_message }}">
+                                                <i class="fas fa-comment"></i> Yes
+                                            </span>
+                                        @else
+                                            <span class="badge badge-secondary">No</span>
+                                        @endif
+                                    </td>
+                                    <td>{{ ucfirst($order->occasion) ?? 'N/A' }}</td>
+                                    <td>${{ number_format($order->total, 2) }}</td>
+                                    <td>
+                                        @if($order->status == 'completed')
+                                            <span class="badge badge-success">Completed</span>
+                                        @elseif($order->status == 'pending')
+                                            <span class="badge badge-warning">Pending</span>
+                                        @elseif($order->status == 'cancelled')
+                                            <span class="badge badge-danger">Cancelled</span>
+                                        @else
+                                            <span class="badge badge-info">{{ ucfirst($order->status) }}</span>
+                                        @endif
+                                    </td>
+                                </tr>
+                                @empty
+                                <tr>
+                                    <td colspan="8" class="text-center">No custom cake orders found</td>
+                                </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
 
                     <!-- Pagination -->
                     <div class="mt-4">
@@ -304,9 +286,7 @@ $(document).ready(function() {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: {
-                    position: 'bottom'
-                }
+                legend: { position: 'bottom' }
             }
         }
     });
@@ -328,25 +308,26 @@ $(document).ready(function() {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: {
-                    position: 'bottom'
-                }
+                legend: { position: 'bottom' }
             }
         }
     });
 });
 
 function exportReport(format) {
-    var form = $('#filterForm');
-    var action = '{{ route("admin.reports.export", ["type" => "orders", "report" => "orders"]) }}';
+    var startDate = $('input[name="start_date"]').val();
+    var endDate = $('input[name="end_date"]').val();
 
-    form.append('<input type="hidden" name="format" value="' + format + '">');
-    form.attr('action', action);
-    form.submit();
+    if (!startDate || !endDate) {
+        alert('Please select both start and end dates');
+        return;
+    }
 
-    setTimeout(function() {
-        $('input[name="format"]').remove();
-    }, 100);
+    var exportUrl = '{{ route("admin.reports.export", "orders") }}' +
+                    '?start_date=' + startDate +
+                    '&end_date=' + endDate +
+                    '&format=' + format;
+    window.location.href = exportUrl;
 }
 </script>
 @endsection

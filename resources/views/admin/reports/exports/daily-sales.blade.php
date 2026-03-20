@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>{{ $title }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            line-height: 1.4;
+            color: #333;
+        }
+        h1 {
+            color: #2c3e50;
+            font-size: 24px;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        h3 {
+            color: #34495e;
+            font-size: 16px;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th {
+            background-color: #3498db;
+            color: white;
+            font-weight: bold;
+            text-align: left;
+            padding: 10px;
+            border: 1px solid #2980b9;
+        }
+        td {
+            padding: 8px 10px;
+            border: 1px solid #bdc3c7;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #3498db;
+        }
+        .summary {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            border-left: 4px solid #3498db;
+        }
+        .summary-item {
+            margin: 5px 0;
+            font-size: 13px;
+        }
+        .footer {
+            margin-top: 30px;
+            font-size: 10px;
+            color: #7f8c8d;
+            text-align: center;
+            padding-top: 10px;
+            border-top: 1px solid #bdc3c7;
+        }
+        .amount {
+            text-align: right;
+            font-weight: bold;
+        }
+        .text-success {
+            color: #27ae60;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>{{ $title }}</h1>
+        <p><strong>Generated on:</strong> {{ now()->format('F d, Y H:i:s') }}</p>
+        <p><strong>Period:</strong> {{ request('start_date') }} to {{ request('end_date') }}</p>
+    </div>
+
+    @if(!empty($pdfData))
+        <!-- Summary Section -->
+        <div class="summary">
+            <h3>Summary</h3>
+            @php
+                $totalRevenue = collect($pdfData)->sum('Total Revenue');
+                $totalOrders = collect($pdfData)->sum('Total Orders');
+                $totalCustom = collect($pdfData)->sum('Custom Cakes');
+                $totalStandard = collect($pdfData)->sum('Standard Cakes');
+            @endphp
+            <div class="summary-item"><strong>Total Revenue:</strong> ${{ number_format($totalRevenue, 2) }}</div>
+            <div class="summary-item"><strong>Total Orders:</strong> {{ $totalOrders }}</div>
+            <div class="summary-item"><strong>Custom Cakes:</strong> {{ $totalCustom }}</div>
+            <div class="summary-item"><strong>Standard Cakes:</strong> {{ $totalStandard }}</div>
+            <div class="summary-item"><strong>Average Daily Revenue:</strong> ${{ number_format($totalRevenue / count($pdfData), 2) }}</div>
+        </div>
+
+        <!-- Data Table -->
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Day</th>
+                    <th>Orders</th>
+                    <th>Custom</th>
+                    <th>Standard</th>
+                    <th>Revenue</th>
+                    <th>Avg Order</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($pdfData as $row)
+                <tr>
+                    <td>{{ $row['Date'] }}</td>
+                    <td>{{ $row['Day'] }}</td>
+                    <td style="text-align: center;">{{ $row['Total Orders'] }}</td>
+                    <td style="text-align: center;">{{ $row['Custom Cakes'] }}</td>
+                    <td style="text-align: center;">{{ $row['Standard Cakes'] }}</td>
+                    <td class="amount text-success">${{ number_format($row['Total Revenue'], 2) }}</td>
+                    <td class="amount">${{ number_format($row['Avg Order Value'], 2) }}</td>
+                </tr>
+                @endforeach
+            </tbody>
+            <tfoot>
+                <tr style="background-color: #ecf0f1; font-weight: bold;">
+                    <td colspan="3"><strong>Totals:</strong></td>
+                    <td style="text-align: center;">{{ $totalCustom }}</td>
+                    <td style="text-align: center;">{{ $totalStandard }}</td>
+                    <td class="amount">${{ number_format($totalRevenue, 2) }}</td>
+                    <td class="amount">${{ number_format($totalRevenue / $totalOrders, 2) }}</td>
+                </tr>
+            </tfoot>
+        </table>
+    @else
+        <p style="text-align: center; color: #e74c3c;">No data available for the selected period.</p>
+    @endif
+
+    <div class="footer">
+        <p>Generated by Cake Shop Management System</p>
+    </div>
+</body>
+</html>

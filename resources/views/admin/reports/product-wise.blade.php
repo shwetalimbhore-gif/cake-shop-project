@@ -97,11 +97,12 @@
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table table-bordered table-striped table-hover" id="productTable">
+                        <table class="table table-bordered table-striped table-hover">
                             <thead class="bg-primary text-white">
                                 <tr>
                                     <th>#</th>
                                     <th>Product Name</th>
+                                    <th>SKU</th>
                                     <th>Stock</th>
                                     <th>Quantity Sold</th>
                                     <th>Order Count</th>
@@ -113,13 +114,16 @@
                             <tbody>
                                 @foreach($productSales as $index => $product)
                                 @php
-                                    $performance = ($product->total_quantity / $productSales->max('total_quantity')) * 100;
+                                    $maxQuantity = $productSales->max('total_quantity');
+                                    $performance = $maxQuantity > 0 ? ($product->total_quantity / $maxQuantity) * 100 : 0;
+                                    $stockClass = $product->stock_quantity <= 5 ? 'danger' : ($product->stock_quantity <= 10 ? 'warning' : 'success');
                                 @endphp
                                 <tr>
                                     <td>{{ $index + 1 }}</td>
                                     <td>{{ $product->name }}</td>
+                                    <td>{{ $product->sku ?? 'N/A' }}</td>
                                     <td>
-                                        <span class="badge badge-{{ $product->stock_quantity > 10 ? 'success' : 'warning' }}">
+                                        <span class="badge badge-{{ $stockClass }}">
                                             {{ $product->stock_quantity }}
                                         </span>
                                     </td>
@@ -152,6 +156,12 @@
 function exportReport(format) {
     var startDate = $('input[name="start_date"]').val();
     var endDate = $('input[name="end_date"]').val();
+
+    if (!startDate || !endDate) {
+        alert('Please select both start and end dates');
+        return;
+    }
+
     var exportUrl = '{{ route("admin.reports.export", "product-wise") }}' +
                     '?start_date=' + startDate +
                     '&end_date=' + endDate +

@@ -1,4 +1,3 @@
-{{-- resources/views/admin/reports/customers.blade.php --}}
 @extends('layouts.admin')
 
 @section('title', 'Customer Reports - Admin Panel')
@@ -10,11 +9,6 @@
     <div class="card">
         <div class="card-header">
             <h5 class="card-title">Filter Reports</h5>
-            <div class="card-tools">
-                <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                    <i class="fas fa-minus"></i>
-                </button>
-            </div>
         </div>
         <div class="card-body">
             <form method="GET" action="{{ route('admin.reports.customers') }}" id="filterForm">
@@ -38,19 +32,23 @@
                         <a href="{{ route('admin.reports.customers') }}" class="btn btn-secondary mt-4">
                             <i class="fas fa-redo"></i> Reset
                         </a>
-                        <div class="btn-group mt-4">
-                            <button type="button" class="btn btn-success dropdown-toggle" data-toggle="dropdown">
-                                <i class="fas fa-download"></i> Export
-                            </button>
-                            <div class="dropdown-menu">
-                                <a class="dropdown-item" href="#" onclick="exportReport('csv')">CSV</a>
-                                <a class="dropdown-item" href="#" onclick="exportReport('excel')">Excel</a>
-                                <a class="dropdown-item" href="#" onclick="exportReport('pdf')">PDF</a>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Export Buttons -->
+    <div class="row mb-3">
+        <div class="col-12 text-right">
+            <div class="btn-group">
+                <button type="button" class="btn btn-success" onclick="exportReport('excel')">
+                    <i class="fas fa-file-excel"></i> Export to Excel
+                </button>
+                <button type="button" class="btn btn-danger" onclick="exportReport('pdf')">
+                    <i class="fas fa-file-pdf"></i> Export to PDF
+                </button>
+            </div>
         </div>
     </div>
 
@@ -62,9 +60,6 @@
                     <h3>{{ $topCustomers->count() }}</h3>
                     <p>Top Customers</p>
                 </div>
-                <div class="icon">
-                    <i class="fas fa-crown"></i>
-                </div>
             </div>
         </div>
         <div class="col-lg-4 col-6">
@@ -73,9 +68,6 @@
                     <h3>{{ $newCustomers }}</h3>
                     <p>New Customers</p>
                 </div>
-                <div class="icon">
-                    <i class="fas fa-user-plus"></i>
-                </div>
             </div>
         </div>
         <div class="col-lg-4 col-6">
@@ -83,9 +75,6 @@
                 <div class="inner">
                     <h3>{{ $returningCustomers }}</h3>
                     <p>Returning Customers</p>
-                </div>
-                <div class="icon">
-                    <i class="fas fa-user-friends"></i>
                 </div>
             </div>
         </div>
@@ -99,7 +88,7 @@
                     <h5 class="card-title">New vs Returning Customers</h5>
                 </div>
                 <div class="card-body">
-                    <canvas id="customerTypeChart" style="min-height: 300px;"></canvas>
+                    <canvas id="customerTypeChart" style="height: 300px;"></canvas>
                 </div>
             </div>
         </div>
@@ -109,7 +98,7 @@
                     <h5 class="card-title">Order Frequency Distribution</h5>
                 </div>
                 <div class="card-body">
-                    <canvas id="frequencyChart" style="min-height: 300px;"></canvas>
+                    <canvas id="frequencyChart" style="height: 300px;"></canvas>
                 </div>
             </div>
         </div>
@@ -123,32 +112,34 @@
                     <h5 class="card-title">Top Customers by Spending</h5>
                 </div>
                 <div class="card-body">
-                    <table class="table table-bordered table-striped">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Customer Name</th>
-                                <th>Email</th>
-                                <th>Total Orders</th>
-                                <th>Total Spent</th>
-                                <th>Avg Order Value</th>
-                                <th>Last Order</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($topCustomers as $index => $customer)
-                            <tr>
-                                <td>{{ $index + 1 }}</td>
-                                <td>{{ $customer->name }}</td>
-                                <td>{{ $customer->email }}</td>
-                                <td>{{ $customer->total_orders }}</td>
-                                <td>${{ number_format($customer->total_spent, 2) }}</td>
-                                <td>${{ number_format($customer->avg_order_value, 2) }}</td>
-                                <td>{{ \Carbon\Carbon::parse($customer->last_order_date)->format('M d, Y') }}</td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Customer Name</th>
+                                    <th>Email</th>
+                                    <th>Total Orders</th>
+                                    <th>Total Spent</th>
+                                    <th>Avg Order Value</th>
+                                    <th>Last Order</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($topCustomers as $index => $customer)
+                                <tr>
+                                    <td>{{ $index + 1 }}</td>
+                                    <td>{{ $customer->name }}</td>
+                                    <td>{{ $customer->email }}</td>
+                                    <td>{{ $customer->total_orders }}</td>
+                                    <td>${{ number_format($customer->total_spent, 2) }}</td>
+                                    <td>${{ number_format($customer->avg_order_value, 2) }}</td>
+                                    <td>{{ \Carbon\Carbon::parse($customer->last_order_date)->format('M d, Y') }}</td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -162,46 +153,48 @@
                     <h5 class="card-title">Recent Customer Orders</h5>
                 </div>
                 <div class="card-body">
-                    <table class="table table-bordered">
-                        <thead>
-                            <tr>
-                                <th>Order #</th>
-                                <th>Customer</th>
-                                <th>Date</th>
-                                <th>Items</th>
-                                <th>Total</th>
-                                <th>Type</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($customerOrders as $order)
-                            <tr>
-                                <td>#{{ $order->id }}</td>
-                                <td>{{ $order->user->name ?? ($order->walkin_customer_name ?? 'Guest') }}</td>
-                                <td>{{ $order->created_at->format('M d, Y') }}</td>
-                                <td>{{ $order->items->count() }}</td>
-                                <td>${{ number_format($order->total, 2) }}</td>
-                                <td>
-                                    @if($order->is_custom_cake)
-                                        <span class="badge badge-primary">Custom</span>
-                                    @else
-                                        <span class="badge badge-secondary">Standard</span>
-                                    @endif
-                                </td>
-                                <td>
-                                    @if($order->status == 'completed')
-                                        <span class="badge badge-success">Completed</span>
-                                    @elseif($order->status == 'pending')
-                                        <span class="badge badge-warning">Pending</span>
-                                    @else
-                                        <span class="badge badge-danger">{{ ucfirst($order->status) }}</span>
-                                    @endif
-                                </td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Order #</th>
+                                    <th>Customer</th>
+                                    <th>Date</th>
+                                    <th>Items</th>
+                                    <th>Total</th>
+                                    <th>Type</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($customerOrders as $order)
+                                <tr>
+                                    <td>#{{ $order->id }}</td>
+                                    <td>{{ $order->user->name ?? ($order->walkin_customer_name ?? 'Guest') }}</td>
+                                    <td>{{ $order->created_at->format('M d, Y') }}</td>
+                                    <td>{{ $order->items->count() }}</td>
+                                    <td>${{ number_format($order->total, 2) }}</td>
+                                    <td>
+                                        @if($order->is_custom_cake)
+                                            <span class="badge badge-primary">Custom</span>
+                                        @else
+                                            <span class="badge badge-secondary">Standard</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        @if($order->status == 'completed')
+                                            <span class="badge badge-success">Completed</span>
+                                        @elseif($order->status == 'pending')
+                                            <span class="badge badge-warning">Pending</span>
+                                        @else
+                                            <span class="badge badge-danger">{{ ucfirst($order->status) }}</span>
+                                        @endif
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
 
                     <div class="mt-4">
                         {{ $customerOrders->appends(request()->query())->links() }}
@@ -274,9 +267,7 @@ $(document).ready(function() {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: {
-                    position: 'bottom'
-                }
+                legend: { position: 'bottom' }
             }
         }
     });
@@ -304,9 +295,7 @@ $(document).ready(function() {
             scales: {
                 y: {
                     beginAtZero: true,
-                    ticks: {
-                        stepSize: 1
-                    }
+                    ticks: { stepSize: 1 }
                 }
             }
         }
@@ -315,16 +304,19 @@ $(document).ready(function() {
 });
 
 function exportReport(format) {
-    var form = $('#filterForm');
-    var action = '{{ route("admin.reports.export", ["type" => "customers", "report" => "customers"]) }}';
+    var startDate = $('input[name="start_date"]').val();
+    var endDate = $('input[name="end_date"]').val();
 
-    form.append('<input type="hidden" name="format" value="' + format + '">');
-    form.attr('action', action);
-    form.submit();
+    if (!startDate || !endDate) {
+        alert('Please select both start and end dates');
+        return;
+    }
 
-    setTimeout(function() {
-        $('input[name="format"]').remove();
-    }, 100);
+    var exportUrl = '{{ route("admin.reports.export", "customers") }}' +
+                    '?start_date=' + startDate +
+                    '&end_date=' + endDate +
+                    '&format=' + format;
+    window.location.href = exportUrl;
 }
 </script>
 @endsection

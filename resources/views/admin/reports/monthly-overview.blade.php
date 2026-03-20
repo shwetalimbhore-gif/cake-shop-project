@@ -95,7 +95,7 @@
             <div class="alert alert-success">
                 <i class="fas fa-trophy"></i>
                 <strong>Best Performing Month:</strong>
-                {{ Carbon\Carbon::create()->month($summary['best_month']->month)->format('F') }} {{ $summary['best_month']->year }}
+                {{ \Carbon\Carbon::create()->month($summary['best_month']->month)->format('F') }} {{ $summary['best_month']->year }}
                 with ${{ number_format($summary['best_month']->total_revenue, 2) }} revenue
             </div>
         </div>
@@ -140,7 +140,7 @@
                                 @foreach($monthlyData as $data)
                                 <tr>
                                     <td>{{ $data->year }}</td>
-                                    <td>{{ Carbon\Carbon::create()->month($data->month)->format('F') }}</td>
+                                    <td>{{ \Carbon\Carbon::create()->month($data->month)->format('F') }}</td>
                                     <td>{{ $data->total_orders }}</td>
                                     <td>{{ $data->custom_cakes }}</td>
                                     <td class="text-success">${{ number_format($data->total_revenue, 2) }}</td>
@@ -166,7 +166,7 @@ $(document).ready(function() {
         type: 'bar',
         data: {
             labels: {!! json_encode($monthlyData->map(function($data) {
-                return Carbon\Carbon::create()->month($data->month)->format('F') . ' ' . $data->year;
+                return \Carbon\Carbon::create()->month($data->month)->format('F') . ' ' . $data->year;
             })) !!},
             datasets: [{
                 label: 'Revenue',
@@ -192,6 +192,12 @@ $(document).ready(function() {
 function exportReport(format) {
     var startDate = $('input[name="start_date"]').val();
     var endDate = $('input[name="end_date"]').val();
+
+    if (!startDate || !endDate) {
+        alert('Please select both start and end dates');
+        return;
+    }
+
     var exportUrl = '{{ route("admin.reports.export", "monthly-overview") }}' +
                     '?start_date=' + startDate +
                     '&end_date=' + endDate +

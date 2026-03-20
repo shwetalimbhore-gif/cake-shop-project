@@ -32,10 +32,13 @@
         "psr-4": {
             "App\\": "app/",
             "Database\\Factories\\": "database/factories/",
-            "Database\\Seeders\\": "database/seeders/"
+            "Database\\Seeders\\": "database/seeders/",
+            "App\\Exports\\": "app/Exports/",
+            "App\\Helpers\\": "app/Helpers/"
         },
         "files": [
             "app/Helpers/SettingsHelper.php"
+
         ]
     },
     "autoload-dev": {

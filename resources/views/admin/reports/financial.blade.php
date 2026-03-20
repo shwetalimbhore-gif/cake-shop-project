@@ -1,4 +1,3 @@
-{{-- resources/views/admin/reports/financial.blade.php --}}
 @extends('layouts.admin')
 
 @section('title', 'Financial Reports - Admin Panel')
@@ -10,11 +9,6 @@
     <div class="card">
         <div class="card-header">
             <h5 class="card-title">Filter Reports</h5>
-            <div class="card-tools">
-                <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                    <i class="fas fa-minus"></i>
-                </button>
-            </div>
         </div>
         <div class="card-body">
             <form method="GET" action="{{ route('admin.reports.financial') }}" id="filterForm">
@@ -38,19 +32,23 @@
                         <a href="{{ route('admin.reports.financial') }}" class="btn btn-secondary mt-4">
                             <i class="fas fa-redo"></i> Reset
                         </a>
-                        <div class="btn-group mt-4">
-                            <button type="button" class="btn btn-success dropdown-toggle" data-toggle="dropdown">
-                                <i class="fas fa-download"></i> Export
-                            </button>
-                            <div class="dropdown-menu">
-                                <a class="dropdown-item" href="#" onclick="exportReport('csv')">CSV</a>
-                                <a class="dropdown-item" href="#" onclick="exportReport('excel')">Excel</a>
-                                <a class="dropdown-item" href="#" onclick="exportReport('pdf')">PDF</a>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Export Buttons -->
+    <div class="row mb-3">
+        <div class="col-12 text-right">
+            <div class="btn-group">
+                <button type="button" class="btn btn-success" onclick="exportReport('excel')">
+                    <i class="fas fa-file-excel"></i> Export to Excel
+                </button>
+                <button type="button" class="btn btn-danger" onclick="exportReport('pdf')">
+                    <i class="fas fa-file-pdf"></i> Export to PDF
+                </button>
+            </div>
         </div>
     </div>
 
@@ -62,9 +60,6 @@
                     <h3>${{ number_format($totalRevenue, 2) }}</h3>
                     <p>Total Revenue</p>
                 </div>
-                <div class="icon">
-                    <i class="fas fa-dollar-sign"></i>
-                </div>
             </div>
         </div>
         <div class="col-lg-3 col-6">
@@ -72,9 +67,6 @@
                 <div class="inner">
                     <h3>${{ number_format($totalCost, 2) }}</h3>
                     <p>Total Cost</p>
-                </div>
-                <div class="icon">
-                    <i class="fas fa-coins"></i>
                 </div>
             </div>
         </div>
@@ -84,9 +76,6 @@
                     <h3>${{ number_format($totalProfit, 2) }}</h3>
                     <p>Total Profit</p>
                 </div>
-                <div class="icon">
-                    <i class="fas fa-chart-pie"></i>
-                </div>
             </div>
         </div>
         <div class="col-lg-3 col-6">
@@ -94,9 +83,6 @@
                 <div class="inner">
                     <h3>{{ number_format($profitMargin, 1) }}%</h3>
                     <p>Profit Margin</p>
-                </div>
-                <div class="icon">
-                    <i class="fas fa-percent"></i>
                 </div>
             </div>
         </div>
@@ -110,7 +96,7 @@
                     <h5 class="card-title">Revenue vs Cost Analysis</h5>
                 </div>
                 <div class="card-body">
-                    <canvas id="profitChart" style="min-height: 400px;"></canvas>
+                    <canvas id="profitChart" style="height: 400px;"></canvas>
                 </div>
             </div>
         </div>
@@ -124,37 +110,39 @@
                     <h5 class="card-title">Profit by Product</h5>
                 </div>
                 <div class="card-body">
-                    <table class="table table-bordered table-striped">
-                        <thead>
-                            <tr>
-                                <th>Product</th>
-                                <th>Quantity Sold</th>
-                                <th>Revenue</th>
-                                <th>Cost</th>
-                                <th>Profit</th>
-                                <th>Margin</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($profitData as $item)
-                            <tr>
-                                <td>{{ $item->name }}</td>
-                                <td>{{ $item->quantity_sold }}</td>
-                                <td>${{ number_format($item->revenue, 2) }}</td>
-                                <td>${{ number_format($item->total_cost, 2) }}</td>
-                                <td class="{{ $item->profit >= 0 ? 'text-success' : 'text-danger' }}">
-                                    ${{ number_format($item->profit, 2) }}
-                                </td>
-                                <td>
-                                    @php
-                                        $marginColor = $item->margin >= 30 ? 'success' : ($item->margin >= 15 ? 'warning' : 'danger');
-                                    @endphp
-                                    <span class="badge badge-{{ $marginColor }}">{{ number_format($item->margin, 1) }}%</span>
-                                </td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Quantity Sold</th>
+                                    <th>Revenue</th>
+                                    <th>Cost</th>
+                                    <th>Profit</th>
+                                    <th>Margin</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($profitData as $item)
+                                @php
+                                    $marginColor = $item->margin >= 30 ? 'success' : ($item->margin >= 15 ? 'warning' : 'danger');
+                                @endphp
+                                <tr>
+                                    <td>{{ $item->name }}</td>
+                                    <td>{{ $item->quantity_sold }}</td>
+                                    <td>${{ number_format($item->revenue, 2) }}</td>
+                                    <td>${{ number_format($item->total_cost, 2) }}</td>
+                                    <td class="{{ $item->profit >= 0 ? 'text-success' : 'text-danger' }}">
+                                        ${{ number_format($item->profit, 2) }}
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-{{ $marginColor }}">{{ number_format($item->margin, 1) }}%</span>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -189,6 +177,26 @@
                             <span class="info-box-number">${{ number_format($discountImpact->avg_discount, 2) }}</span>
                         </div>
                     </div>
+
+                    <h6 class="mt-4">Revenue Comparison</h6>
+                    <div class="progress-group">
+                        <span class="progress-text">With Discount</span>
+                        <span class="float-right">${{ number_format($discountImpact->revenue_with_discount, 2) }}</span>
+                        <div class="progress sm">
+                            @php
+                                $totalRevenue = $discountImpact->revenue_with_discount + $discountImpact->revenue_without_discount;
+                                $withDiscountPercent = $totalRevenue > 0 ? ($discountImpact->revenue_with_discount / $totalRevenue) * 100 : 0;
+                            @endphp
+                            <div class="progress-bar bg-success" style="width: {{ $withDiscountPercent }}%"></div>
+                        </div>
+                    </div>
+                    <div class="progress-group">
+                        <span class="progress-text">Without Discount</span>
+                        <span class="float-right">${{ number_format($discountImpact->revenue_without_discount, 2) }}</span>
+                        <div class="progress sm">
+                            <div class="progress-bar bg-primary" style="width: {{ 100 - $withDiscountPercent }}%"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -199,31 +207,33 @@
                     <h5 class="card-title">Payment Methods</h5>
                 </div>
                 <div class="card-body">
-                    <canvas id="paymentChart" style="min-height: 250px;"></canvas>
-                    <table class="table table-sm mt-3">
-                        @foreach($paymentMethods as $method)
-                        <tr>
-                            <td>
-                                @switch($method->payment_method)
-                                    @case('cash')
-                                        <i class="fas fa-money-bill-wave text-success"></i>
-                                        @break
-                                    @case('card')
-                                        <i class="fas fa-credit-card text-primary"></i>
-                                        @break
-                                    @case('upi')
-                                        <i class="fas fa-mobile-alt text-info"></i>
-                                        @break
-                                    @default
-                                        <i class="fas fa-circle text-secondary"></i>
-                                @endswitch
-                                {{ ucfirst($method->payment_method) }}
-                            </td>
-                            <td>{{ $method->count }} orders</td>
-                            <td>${{ number_format($method->total, 2) }}</td>
-                        </tr>
-                        @endforeach
-                    </table>
+                    <canvas id="paymentChart" style="height: 250px;"></canvas>
+                    <div class="table-responsive mt-3">
+                        <table class="table table-sm">
+                            @foreach($paymentMethods as $method)
+                            <tr>
+                                <td>
+                                    @switch($method->payment_method)
+                                        @case('cash')
+                                            <i class="fas fa-money-bill-wave text-success"></i>
+                                            @break
+                                        @case('card')
+                                            <i class="fas fa-credit-card text-primary"></i>
+                                            @break
+                                        @case('upi')
+                                            <i class="fas fa-mobile-alt text-info"></i>
+                                            @break
+                                        @default
+                                            <i class="fas fa-circle text-secondary"></i>
+                                    @endswitch
+                                    {{ ucfirst($method->payment_method) }}
+                                </td>
+                                <td>{{ $method->count }} orders</td>
+                                <td class="text-right">${{ number_format($method->total, 2) }}</td>
+                            </tr>
+                            @endforeach
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -237,7 +247,7 @@
                     <h5 class="card-title">Seasonal Revenue Trends</h5>
                 </div>
                 <div class="card-body">
-                    <canvas id="seasonalChart" style="min-height: 300px;"></canvas>
+                    <canvas id="seasonalChart" style="height: 300px;"></canvas>
                 </div>
             </div>
         </div>
@@ -279,11 +289,7 @@ $(document).ready(function() {
             scales: {
                 y: {
                     beginAtZero: true,
-                    ticks: {
-                        callback: function(value) {
-                            return '$' + value;
-                        }
-                    }
+                    ticks: { callback: value => '$' + value }
                 }
             }
         }
@@ -318,9 +324,7 @@ $(document).ready(function() {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: {
-                    position: 'bottom'
-                }
+                legend: { position: 'bottom' }
             }
         }
     });
@@ -353,11 +357,7 @@ $(document).ready(function() {
             scales: {
                 y: {
                     beginAtZero: true,
-                    ticks: {
-                        callback: function(value) {
-                            return '$' + value;
-                        }
-                    }
+                    ticks: { callback: value => '$' + value }
                 }
             }
         }
@@ -366,16 +366,19 @@ $(document).ready(function() {
 });
 
 function exportReport(format) {
-    var form = $('#filterForm');
-    var action = '{{ route("admin.reports.export", ["type" => "financial", "report" => "financial"]) }}';
+    var startDate = $('input[name="start_date"]').val();
+    var endDate = $('input[name="end_date"]').val();
 
-    form.append('<input type="hidden" name="format" value="' + format + '">');
-    form.attr('action', action);
-    form.submit();
+    if (!startDate || !endDate) {
+        alert('Please select both start and end dates');
+        return;
+    }
 
-    setTimeout(function() {
-        $('input[name="format"]').remove();
-    }, 100);
+    var exportUrl = '{{ route("admin.reports.export", "financial") }}' +
+                    '?start_date=' + startDate +
+                    '&end_date=' + endDate +
+                    '&format=' + format;
+    window.location.href = exportUrl;
 }
 </script>
 @endsection

@@ -1,5 +1,4 @@
 <?php
-// app/Http/Controllers/Admin/ReportController.php
 
 namespace App\Http\Controllers\Admin;
 
@@ -13,8 +12,14 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
-use Barryvdh\DomPDF\Facade\Pdf;
-use Maatwebsite\Excel\Facades\Excel;
+// Import Helpers and Exports
+use App\Helpers\ReportHelpers;
+use App\Exports\ReportExportService;
+use App\Exports\SalesReportExport;
+use App\Exports\OrdersReportExport;
+use App\Exports\CustomersReportExport;
+use App\Exports\InventoryReportExport;
+use App\Exports\FinancialReportExport;
 
 class ReportController extends Controller
 {
@@ -23,13 +28,11 @@ class ReportController extends Controller
      */
     public function index()
     {
-        // Get some basic stats for the dashboard
         $totalRevenue = Order::sum('total') ?? 0;
         $totalOrders = Order::count() ?? 0;
         $totalCustomers = User::whereHas('orders')->count() ?? 0;
         $lowStockCount = Product::where('stock_quantity', '<=', 10)->count() ?? 0;
 
-        // Get quick insights
         $topFlavor = OrderItem::whereNotNull('flavor')
             ->join('orders', 'order_items.order_id', '=', 'orders.id')
             ->select('order_items.flavor', DB::raw('SUM(order_items.quantity) as total'))
@@ -45,21 +48,14 @@ class ReportController extends Controller
 
         $avgOrderValue = Order::avg('total') ?? 0;
 
-        // Get peak order day (simplified)
         $peakDay = Order::select(DB::raw('DAYNAME(created_at) as day'), DB::raw('COUNT(*) as total'))
             ->groupBy('day')
             ->orderBy('total', 'DESC')
             ->first()->day ?? 'Saturday';
 
         return view('admin.reports.index', compact(
-            'totalRevenue',
-            'totalOrders',
-            'totalCustomers',
-            'lowStockCount',
-            'topFlavor',
-            'topOccasion',
-            'avgOrderValue',
-            'peakDay'
+            'totalRevenue', 'totalOrders', 'totalCustomers', 'lowStockCount',
+            'topFlavor', 'topOccasion', 'avgOrderValue', 'peakDay'
         ));
     }
 
@@ -68,15 +64,8 @@ class ReportController extends Controller
      */
     public function dailySales(Request $request)
     {
-        $request->validate([
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date|after_or_equal:start_date',
-        ]);
+        [$startDate, $endDate] = ReportHelpers::validateDateRange($request);
 
-        $startDate = $request->start_date ? Carbon::parse($request->start_date) : Carbon::now()->startOfMonth();
-        $endDate = $request->end_date ? Carbon::parse($request->end_date) : Carbon::now()->endOfDay();
-
-        // Daily Sales Data
         $dailySales = Order::select(
                 DB::raw('DATE(created_at) as date'),
                 DB::raw('DAYNAME(created_at) as day_name'),
@@ -90,7 +79,6 @@ class ReportController extends Controller
             ->orderBy('date', 'desc')
             ->get();
 
-        // Summary Stats
         $summary = [
             'total_revenue' => $dailySales->sum('total_revenue'),
             'total_orders' => $dailySales->sum('total_orders'),
@@ -101,11 +89,8 @@ class ReportController extends Controller
             'best_day' => $dailySales->sortByDesc('total_revenue')->first(),
         ];
 
-        // Chart Data
         $chartData = [
-            'dates' => $dailySales->pluck('date')->map(function($date) {
-                return Carbon::parse($date)->format('M d');
-            }),
+            'dates' => $dailySales->pluck('date')->map(fn($date) => Carbon::parse($date)->format('M d')),
             'revenues' => $dailySales->pluck('total_revenue'),
             'orders' => $dailySales->pluck('total_orders'),
         ];
@@ -118,13 +103,7 @@ class ReportController extends Controller
      */
     public function monthlyOverview(Request $request)
     {
-        $request->validate([
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date|after_or_equal:start_date',
-        ]);
-
-        $startDate = $request->start_date ? Carbon::parse($request->start_date) : Carbon::now()->startOfYear();
-        $endDate = $request->end_date ? Carbon::parse($request->end_date) : Carbon::now()->endOfMonth();
+        [$startDate, $endDate] = ReportHelpers::validateDateRange($request, Carbon::now()->startOfYear());
 
         $monthlyData = Order::select(
                 DB::raw('YEAR(created_at) as year'),
@@ -156,13 +135,7 @@ class ReportController extends Controller
      */
     public function productWise(Request $request)
     {
-        $request->validate([
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date|after_or_equal:start_date',
-        ]);
-
-        $startDate = $request->start_date ? Carbon::parse($request->start_date) : Carbon::now()->startOfMonth();
-        $endDate = $request->end_date ? Carbon::parse($request->end_date) : Carbon::now()->endOfDay();
+        [$startDate, $endDate] = ReportHelpers::validateDateRange($request);
 
         $productSales = OrderItem::select(
                 'products.id',
@@ -194,14 +167,7 @@ class ReportController extends Controller
      */
     public function topCakes(Request $request)
     {
-        $request->validate([
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date|after_or_equal:start_date',
-            'limit' => 'nullable|integer|min:1|max:50'
-        ]);
-
-        $startDate = $request->start_date ? Carbon::parse($request->start_date) : Carbon::now()->startOfMonth();
-        $endDate = $request->end_date ? Carbon::parse($request->end_date) : Carbon::now()->endOfDay();
+        [$startDate, $endDate] = ReportHelpers::validateDateRange($request);
         $limit = $request->limit ?? 10;
 
         $topCakes = OrderItem::select(
@@ -235,13 +201,7 @@ class ReportController extends Controller
      */
     public function flavorTrends(Request $request)
     {
-        $request->validate([
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date|after_or_equal:start_date',
-        ]);
-
-        $startDate = $request->start_date ? Carbon::parse($request->start_date) : Carbon::now()->startOfMonth();
-        $endDate = $request->end_date ? Carbon::parse($request->end_date) : Carbon::now()->endOfDay();
+        [$startDate, $endDate] = ReportHelpers::validateDateRange($request);
 
         $flavorTrends = OrderItem::select(
                 'order_items.flavor',
@@ -253,7 +213,7 @@ class ReportController extends Controller
             ->join('orders', 'order_items.order_id', '=', 'orders.id')
             ->whereBetween('orders.created_at', [$startDate, $endDate])
             ->whereNotNull('order_items.flavor')
-            ->groupBy('order_items.flavor', DB::raw('YEAR(orders.created_at)'), DB::raw('MONTH(orders.created_at)'))
+            ->groupBy('order_items.flavor', 'year', 'month')
             ->orderBy('year', 'desc')
             ->orderBy('month', 'desc')
             ->orderBy('total_quantity', 'desc')
@@ -282,20 +242,15 @@ class ReportController extends Controller
      */
     public function categoryWise(Request $request)
     {
-        $request->validate([
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date|after_or_equal:start_date',
-        ]);
-
-        $startDate = $request->start_date ? Carbon::parse($request->start_date) : Carbon::now()->startOfMonth();
-        $endDate = $request->end_date ? Carbon::parse($request->end_date) : Carbon::now()->endOfDay();
+        [$startDate, $endDate] = ReportHelpers::validateDateRange($request);
 
         $categorySales = OrderItem::select(
                 'categories.id',
                 'categories.name',
+                DB::raw('COUNT(DISTINCT order_items.order_id) as order_count'),
                 DB::raw('SUM(order_items.quantity) as total_quantity'),
                 DB::raw('SUM(order_items.subtotal) as total_revenue'),
-                DB::raw('COUNT(DISTINCT order_items.order_id) as order_count')
+                DB::raw('AVG(order_items.subtotal / order_items.quantity) as avg_price')
             )
             ->join('products', 'order_items.product_id', '=', 'products.id')
             ->join('categories', 'products.category_id', '=', 'categories.id')
@@ -305,7 +260,227 @@ class ReportController extends Controller
             ->orderBy('total_revenue', 'desc')
             ->get();
 
-        return view('admin.reports.category-wise', compact('categorySales', 'startDate', 'endDate'));
+        $summary = [
+            'total_categories' => $categorySales->count(),
+            'total_revenue' => $categorySales->sum('total_revenue'),
+            'total_quantity' => $categorySales->sum('total_quantity'),
+            'total_orders' => $categorySales->sum('order_count'),
+            'avg_category_revenue' => $categorySales->count() > 0 ? $categorySales->avg('total_revenue') : 0,
+            'top_category' => $categorySales->first()->name ?? 'N/A',
+            'top_category_revenue' => $categorySales->first()->total_revenue ?? 0,
+        ];
+
+        $chartData = [
+            'labels' => $categorySales->pluck('name'),
+            'revenues' => $categorySales->pluck('total_revenue'),
+            'quantities' => $categorySales->pluck('total_quantity'),
+        ];
+
+        return view('admin.reports.category-wise', compact('categorySales', 'summary', 'chartData', 'startDate', 'endDate'));
+    }
+
+    /**
+     * Orders Report
+     */
+    public function orders(Request $request)
+    {
+        [$startDate, $endDate] = ReportHelpers::validateDateRange($request);
+
+        $orderSummary = [
+            'total' => Order::whereBetween('created_at', [$startDate, $endDate])->count(),
+            'completed' => Order::whereBetween('created_at', [$startDate, $endDate])->where('status', 'completed')->count(),
+            'pending' => Order::whereBetween('created_at', [$startDate, $endDate])->where('status', 'pending')->count(),
+            'cancelled' => Order::whereBetween('created_at', [$startDate, $endDate])->where('status', 'cancelled')->count(),
+            'processing' => Order::whereBetween('created_at', [$startDate, $endDate])->where('status', 'processing')->count(),
+        ];
+
+        $customCakes = Order::whereBetween('created_at', [$startDate, $endDate])
+            ->where('is_custom_cake', true)
+            ->with('user')
+            ->latest()
+            ->paginate(20);
+
+        $customCakesStats = [
+            'total' => $customCakes->total(),
+            'avg_price' => Order::whereBetween('created_at', [$startDate, $endDate])->where('is_custom_cake', true)->avg('total') ?? 0,
+            'with_message' => Order::whereBetween('created_at', [$startDate, $endDate])->where('is_custom_cake', true)->whereNotNull('custom_message')->count(),
+        ];
+
+        $preorderVsWalkin = [
+            'pre_order' => Order::whereBetween('created_at', [$startDate, $endDate])->whereNotNull('pre_order_date')->count(),
+            'walk_in' => Order::whereBetween('created_at', [$startDate, $endDate])->whereNull('pre_order_date')->count(),
+        ];
+
+        $deliveryVsPickup = [
+            'delivery' => Order::whereBetween('created_at', [$startDate, $endDate])->where('order_type', 'delivery')->count(),
+            'pickup' => Order::whereBetween('created_at', [$startDate, $endDate])->where('order_type', 'pickup')->count(),
+        ];
+
+        $occasionOrders = Order::whereBetween('created_at', [$startDate, $endDate])
+            ->whereNotNull('occasion')
+            ->select('occasion', DB::raw('COUNT(*) as total'), DB::raw('SUM(total) as revenue'))
+            ->groupBy('occasion')
+            ->orderBy('total', 'desc')
+            ->get();
+
+        return view('admin.reports.orders', compact(
+            'orderSummary', 'customCakes', 'customCakesStats', 'preorderVsWalkin',
+            'deliveryVsPickup', 'occasionOrders', 'startDate', 'endDate'
+        ));
+    }
+
+    /**
+     * Customers Report
+     */
+    public function customers(Request $request)
+    {
+        [$startDate, $endDate] = ReportHelpers::validateDateRange($request);
+
+        $topCustomers = User::select(
+                'users.id', 'users.name', 'users.email',
+                DB::raw('COUNT(orders.id) as total_orders'),
+                DB::raw('SUM(orders.total) as total_spent'),
+                DB::raw('AVG(orders.total) as avg_order_value'),
+                DB::raw('MAX(orders.created_at) as last_order_date')
+            )
+            ->join('orders', 'users.id', '=', 'orders.user_id')
+            ->whereBetween('orders.created_at', [$startDate, $endDate])
+            ->groupBy('users.id', 'users.name', 'users.email')
+            ->orderBy('total_spent', 'desc')
+            ->limit(20)
+            ->get();
+
+        $customerOrders = Order::with('user')
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->latest()
+            ->paginate(20);
+
+        $customers = User::whereHas('orders', fn($q) => $q->whereBetween('created_at', [$startDate, $endDate]))
+            ->withCount(['orders' => fn($q) => $q->whereBetween('created_at', [$startDate, $endDate])])
+            ->get();
+
+        $newCustomers = $customers->filter(fn($c) => $c->orders_count == 1)->count();
+        $returningCustomers = $customers->filter(fn($c) => $c->orders_count > 1)->count();
+
+        $orderFrequency = User::select(DB::raw('COUNT(orders.id) as order_count'), DB::raw('COUNT(DISTINCT users.id) as user_count'))
+            ->join('orders', 'users.id', '=', 'orders.user_id')
+            ->whereBetween('orders.created_at', [$startDate, $endDate])
+            ->groupBy('users.id')
+            ->having('order_count', '>', 0)
+            ->get()
+            ->groupBy('order_count')
+            ->map(fn($group) => $group->sum('user_count'));
+
+        $specialDateCustomers = User::whereHas('orders', fn($q) => $q->whereNotNull('occasion'))
+            ->with(['orders' => fn($q) => $q->whereBetween('created_at', [$startDate, $endDate])->whereNotNull('occasion')])
+            ->get()
+            ->filter(fn($user) => $user->orders->isNotEmpty());
+
+        return view('admin.reports.customers', compact(
+            'topCustomers', 'customerOrders', 'newCustomers', 'returningCustomers',
+            'orderFrequency', 'specialDateCustomers', 'startDate', 'endDate'
+        ));
+    }
+
+    /**
+     * Inventory Report
+     */
+    public function inventory(Request $request)
+    {
+        [$startDate, $endDate] = ReportHelpers::validateDateRange($request);
+
+        $rawMaterialUsage = OrderItem::select(
+                'products.name as product_name',
+                'order_items.flavor',
+                DB::raw('SUM(order_items.quantity) as total_quantity'),
+                DB::raw('COUNT(DISTINCT order_items.order_id) as times_used')
+            )
+            ->join('products', 'order_items.product_id', '=', 'products.id')
+            ->join('orders', 'order_items.order_id', '=', 'orders.id')
+            ->whereBetween('orders.created_at', [$startDate, $endDate])
+            ->groupBy('products.name', 'order_items.flavor')
+            ->orderBy('total_quantity', 'desc')
+            ->get();
+
+        $lowStockProducts = Product::where('stock_quantity', '<=', 10)
+            ->orderBy('stock_quantity', 'asc')
+            ->get();
+
+        $stockMovement = OrderItem::select(
+                DB::raw('DATE(orders.created_at) as date'),
+                DB::raw('SUM(order_items.quantity) as total_used')
+            )
+            ->join('orders', 'order_items.order_id', '=', 'orders.id')
+            ->whereBetween('orders.created_at', [$startDate, $endDate])
+            ->groupBy('date')
+            ->orderBy('date', 'asc')
+            ->get();
+
+        return view('admin.reports.inventory', compact(
+            'rawMaterialUsage', 'lowStockProducts', 'stockMovement', 'startDate', 'endDate'
+        ));
+    }
+
+    /**
+     * Financial Report
+     */
+    public function financial(Request $request)
+    {
+        [$startDate, $endDate] = ReportHelpers::validateDateRange($request);
+
+        $profitData = OrderItem::select(
+                'products.id', 'products.name',
+                DB::raw('SUM(order_items.quantity) as quantity_sold'),
+                DB::raw('SUM(order_items.subtotal) as revenue')
+            )
+            ->join('products', 'order_items.product_id', '=', 'products.id')
+            ->join('orders', 'order_items.order_id', '=', 'orders.id')
+            ->whereBetween('orders.created_at', [$startDate, $endDate])
+            ->groupBy('products.id', 'products.name')
+            ->get()
+            ->map(function($item) {
+                $item->total_cost = $item->revenue * 0.6;
+                $item->profit = $item->revenue - $item->total_cost;
+                $item->margin = $item->revenue > 0 ? ($item->profit / $item->revenue) * 100 : 0;
+                return $item;
+            });
+
+        $totalRevenue = Order::whereBetween('created_at', [$startDate, $endDate])->sum('total');
+        $totalCost = $profitData->sum('total_cost');
+        $totalProfit = $totalRevenue - $totalCost;
+        $profitMargin = $totalRevenue > 0 ? ($totalProfit / $totalRevenue) * 100 : 0;
+
+        $discountImpact = Order::whereBetween('created_at', [$startDate, $endDate])
+            ->select(
+                DB::raw('COUNT(CASE WHEN discount > 0 THEN 1 END) as orders_with_discount'),
+                DB::raw('SUM(discount) as total_discount_given'),
+                DB::raw('AVG(discount) as avg_discount'),
+                DB::raw('SUM(total) as revenue_with_discount')
+            )
+            ->first();
+
+        $revenueWithoutDiscount = Order::whereBetween('created_at', [$startDate, $endDate])
+            ->where('discount', 0)
+            ->sum('total');
+
+        $discountImpact->revenue_without_discount = $revenueWithoutDiscount;
+
+        $paymentMethods = Order::whereBetween('created_at', [$startDate, $endDate])
+            ->select('payment_method', DB::raw('COUNT(*) as count'), DB::raw('SUM(total) as total'))
+            ->groupBy('payment_method')
+            ->get();
+
+        $seasonalRevenue = Order::select(DB::raw('DATE(created_at) as date'), DB::raw('SUM(total) as revenue'))
+            ->whereBetween('created_at', [$startDate->copy()->subYear(), $endDate])
+            ->groupBy('date')
+            ->orderBy('date', 'asc')
+            ->get()
+            ->groupBy(fn($item) => Carbon::parse($item->date)->format('Y-m-d'));
+
+        return view('admin.reports.financial', compact(
+            'profitData', 'totalRevenue', 'totalCost', 'totalProfit', 'profitMargin',
+            'discountImpact', 'paymentMethods', 'seasonalRevenue', 'startDate', 'endDate'
+        ));
     }
 
     /**
@@ -322,441 +497,104 @@ class ReportController extends Controller
         $startDate = Carbon::parse($request->start_date);
         $endDate = Carbon::parse($request->end_date);
 
-        // Get data based on report type
+        // Get export data based on type
+        $exportData = $this->getExportData($type, $startDate, $endDate, $request);
+        $filename = $this->getExportFilename($type, $startDate, $endDate);
+        $view = "admin.reports.exports.{$type}";
+        $title = $this->getReportTitle($type);
+
+        if ($request->format === 'excel') {
+            return ReportExportService::toExcel($exportData, $filename, $title);
+        } else {
+            return ReportExportService::toPdf($exportData, $filename, $view, $title);
+        }
+    }
+
+    /**
+     * Get export data based on report type
+     */
+    private function getExportData($type, $startDate, $endDate, $request)
+    {
         switch ($type) {
             case 'daily-sales':
-                $data = $this->getDailySalesExport($startDate, $endDate);
-                $filename = "daily_sales_{$startDate->format('Y-m-d')}_to_{$endDate->format('Y-m-d')}";
-                $view = 'admin.reports.exports.daily-sales';
-                break;
+                return $this->getDailySalesExport($startDate, $endDate);
+
             case 'monthly-overview':
-                $data = $this->getMonthlyExport($startDate, $endDate);
-                $filename = "monthly_overview_{$startDate->format('Y-m-d')}_to_{$endDate->format('Y-m-d')}";
-                $view = 'admin.reports.exports.monthly';
-                break;
+                return $this->getMonthlyExport($startDate, $endDate);
+
             case 'product-wise':
-                $data = $this->getProductWiseExport($startDate, $endDate);
-                $filename = "product_sales_{$startDate->format('Y-m-d')}_to_{$endDate->format('Y-m-d')}";
-                $view = 'admin.reports.exports.product-wise';
-                break;
+                return $this->getProductWiseExport($startDate, $endDate);
+
             case 'top-cakes':
-                $data = $this->getTopCakesExport($startDate, $endDate);
-                $filename = "top_cakes_{$startDate->format('Y-m-d')}_to_{$endDate->format('Y-m-d')}";
-                $view = 'admin.reports.exports.top-cakes';
-                break;
+                $limit = $request->limit ?? 10;
+                return $this->getTopCakesExport($startDate, $endDate, $limit);
+
             case 'flavor-trends':
-                $data = $this->getFlavorTrendsExport($startDate, $endDate);
-                $filename = "flavor_trends_{$startDate->format('Y-m-d')}_to_{$endDate->format('Y-m-d')}";
-                $view = 'admin.reports.exports.flavor-trends';
-                break;
+                return $this->getFlavorTrendsExport($startDate, $endDate);
+
+            case 'category-wise':
+                return $this->getCategoryWiseExport($startDate, $endDate);
+
+            case 'orders':
+                return $this->getOrdersExportData($startDate, $endDate);
+
+            case 'customers':
+                return $this->getCustomersExportData($startDate, $endDate);
+
+            case 'inventory':
+                return $this->getInventoryExportData($startDate, $endDate);
+
+            case 'financial':
+                return $this->getFinancialExportData($startDate, $endDate);
+
             default:
                 abort(404);
         }
-
-        if ($request->format === 'excel') {
-            return $this->exportToExcel($data, $filename);
-        } else {
-            return $this->exportToPdf($data, $filename, $view);
-        }
     }
+
     /**
-     * Orders & Operations Reports
+     * Get daily sales export data
      */
-    public function orders(Request $request)
+    private function getDailySalesExport($startDate, $endDate)
     {
-        $request->validate([
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date|after_or_equal:start_date',
-        ]);
-
-        $startDate = $request->start_date ? Carbon::parse($request->start_date) : Carbon::now()->startOfMonth();
-        $endDate = $request->end_date ? Carbon::parse($request->end_date) : Carbon::now()->endOfDay();
-
-        // Order Summary
-        $orderSummary = [
-            'total' => Order::whereBetween('created_at', [$startDate, $endDate])->count(),
-            'completed' => Order::whereBetween('created_at', [$startDate, $endDate])
-                ->where('status', 'completed')->count(),
-            'pending' => Order::whereBetween('created_at', [$startDate, $endDate])
-                ->where('status', 'pending')->count(),
-            'cancelled' => Order::whereBetween('created_at', [$startDate, $endDate])
-                ->where('status', 'cancelled')->count(),
-            'processing' => Order::whereBetween('created_at', [$startDate, $endDate])
-                ->where('status', 'processing')->count(),
-        ];
-
-        // Custom Cake Orders
-        $customCakes = Order::whereBetween('created_at', [$startDate, $endDate])
-            ->where('is_custom_cake', true)
-            ->with('user')
-            ->latest()
-            ->paginate(20);
-
-        $customCakesStats = [
-            'total' => $customCakes->total(),
-            'avg_price' => Order::whereBetween('created_at', [$startDate, $endDate])
-                ->where('is_custom_cake', true)
-                ->avg('total') ?? 0,
-            'with_message' => Order::whereBetween('created_at', [$startDate, $endDate])
-                ->where('is_custom_cake', true)
-                ->whereNotNull('custom_message')
-                ->count(),
-        ];
-
-        // Pre-order vs Walk-in
-        $preorderVsWalkin = [
-            'pre_order' => Order::whereBetween('created_at', [$startDate, $endDate])
-                ->whereNotNull('pre_order_date')
-                ->count(),
-            'walk_in' => Order::whereBetween('created_at', [$startDate, $endDate])
-                ->whereNull('pre_order_date')
-                ->count(),
-        ];
-
-        // Delivery vs Pickup
-        $deliveryVsPickup = [
-            'delivery' => Order::whereBetween('created_at', [$startDate, $endDate])
-                ->where('order_type', 'delivery')
-                ->count(),
-            'pickup' => Order::whereBetween('created_at', [$startDate, $endDate])
-                ->where('order_type', 'pickup')
-                ->count(),
-        ];
-
-        // Occasion-based Orders
-        $occasionOrders = Order::whereBetween('created_at', [$startDate, $endDate])
-            ->whereNotNull('occasion')
-            ->select('occasion', DB::raw('COUNT(*) as total'), DB::raw('SUM(total) as revenue'))
-            ->groupBy('occasion')
-            ->orderBy('total', 'desc')
-            ->get();
-
-        return view('admin.reports.orders', compact(
-            'orderSummary',
-            'customCakes',
-            'customCakesStats',
-            'preorderVsWalkin',
-            'deliveryVsPickup',
-            'occasionOrders',
-            'startDate',
-            'endDate'
-        ));
-    }
-
-    /**
-     * Customer Reports
-     */
-    public function customers(Request $request)
-    {
-        $request->validate([
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date|after_or_equal:start_date',
-        ]);
-
-        $startDate = $request->start_date ? Carbon::parse($request->start_date) : Carbon::now()->startOfMonth();
-        $endDate = $request->end_date ? Carbon::parse($request->end_date) : Carbon::now()->endOfDay();
-
-        // Top Customers by Spending - FIXED: using 'total' instead of 'total_amount'
-        $topCustomers = User::select(
-                'users.id',
-                'users.name',
-                'users.email',
-                DB::raw('COUNT(orders.id) as total_orders'),
-                DB::raw('SUM(orders.total) as total_spent'),
-                DB::raw('AVG(orders.total) as avg_order_value'),
-                DB::raw('MAX(orders.created_at) as last_order_date')
-            )
-            ->join('orders', 'users.id', '=', 'orders.user_id')
-            ->whereBetween('orders.created_at', [$startDate, $endDate])
-            ->groupBy('users.id', 'users.name', 'users.email')
-            ->orderBy('total_spent', 'desc')
-            ->limit(20)
-            ->get();
-
-        // Customer Order History (paginated)
-        $customerOrders = Order::with('user')
-            ->whereBetween('created_at', [$startDate, $endDate])
-            ->latest()
-            ->paginate(20);
-
-        // New vs Returning Customers
-        $customers = User::whereHas('orders', function($query) use ($startDate, $endDate) {
-                $query->whereBetween('created_at', [$startDate, $endDate]);
-            })
-            ->withCount(['orders' => function($query) use ($startDate, $endDate) {
-                $query->whereBetween('created_at', [$startDate, $endDate]);
-            }])
-            ->get();
-
-        $newCustomers = $customers->filter(function($customer) {
-            return $customer->orders_count == 1;
-        })->count();
-
-        $returningCustomers = $customers->filter(function($customer) {
-            return $customer->orders_count > 1;
-        })->count();
-
-        // Order Frequency
-        $orderFrequency = User::select(
-                DB::raw('COUNT(orders.id) as order_count'),
-                DB::raw('COUNT(DISTINCT users.id) as user_count')
-            )
-            ->join('orders', 'users.id', '=', 'orders.user_id')
-            ->whereBetween('orders.created_at', [$startDate, $endDate])
-            ->groupBy('users.id')
-            ->having('order_count', '>', 0)
-            ->get()
-            ->groupBy('order_count')
-            ->map(function($group) {
-                return $group->sum('user_count');
-            });
-
-        // Special Date Customers (birthday/anniversary)
-        $specialDateCustomers = User::whereHas('orders', function($query) {
-                $query->whereNotNull('occasion');
-            })
-            ->with(['orders' => function($query) use ($startDate, $endDate) {
-                $query->whereBetween('created_at', [$startDate, $endDate])
-                      ->whereNotNull('occasion');
-            }])
-            ->get()
-            ->filter(function($user) {
-                return $user->orders->isNotEmpty();
-            });
-
-        return view('admin.reports.customers', compact(
-            'topCustomers',
-            'customerOrders',
-            'newCustomers',
-            'returningCustomers',
-            'orderFrequency',
-            'specialDateCustomers',
-            'startDate',
-            'endDate'
-        ));
-    }
-
-    /**
-     * Inventory Reports
-     */
-    public function inventory(Request $request)
-    {
-        $request->validate([
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date|after_or_equal:start_date',
-        ]);
-
-        $startDate = $request->start_date ? Carbon::parse($request->start_date) : Carbon::now()->startOfMonth();
-        $endDate = $request->end_date ? Carbon::parse($request->end_date) : Carbon::now()->endOfDay();
-
-        // Raw Material Usage
-        $rawMaterialUsage = OrderItem::select(
-                'products.name as product_name',
-                'order_items.flavor',
-                DB::raw('SUM(order_items.quantity) as total_quantity'),
-                DB::raw('COUNT(DISTINCT order_items.order_id) as times_used')
-            )
-            ->join('products', 'order_items.product_id', '=', 'products.id')
-            ->join('orders', 'order_items.order_id', '=', 'orders.id')
-            ->whereBetween('orders.created_at', [$startDate, $endDate])
-            ->groupBy('products.name', 'order_items.flavor')
-            ->orderBy('total_quantity', 'desc')
-            ->get();
-
-        // Low Stock Alerts - FIXED: removed reorder_level reference
-        $lowStockProducts = Product::where('stock_quantity', '<=', 10)
-            ->orderBy('stock_quantity', 'asc')
-            ->get();
-
-        // Stock Movement (daily usage trend)
-        $stockMovement = OrderItem::select(
-                DB::raw('DATE(orders.created_at) as date'),
-                DB::raw('SUM(order_items.quantity) as total_used')
-            )
-            ->join('orders', 'order_items.order_id', '=', 'orders.id')
-            ->whereBetween('orders.created_at', [$startDate, $endDate])
-            ->groupBy('date')
-            ->orderBy('date', 'asc')
-            ->get();
-
-        return view('admin.reports.inventory', compact(
-            'rawMaterialUsage',
-            'lowStockProducts',
-            'stockMovement',
-            'startDate',
-            'endDate'
-        ));
-    }
-
-    /**
-     * Financial Reports - COMPLETELY REWRITTEN to match database schema
-     */
-    public function financial(Request $request)
-    {
-        $request->validate([
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date|after_or_equal:start_date',
-        ]);
-
-        $startDate = $request->start_date ? Carbon::parse($request->start_date) : Carbon::now()->startOfMonth();
-        $endDate = $request->end_date ? Carbon::parse($request->end_date) : Carbon::now()->endOfDay();
-
-        // Simplified profit data (without cost_price since it doesn't exist)
-        $profitData = OrderItem::select(
-                'products.id',
-                'products.name',
-                DB::raw('SUM(order_items.quantity) as quantity_sold'),
-                DB::raw('SUM(order_items.subtotal) as revenue')
-            )
-            ->join('products', 'order_items.product_id', '=', 'products.id')
-            ->join('orders', 'order_items.order_id', '=', 'orders.id')
-            ->whereBetween('orders.created_at', [$startDate, $endDate])
-            ->groupBy('products.id', 'products.name')
-            ->get()
-            ->map(function($item) {
-                // Since we don't have cost_price, we'll estimate cost as 60% of revenue (example)
-                // You can adjust this percentage based on your actual costs
-                $item->total_cost = $item->revenue * 0.6; // 60% cost assumption
-                $item->profit = $item->revenue - $item->total_cost;
-                $item->margin = $item->revenue > 0 ? ($item->profit / $item->revenue) * 100 : 0;
-                return $item;
-            });
-
-        $totalRevenue = Order::whereBetween('created_at', [$startDate, $endDate])->sum('total');
-        $totalCost = $profitData->sum('total_cost');
-        $totalProfit = $totalRevenue - $totalCost;
-        $profitMargin = $totalRevenue > 0 ? ($totalProfit / $totalRevenue) * 100 : 0;
-
-        // Discount Impact - using 'discount' column
-        $discountImpact = Order::whereBetween('created_at', [$startDate, $endDate])
-            ->select(
-                DB::raw('COUNT(CASE WHEN discount > 0 THEN 1 END) as orders_with_discount'),
-                DB::raw('SUM(discount) as total_discount_given'),
-                DB::raw('AVG(discount) as avg_discount'),
-                DB::raw('SUM(total) as revenue_with_discount')
-            )
-            ->first();
-
-        // Add revenue without discount
-        $revenueWithoutDiscount = Order::whereBetween('created_at', [$startDate, $endDate])
-            ->where('discount', 0)
-            ->sum('total');
-
-        $discountImpact->revenue_without_discount = $revenueWithoutDiscount;
-
-        // Payment Methods - using 'total' instead of 'total_amount'
-        $paymentMethods = Order::whereBetween('created_at', [$startDate, $endDate])
-            ->select('payment_method', DB::raw('COUNT(*) as count'), DB::raw('SUM(total) as total'))
-            ->groupBy('payment_method')
-            ->get();
-
-        // Seasonal Revenue - using 'total' instead of 'total_amount'
-        $seasonalRevenue = Order::select(
-                DB::raw('DATE(created_at) as date'),
-                DB::raw('SUM(total) as revenue')
-            )
-            ->whereBetween('created_at', [$startDate->copy()->subYear(), $endDate])
-            ->groupBy('date')
-            ->orderBy('date', 'asc')
-            ->get()
-            ->groupBy(function($item) {
-                return Carbon::parse($item->date)->format('Y-m-d');
-            });
-
-        return view('admin.reports.financial', compact(
-            'profitData',
-            'totalRevenue',
-            'totalCost',
-            'totalProfit',
-            'profitMargin',
-            'discountImpact',
-            'paymentMethods',
-            'seasonalRevenue',
-            'startDate',
-            'endDate'
-        ));
-    }
-
-    /**
- * Export reports to Excel/PDF
- */
-public function export(Request $request, $type, $report)
-{
-    $request->validate([
-        'start_date' => 'required|date',
-        'end_date' => 'required|date|after_or_equal:start_date',
-        'format' => 'required|in:excel,pdf',
-        'report' => 'nullable|string'
-    ]);
-
-    $startDate = Carbon::parse($request->start_date);
-    $endDate = Carbon::parse($request->end_date);
-    $reportType = $request->report ?? 'daily';
-
-    // Get data based on report type
-    switch ($report) {
-        case 'sales':
-            $data = $this->getSalesExportData($startDate, $endDate, $reportType);
-            $filename = "sales_report_{$reportType}_{$startDate->format('Y-m-d')}_to_{$endDate->format('Y-m-d')}";
-            $view = 'admin.reports.exports.sales';
-            break;
-        case 'orders':
-            $data = $this->getOrdersExportData($startDate, $endDate);
-            $filename = "orders_report_{$startDate->format('Y-m-d')}_to_{$endDate->format('Y-m-d')}";
-            $view = 'admin.reports.exports.orders';
-            break;
-        case 'customers':
-            $data = $this->getCustomersExportData($startDate, $endDate);
-            $filename = "customers_report_{$startDate->format('Y-m-d')}_to_{$endDate->format('Y-m-d')}";
-            $view = 'admin.reports.exports.customers';
-            break;
-        default:
-            abort(404);
-    }
-
-    if ($request->format === 'excel') {
-        return $this->exportToExcel($data, $filename);
-    } else {
-        return $this->exportToPdf($data, $filename, $view);
-    }
-}
-
-/**
- * Get sales data for export
- */
-private function getSalesExportData($startDate, $endDate, $reportType = 'daily')
-{
-    if ($reportType == 'daily') {
         return Order::select(
                 DB::raw('DATE(created_at) as date'),
-                DB::raw('DAYNAME(created_at) as day_name'),
-                DB::raw('COUNT(*) as total_orders'),
-                DB::raw('SUM(total) as total_revenue'),
+                DB::raw('DAYNAME(created_at) as day'),
+                DB::raw('COUNT(*) as orders'),
+                DB::raw('SUM(total) as revenue'),
                 DB::raw('SUM(CASE WHEN is_custom_cake = 1 THEN 1 ELSE 0 END) as custom_cakes'),
                 DB::raw('SUM(CASE WHEN is_custom_cake = 0 THEN 1 ELSE 0 END) as standard_cakes')
             )
             ->whereBetween('created_at', [$startDate, $endDate])
-            ->groupBy('date', 'day_name')
+            ->groupBy('date', 'day')
             ->orderBy('date', 'asc')
             ->get()
             ->map(function($item) {
                 return [
                     'Date' => Carbon::parse($item->date)->format('Y-m-d'),
-                    'Day' => $item->day_name,
-                    'Total Orders' => $item->total_orders,
+                    'Day' => $item->day,
+                    'Total Orders' => $item->orders,
                     'Custom Cakes' => $item->custom_cakes,
                     'Standard Cakes' => $item->standard_cakes,
-                    'Total Revenue' => $item->total_revenue,
-                    'Avg per Order' => $item->total_orders > 0 ? round($item->total_revenue / $item->total_orders, 2) : 0,
+                    'Total Revenue' => $item->revenue,
+                    'Avg Order Value' => $item->orders > 0 ? round($item->revenue / $item->orders, 2) : 0,
                 ];
-            });
-    } elseif ($reportType == 'monthly') {
+            })
+            ->toArray(); // Important: Convert to array
+    }
+
+    /**
+     * Get monthly export data
+     */
+    private function getMonthlyExport($startDate, $endDate)
+    {
         return Order::select(
                 DB::raw('YEAR(created_at) as year'),
                 DB::raw('MONTH(created_at) as month'),
-                DB::raw('COUNT(*) as total_orders'),
-                DB::raw('SUM(total) as total_revenue'),
-                DB::raw('AVG(total) as avg_order_value')
+                DB::raw('COUNT(*) as orders'),
+                DB::raw('SUM(total) as revenue'),
+                DB::raw('AVG(total) as avg_order_value'),
+                DB::raw('SUM(CASE WHEN is_custom_cake = 1 THEN 1 ELSE 0 END) as custom_cakes')
             )
             ->whereBetween('created_at', [$startDate, $endDate])
             ->groupBy('year', 'month')
@@ -767,142 +605,152 @@ private function getSalesExportData($startDate, $endDate, $reportType = 'daily')
                 return [
                     'Year' => $item->year,
                     'Month' => Carbon::create()->month($item->month)->format('F'),
-                    'Total Orders' => $item->total_orders,
-                    'Total Revenue' => $item->total_revenue,
+                    'Total Orders' => $item->orders,
+                    'Custom Cakes' => $item->custom_cakes,
+                    'Total Revenue' => $item->revenue,
                     'Avg Order Value' => round($item->avg_order_value, 2),
                 ];
-            });
-    } elseif ($reportType == 'product') {
+            })
+            ->toArray();
+    }
+
+    /**
+     * Get product wise export data
+     */
+    private function getProductWiseExport($startDate, $endDate)
+    {
         return OrderItem::select(
                 'products.name as product_name',
-                DB::raw('SUM(order_items.quantity) as total_quantity'),
-                DB::raw('SUM(order_items.subtotal) as total_revenue'),
+                'products.sku',
+                'products.stock_quantity',
+                DB::raw('SUM(order_items.quantity) as quantity'),
+                DB::raw('SUM(order_items.subtotal) as revenue'),
                 DB::raw('COUNT(DISTINCT order_id) as order_count')
             )
             ->join('products', 'order_items.product_id', '=', 'products.id')
             ->join('orders', 'order_items.order_id', '=', 'orders.id')
             ->whereBetween('orders.created_at', [$startDate, $endDate])
-            ->groupBy('products.name')
-            ->orderBy('total_revenue', 'desc')
+            ->groupBy('products.name', 'products.sku', 'products.stock_quantity')
+            ->orderBy('revenue', 'desc')
             ->get()
             ->map(function($item) {
                 return [
                     'Product Name' => $item->product_name,
-                    'Quantity Sold' => $item->total_quantity,
-                    'Total Revenue' => $item->total_revenue,
+                    'SKU' => $item->sku,
+                    'Current Stock' => $item->stock_quantity,
+                    'Quantity Sold' => $item->quantity,
                     'Order Count' => $item->order_count,
-                    'Avg Price' => $item->total_quantity > 0 ? round($item->total_revenue / $item->total_quantity, 2) : 0,
+                    'Total Revenue' => $item->revenue,
+                    'Average Price' => $item->quantity > 0 ? round($item->revenue / $item->quantity, 2) : 0,
                 ];
-            });
-    } elseif ($reportType == 'top') {
+            })
+            ->toArray();
+    }
+
+    /**
+     * Get top cakes export data
+     */
+    private function getTopCakesExport($startDate, $endDate, $limit = 10)
+    {
         return OrderItem::select(
                 'products.name as product_name',
                 'order_items.flavor',
-                DB::raw('SUM(order_items.quantity) as total_quantity'),
-                DB::raw('SUM(order_items.subtotal) as total_revenue'),
-                DB::raw('COUNT(DISTINCT order_items.order_id) as times_ordered')
+                DB::raw('SUM(order_items.quantity) as quantity'),
+                DB::raw('SUM(order_items.subtotal) as revenue'),
+                DB::raw('COUNT(DISTINCT order_items.order_id) as order_count')
             )
             ->join('products', 'order_items.product_id', '=', 'products.id')
             ->join('orders', 'order_items.order_id', '=', 'orders.id')
             ->whereBetween('orders.created_at', [$startDate, $endDate])
             ->groupBy('products.name', 'order_items.flavor')
-            ->orderBy('total_quantity', 'desc')
-            ->limit(20)
+            ->orderBy('quantity', 'desc')
+            ->limit($limit)
+            ->get()
+            ->map(function($item, $index) {
+                return [
+                    'Rank' => $index + 1,
+                    'Product Name' => $item->product_name,
+                    'Flavor' => ucfirst($item->flavor) ?? 'N/A',
+                    'Quantity Sold' => $item->quantity,
+                    'Times Ordered' => $item->order_count,
+                    'Total Revenue' => $item->revenue,
+                    'Average Price' => $item->quantity > 0 ? round($item->revenue / $item->quantity, 2) : 0,
+                ];
+            })
+            ->toArray();
+    }
+
+    /**
+     * Get category wise export data
+     */
+    private function getCategoryWiseExport($startDate, $endDate)
+    {
+        return OrderItem::select(
+                'categories.name as category_name',
+                DB::raw('COUNT(DISTINCT order_items.order_id) as order_count'),
+                DB::raw('SUM(order_items.quantity) as quantity'),
+                DB::raw('SUM(order_items.subtotal) as revenue'),
+                DB::raw('AVG(order_items.subtotal / order_items.quantity) as avg_price')
+            )
+            ->join('products', 'order_items.product_id', '=', 'products.id')
+            ->join('categories', 'products.category_id', '=', 'categories.id')
+            ->join('orders', 'order_items.order_id', '=', 'orders.id')
+            ->whereBetween('orders.created_at', [$startDate, $endDate])
+            ->groupBy('categories.name')
+            ->orderBy('revenue', 'desc')
             ->get()
             ->map(function($item) {
                 return [
-                    'Product Name' => $item->product_name,
-                    'Flavor' => ucfirst($item->flavor) ?? 'N/A',
-                    'Quantity Sold' => $item->total_quantity,
-                    'Total Revenue' => $item->total_revenue,
-                    'Times Ordered' => $item->times_ordered,
+                    'Category Name' => $item->category_name,
+                    'Total Orders' => $item->order_count,
+                    'Quantity Sold' => $item->quantity,
+                    'Total Revenue' => $item->revenue,
+                    'Average Price' => round($item->avg_price, 2),
                 ];
-            });
-    }
-
-    return collect([]);
-}
-
-    /**
-     * Export to Excel
-     */
-    private function exportToExcel($data, $filename)
-    {
-        // If you have Maatwebsite Excel installed
-        if (class_exists('Maatwebsite\Excel\Facades\Excel')) {
-            return Excel::download(new class($data) implements \Maatwebsite\Excel\Concerns\FromCollection,
-                                        \Maatwebsite\Excel\Concerns\WithHeadings {
-                private $data;
-
-                public function __construct($data)
-                {
-                    $this->data = $data;
-                }
-
-                public function collection()
-                {
-                    return $this->data;
-                }
-
-                public function headings(): array
-                {
-                    if ($this->data->isNotEmpty()) {
-                        return array_keys($this->data->first()->toArray());
-                    }
-                    return [];
-                }
-            }, $filename . '.xlsx');
-        }
-
-        // Fallback to CSV
-        return $this->exportToCsv($data, $filename);
+            })
+            ->toArray();
     }
 
     /**
-     * Export to PDF
+     * Get export filename
      */
-    private function exportToPdf($data, $filename, $view)
+    private function getExportFilename($type, $startDate, $endDate)
     {
-        // If you have DomPDF installed
-        if (class_exists('Barryvdh\DomPDF\Facade\Pdf')) {
-            $pdf = PDF::loadView($view, compact('data'));
-            return $pdf->download($filename . '.pdf');
-        }
-
-        // Fallback to CSV
-        return $this->exportToCsv($data, $filename);
-    }
-
-    /**
-     * Export to CSV (fallback)
-     */
-    private function exportToCsv($data, $filename)
-    {
-        $callback = function() use ($data) {
-            $file = fopen('php://output', 'w');
-
-            // Add UTF-8 BOM for Excel compatibility
-            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
-
-            // Add headers
-            if ($data->isNotEmpty()) {
-                fputcsv($file, array_keys($data->first()->toArray()));
-
-                // Add rows
-                foreach ($data as $row) {
-                    fputcsv($file, $row->toArray());
-                }
-            }
-
-            fclose($file);
-        };
-
-        $headers = [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => "attachment; filename={$filename}.csv",
+        $typeMap = [
+            'daily-sales' => 'daily_sales',
+            'monthly-overview' => 'monthly_overview',
+            'product-wise' => 'product_sales',
+            'top-cakes' => 'top_cakes',
+            'flavor-trends' => 'flavor_trends',
+            'category-wise' => 'category_sales',
+            'orders' => 'orders_report',
+            'customers' => 'customers_report',
+            'inventory' => 'inventory_report',
+            'financial' => 'financial_report',
         ];
 
-        return response()->stream($callback, 200, $headers);
+        $prefix = $typeMap[$type] ?? str_replace('-', '_', $type);
+        return "{$prefix}_{$startDate->format('Y-m-d')}_to_{$endDate->format('Y-m-d')}";
     }
 
+    /**
+     * Get report title
+     */
+    private function getReportTitle($type)
+    {
+        $titles = [
+            'daily-sales' => 'Daily Sales Report',
+            'monthly-overview' => 'Monthly Overview Report',
+            'product-wise' => 'Product-wise Sales Report',
+            'top-cakes' => 'Top Selling Cakes Report',
+            'flavor-trends' => 'Flavor Trends Report',
+            'category-wise' => 'Category-wise Sales Report',
+            'orders' => 'Orders Report',
+            'customers' => 'Customers Report',
+            'inventory' => 'Inventory Report',
+            'financial' => 'Financial Report',
+        ];
+
+        return $titles[$type] ?? ucfirst(str_replace('-', ' ', $type)) . ' Report';
+    }
 }

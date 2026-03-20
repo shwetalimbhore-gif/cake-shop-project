@@ -111,7 +111,7 @@
             <div class="alert alert-success">
                 <i class="fas fa-trophy"></i>
                 <strong>Best Performing Day:</strong>
-                {{ Carbon\Carbon::parse($summary['best_day']->date)->format('l, F d, Y') }}
+                {{ \Carbon\Carbon::parse($summary['best_day']->date)->format('l, F d, Y') }}
                 with ${{ number_format($summary['best_day']->total_revenue, 2) }} revenue
                 ({{ $summary['best_day']->total_orders }} orders)
             </div>
@@ -145,7 +145,7 @@
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table table-bordered table-striped table-hover" id="salesTable">
+                        <table class="table table-bordered table-striped table-hover">
                             <thead class="bg-primary text-white">
                                 <tr>
                                     <th>#</th>
@@ -162,7 +162,7 @@
                                 @foreach($dailySales as $index => $sale)
                                 <tr>
                                     <td>{{ $index + 1 }}</td>
-                                    <td>{{ Carbon\Carbon::parse($sale->date)->format('M d, Y') }}</td>
+                                    <td>{{ \Carbon\Carbon::parse($sale->date)->format('M d, Y') }}</td>
                                     <td>{{ $sale->day_name }}</td>
                                     <td>{{ $sale->total_orders }}</td>
                                     <td><span class="badge badge-info">{{ $sale->custom_cakes }}</span></td>
@@ -195,7 +195,6 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 $(document).ready(function() {
-    // Daily Sales Chart
     var ctx = document.getElementById('dailySalesChart').getContext('2d');
     new Chart(ctx, {
         type: 'line',
@@ -253,6 +252,12 @@ $(document).ready(function() {
 function exportReport(format) {
     var startDate = $('input[name="start_date"]').val();
     var endDate = $('input[name="end_date"]').val();
+
+    if (!startDate || !endDate) {
+        alert('Please select both start and end dates');
+        return;
+    }
+
     var exportUrl = '{{ route("admin.reports.export", "daily-sales") }}' +
                     '?start_date=' + startDate +
                     '&end_date=' + endDate +

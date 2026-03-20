@@ -169,7 +169,7 @@
                                 <tr>
                                     <td><span class="badge badge-info">{{ ucfirst($trend->flavor) }}</span></td>
                                     <td>{{ $trend->year }}</td>
-                                    <td>{{ Carbon\Carbon::create()->month($trend->month)->format('F') }}</td>
+                                    <td>{{ \Carbon\Carbon::create()->month($trend->month)->format('F') }}</td>
                                     <td>{{ $trend->total_quantity }}</td>
                                     <td>{{ $trend->order_count }}</td>
                                     <td>
@@ -222,6 +222,12 @@ $(document).ready(function() {
 function exportReport(format) {
     var startDate = $('input[name="start_date"]').val();
     var endDate = $('input[name="end_date"]').val();
+
+    if (!startDate || !endDate) {
+        alert('Please select both start and end dates');
+        return;
+    }
+
     var exportUrl = '{{ route("admin.reports.export", "flavor-trends") }}' +
                     '?start_date=' + startDate +
                     '&end_date=' + endDate +
